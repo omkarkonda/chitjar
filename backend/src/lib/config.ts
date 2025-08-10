@@ -89,3 +89,9 @@ export const getDatabaseUrl = () => {
   }
   return config.databaseUrl;
 };
+
+// Database configuration object for use in db.ts
+export const databaseConfig = {
+  url: getDatabaseUrl(),
+  ssl: isProduction(), // Enable SSL in production
+};

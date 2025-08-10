@@ -15,17 +15,7 @@ if (majorVersion < 18) {
 }
 console.log(`✅ Node.js version: ${nodeVersion}`);
 
-// Install root dependencies
-console.log('\n📦 Installing root dependencies...');
-try {
-  execSync('npm install', { stdio: 'inherit' });
-  console.log('✅ Root dependencies installed');
-} catch (error) {
-  console.error('❌ Failed to install root dependencies');
-  process.exit(1);
-}
-
-// Create .env files BEFORE installing backend dependencies
+// Create .env files FIRST, before any npm install
 console.log('\n📝 Creating environment files...');
 const backendEnvPath = path.join(__dirname, '..', 'backend', '.env');
 const backendEnvExamplePath = path.join(__dirname, '..', 'backend', 'env.example');
@@ -52,7 +42,17 @@ if (!fs.existsSync(frontendEnvPath) && fs.existsSync(frontendEnvExamplePath)) {
   console.log('⚠️  Could not create frontend .env file - template not found');
 }
 
-// Install backend dependencies (now that .env exists)
+// Install root dependencies (now that .env files exist)
+console.log('\n📦 Installing root dependencies...');
+try {
+  execSync('npm install', { stdio: 'inherit' });
+  console.log('✅ Root dependencies installed');
+} catch (error) {
+  console.error('❌ Failed to install root dependencies');
+  process.exit(1);
+}
+
+// Install backend dependencies
 console.log('\n📦 Installing backend dependencies...');
 try {
   execSync('cd backend && npm install', { stdio: 'inherit' });

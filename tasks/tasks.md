@@ -34,8 +34,12 @@
 - backend/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers.
 - backend/api/bids.ts - CRUD for bids plus CSV import endpoint with schema validation and preview.
 - backend/api/analytics.ts - Server-side heavy calculations (XIRR, projections, FD comparison) to ensure consistency with Excel.
-- backend/lib/db.ts - Database client/ORM setup and schema helpers.
-- backend/lib/schema.sql - SQL schema (if using SQL) for users, funds, monthly_entries, bids, settings.
+- backend/lib/db.ts - Database client/ORM setup and schema helpers with connection pooling and transaction support.
+- backend/lib/schema.sql - PostgreSQL schema with tables for users, funds, monthly_entries, bids, settings including constraints, indexes, and triggers.
+- backend/lib/migrate.ts - TypeScript migration system for database schema versioning and updates.
+- backend/scripts/migrate.js - JavaScript migration script for running migrations via npm scripts.
+- backend/src/test/db.test.ts - Database connection and schema validation tests.
+- backend/README.md - Backend documentation with database setup instructions and API reference.
 - backend/lib/validation.ts - Shared schemas (e.g., zod/yup) for server-side validation.
 - backend/lib/xirr.ts - Wrapper around a proven XIRR library; parity tests vs Excel.
 - backend/lib/forecast.ts - Average-based forecasting utilities, encapsulated for future upgrades.
@@ -78,7 +82,7 @@
   - [x] 1.1 Choose backend stack (Firebase/Supabase vs custom Node+SQL); document choice and rationale.
   - [x] 1.2 Initialize repo with Node.js backend and frontend folders, ESLint, Prettier, and basic CI.
 - [x] 1.3 Set up environment configs (.env), secret handling, and local dev scripts for Node.js + PostgreSQL.
-- [ ] 1.4 Define PostgreSQL schema (users, funds, monthly_entries, bids, settings) and migrations using pg library.
+- [x] 1.4 Define PostgreSQL schema (users, funds, monthly_entries, bids, settings) and migrations using pg library.
 - [ ] 1.5 Establish Express.js API conventions (REST paths, error shape, JWT auth headers).
 - [ ] 1.6 Add Zod validation library for server and client parity.
 - [ ] 1.7 Add utility modules for formatting (INR, DD/MM/YYYY) and date handling.

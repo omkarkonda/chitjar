@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import { config, isDevelopment } from './lib/config';
+import { initializeDatabase, healthCheck } from './lib/db';
 
 const app = express();
 const PORT = config.port;
@@ -19,9 +20,26 @@ app.use(morgan(isDevelopment() ? 'dev' : 'combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Initialize database connection
+initializeDatabase();
+
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+  try {
+    const dbHealthy = await healthCheck();
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      database: dbHealthy ? 'connected' : 'disconnected'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      database: 'error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // API routes will be added here
