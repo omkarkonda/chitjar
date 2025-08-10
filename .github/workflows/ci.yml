@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: chitjar_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm run install:all
+
+    - name: Run linting
+      run: npm run lint
+
+    - name: Check formatting
+      run: npm run format:check
+
+    - name: Run backend tests
+      run: npm run test:backend
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/chitjar_test
+        JWT_SECRET: test-secret-key
+        NODE_ENV: test
+
+    - name: Run frontend tests
+      run: npm run test:frontend
+
+    - name: Build backend
+      run: npm run build:backend
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/chitjar_test
+        JWT_SECRET: test-secret-key
+
+    - name: Build frontend
+      run: npm run build:frontend
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage/lcov.info
+        flags: backend
+        name: backend-coverage
+
+    - name: Upload frontend coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./frontend/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage

@@ -1,0 +1,48 @@
+{
+  "name": "chitjar",
+  "version": "1.0.0",
+  "description": "Personal Chit Fund Tracker - Track and analyze chit fund investments",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "setup": "node scripts/setup-dev.js",
+    "setup:basic": "node scripts/setup-basic.js",
+    "setup:db": "cd backend && npm run setup",
+    "check-env": "cd backend && npm run check-env"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "chit-fund",
+    "personal-finance",
+    "investment-tracker",
+    "xirr",
+    "financial-analytics"
+  ],
+  "author": "ChitJar Team",
+  "license": "MIT"
+}
