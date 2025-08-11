@@ -11,13 +11,13 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { 
-  sendSuccess, 
-  sendError, 
-  HTTP_STATUS, 
-  ERROR_CODES 
+import {
+  sendSuccess,
+  sendError,
+  HTTP_STATUS,
+  ERROR_CODES
 } from '../lib/api-conventions';
-import { 
+import {
   validateBody
 } from '../lib/validation-utils';
 import {
@@ -25,6 +25,13 @@ import {
   createTokenResponse
 } from '../lib/auth-middleware';
 import { query } from '../lib/db';
+import {
+  saveRefreshToken,
+  findRefreshTokenByJti,
+  revokeRefreshTokenByJti,
+  compareRefreshToken,
+  decodeRefreshToken
+} from '../lib/token-store';
 
 // ============================================================================
 // Validation Schemas
@@ -62,6 +69,31 @@ export const tokenRefreshSchema = z.object({
 // ============================================================================
 
 /**
+ * Extract client metadata (user-agent and IP)
+ */
+function getClientMeta(req: Request): { userAgent: string | null; ipAddress: string | null } {
+  const uaHeader = req.headers['user-agent'];
+  const xff = req.headers['x-forwarded-for'];
+  const xffStr = Array.isArray(xff) ? xff[0] : xff;
+
+  let ipFromHeader: string | undefined = undefined;
+  if (typeof xffStr === 'string') {
+    const parts = xffStr.split(',');
+    if (parts.length > 0 && typeof parts[0] === 'string' && parts[0]) {
+      ipFromHeader = parts[0].trim();
+    }
+  }
+
+  const expressIp = typeof (req as any).ip === 'string' ? (req as any).ip : undefined;
+  const ip = expressIp || ipFromHeader || null;
+
+  return {
+    userAgent: typeof uaHeader === 'string' ? uaHeader : null,
+    ipAddress: ip,
+  };
+}
+
+/**
  * Check if email is already registered
  */
 async function isEmailRegistered(email: string): Promise<boolean> {
@@ -97,11 +129,24 @@ async function createUser(email: string, password: string, name: string): Promis
 async function getUserByEmail(email: string): Promise<any> {
   const result = await query(
     `SELECT id, email, password_hash, name, created_at, updated_at, last_login_at, is_active
-     FROM users 
+     FROM users
      WHERE email = $1`,
     [email.toLowerCase()]
   );
   
+  return result.rows[0] || null;
+}
+
+/**
+ * Get user by id
+ */
+async function getUserById(id: string): Promise<any> {
+  const result = await query(
+    `SELECT id, email, name, created_at, updated_at, last_login_at, is_active
+     FROM users
+     WHERE id = $1`,
+    [id]
+  );
   return result.rows[0] || null;
 }
 
@@ -146,6 +191,16 @@ export async function signupHandler(req: Request, res: Response, next: NextFunct
     // Update last login
     await updateLastLogin(user.id);
     
+    // Create tokens and persist refresh token (hashed) with rotation support
+    const tokens = createTokenResponse(user.id, user.email);
+    const meta = getClientMeta(req);
+    await saveRefreshToken({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+      userAgent: meta.userAgent,
+      ipAddress: meta.ipAddress,
+    });
+
     // Send success response
     sendSuccess(res, {
       user: {
@@ -157,7 +212,7 @@ export async function signupHandler(req: Request, res: Response, next: NextFunct
         last_login_at: user.last_login_at,
         is_active: user.is_active
       },
-      ...createTokenResponse(user.id, user.email)
+      ...tokens
     }, HTTP_STATUS.CREATED);
   } catch (error) {
     next(error);
@@ -211,6 +266,16 @@ export async function loginHandler(req: Request, res: Response, next: NextFuncti
     // Update last login
     await updateLastLogin(user.id);
     
+    // Create tokens and persist refresh token (hashed) with rotation support
+    const tokens = createTokenResponse(user.id, user.email);
+    const meta = getClientMeta(req);
+    await saveRefreshToken({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+      userAgent: meta.userAgent,
+      ipAddress: meta.ipAddress,
+    });
+
     // Send success response
     sendSuccess(res, {
       user: {
@@ -222,7 +287,7 @@ export async function loginHandler(req: Request, res: Response, next: NextFuncti
         last_login_at: user.last_login_at,
         is_active: user.is_active
       },
-      ...createTokenResponse(user.id, user.email)
+      ...tokens
     }, HTTP_STATUS.OK);
   } catch (error) {
     next(error);
@@ -233,12 +298,21 @@ export async function loginHandler(req: Request, res: Response, next: NextFuncti
  * User logout endpoint
  * POST /api/v1/auth/logout
  */
-export async function logoutHandler(_req: Request, res: Response): Promise<void> {
-  // For JWT tokens, logout is primarily handled on the client side
-  // by removing the tokens from storage.
-  // We could implement token blacklisting here if needed.
-  
-  sendSuccess(res, null, HTTP_STATUS.OK);
+export async function logoutHandler(req: Request, res: Response): Promise<void> {
+  try {
+    // Optional: revoke provided refresh token
+    const body: any = req.body || {};
+    if (body.refreshToken) {
+      const { jti } = decodeRefreshToken(body.refreshToken);
+      if (jti) {
+        await revokeRefreshTokenByJti(jti);
+      }
+    }
+  } catch (_e) {
+    // Intentionally ignore errors to avoid leaking token validation info
+  } finally {
+    sendSuccess(res, null, HTTP_STATUS.OK);
+  }
 }
 
 /**
@@ -248,37 +322,63 @@ export async function logoutHandler(_req: Request, res: Response): Promise<void>
 export async function refreshHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { refreshToken } = req.body;
-    
-    // Verify refresh token
-    const decoded: any = verifyRefreshToken(refreshToken);
-    
-    // Get user
-    const user = await getUserByEmail(decoded.email || decoded.userId);
-    if (!user) {
-      sendError(
-        res,
-        HTTP_STATUS.UNAUTHORIZED,
-        ERROR_CODES.VALIDATION_ERROR,
-        'Invalid refresh token'
-      );
+
+    // Verify refresh token signature and expiry
+    const verified: any = verifyRefreshToken(refreshToken);
+
+    // Decode to get JTI and EXP for DB lookup
+    const { jti } = decodeRefreshToken(refreshToken);
+    if (!jti) {
+      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_INVALID, 'Invalid refresh token');
       return;
     }
-    
-    // Check if user is active
-    if (!user.is_active) {
-      sendError(
-        res,
-        HTTP_STATUS.FORBIDDEN,
-        ERROR_CODES.VALIDATION_ERROR,
-        'Account is disabled'
-      );
+
+    // Lookup token record
+    const record = await findRefreshTokenByJti(jti);
+    if (!record || record.is_revoked) {
+      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_INVALID, 'Refresh token revoked or not found');
       return;
     }
-    
-    // Send success response
-    sendSuccess(res, {
-      ...createTokenResponse(user.id, user.email)
-    }, HTTP_STATUS.OK);
+
+    // Validate ownership
+    if (record.user_id !== verified.userId) {
+      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_INVALID, 'Refresh token does not match user');
+      return;
+    }
+
+    // Validate not expired (defense in depth, in addition to JWT exp)
+    if (new Date(record.expires_at).getTime() <= Date.now()) {
+      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_EXPIRED, 'Refresh token expired');
+      return;
+    }
+
+    // Compare token hash (anti-theft even if DB leaked)
+    const ok = await compareRefreshToken(refreshToken, record.token_hash);
+    if (!ok) {
+      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_INVALID, 'Invalid refresh token');
+      return;
+    }
+
+    // Rotate: revoke old token and issue a new pair
+    await revokeRefreshTokenByJti(jti);
+
+    // Fetch user info (email required for access token payload)
+    const user = await getUserById(verified.userId);
+    if (!user || !user.is_active) {
+      sendError(res, HTTP_STATUS.FORBIDDEN, ERROR_CODES.VALIDATION_ERROR, 'Account is disabled');
+      return;
+    }
+
+    const tokens = createTokenResponse(user.id, user.email);
+    const meta = getClientMeta(req);
+    await saveRefreshToken({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+      userAgent: meta.userAgent,
+      ipAddress: meta.ipAddress,
+    });
+
+    sendSuccess(res, { ...tokens }, HTTP_STATUS.OK);
   } catch (error) {
     next(error);
   }
@@ -325,4 +425,4 @@ router.post('/login', validateBody(userLoginSchema), loginHandler);
 router.post('/logout', logoutHandler);
 
 // POST /api/v1/auth/refresh
-router.post
+router.post('/refresh', validateBody(tokenRefreshSchema), refreshHandler);

@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import { config, isDevelopment } from './lib/config';
+import { config, isDevelopment, isProduction } from './lib/config';
 import { initializeDatabase, healthCheck } from './lib/db';
 import {
   errorHandler,
@@ -15,8 +15,23 @@ import {
 const app = express();
 const PORT = config.port;
 
-// Middleware
-app.use(helmet());
+// Trust proxy (needed for correct req.secure and X-Forwarded-* handling behind reverse proxies)
+if (isProduction()) {
+  app.set('trust proxy', 1);
+  // Enforce HTTPS in production
+  app.use((req, res, next) => {
+    const xfProto = req.headers['x-forwarded-proto'];
+    const isHttps = req.secure || xfProto === 'https';
+    if (isHttps) return next();
+    const host = req.headers.host;
+    return res.redirect(301, `https://${host}${req.originalUrl}`);
+  });
+}
+
+// Security headers (enable HSTS only in production)
+app.use(helmet({
+  hsts: isProduction() ? { maxAge: 15552000, includeSubDomains: true, preload: true } : false
+}));
 app.use(cors({
   origin: config.corsOrigin,
   credentials: true,
@@ -66,9 +81,6 @@ app.use(API_PATHS.AUTH.BASE, authRoutes);
 app.use(API_PATHS.FUNDS.BASE, fundsRoutes);
 app.use(API_PATHS.ENTRIES.BASE, entriesRoutes);
 app.use(API_PATHS.BIDS.BASE, bidsRoutes);
-// app.use(API_PATHS.FUNDS.BASE, fundsRoutes);
-// app.use(API_PATHS.ENTRIES.BASE, entriesRoutes);
-// app.use(API_PATHS.ANALYTICS.BASE, analyticsRoutes);
 
 // Global error handling middleware
 app.use(errorHandler);

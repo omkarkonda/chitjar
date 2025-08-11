@@ -85,6 +85,36 @@ async function applyMigration(version, name, sql) {
 }
 
 /**
+ * Check if a table exists in the current database
+ */
+async function tableExists(tableName) {
+  const result = await pool.query(
+    `
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_name = $1
+    )
+    `,
+    [tableName]
+  );
+  return result.rows[0]?.exists === true;
+}
+
+/**
+ * Ensure the base schema is present (repair if needed).
+ * Some environments may have an inconsistent migration table.
+ */
+async function ensureBaseSchema(schemaSQL) {
+  const hasUsers = await tableExists('users');
+  if (!hasUsers) {
+    console.log('Base schema missing. Applying initial schema for repair...');
+    await pool.query(schemaSQL);
+    console.log('Base schema applied.');
+  }
+}
+
+/**
  * Run all pending migrations
  */
 async function runMigrations() {
@@ -94,21 +124,47 @@ async function runMigrations() {
     // Initialize migration table
     await initializeMigrationTable();
     
-    // Get applied migrations
-    const appliedMigrations = await getAppliedMigrations();
-    
     // Read the schema file
     const schemaPath = path.join(__dirname, '..', 'src', 'lib', 'schema.sql');
     const schemaSQL = fs.readFileSync(schemaPath, 'utf8');
+
+    // Ensure base schema exists before applying additional migrations
+    await ensureBaseSchema(schemaSQL);
+
+    // Get applied migrations
+    const appliedMigrations = await getAppliedMigrations();
     
-    // Define migrations in order
-    const migrations = [
-      {
-        version: '001',
-        name: 'Initial Schema',
-        sql: schemaSQL
+    // Define migrations in order (dynamic)
+    const migrations = [];
+    migrations.push({
+      version: '001',
+      name: 'Initial Schema',
+      sql: schemaSQL,
+    });
+
+    // Load additional .sql migrations from src/lib/migrations
+    const migrationsDir = path.join(__dirname, '..', 'src', 'lib', 'migrations');
+    if (fs.existsSync(migrationsDir)) {
+      const files = fs.readdirSync(migrationsDir)
+        .filter(f => f.endsWith('.sql'))
+        .sort();
+      for (const file of files) {
+        const fullPath = path.join(migrationsDir, file);
+        const sql = fs.readFileSync(fullPath, 'utf8');
+        const versionMatch = file.match(/^(\d+)_/);
+        const version = versionMatch ? versionMatch[1] : path.parse(file).name;
+        const name = file
+          .replace(/^\d+_/, '')
+          .replace(/\.sql$/, '')
+          .replace(/[-_]/g, ' ')
+          || 'Migration';
+        // Skip 001 if someone added it to the folder
+        if (version === '001') {
+          continue;
+        }
+        migrations.push({ version, name, sql });
       }
-    ];
+    }
     
     // Apply pending migrations
     for (const migration of migrations) {

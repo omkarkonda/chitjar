@@ -10,6 +10,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { config } from './config';
 import { 
   ApiError, 
@@ -86,6 +87,7 @@ export function generateAccessToken(userId: string, email: string): string {
  * Generate JWT refresh token
  */
 export function generateRefreshToken(userId: string): string {
+  const jti = crypto.randomUUID();
   return jwt.sign(
     { userId, type: 'refresh' },
     config.jwtRefreshSecret,
@@ -93,6 +95,7 @@ export function generateRefreshToken(userId: string): string {
       expiresIn: config.jwtRefreshExpiresIn,
       issuer: 'chitjar-api',
       audience: 'chitjar-app',
+      jwtid: jti,
     } as jwt.SignOptions
   );
 }
