@@ -86,11 +86,11 @@
 - [x] 1.5 Establish Express.js API conventions (REST paths, error shape, JWT auth headers).
 - [x] 1.6 Add Zod validation library for server and client parity.
 - [x] 1.7 Add utility modules for formatting (INR, DD/MM/YYYY) and date handling.
-- [ ] 1.8 Pick charting library (Chart.js) and set up a themed wrapper with accessible palettes.
-- [ ] 1.9 Create sample seed data scripts for dev/demo with PostgreSQL.
+- [x] 1.8 Pick charting library (Chart.js) and set up a themed wrapper with accessible palettes.
+- [x] 1.9 Create sample seed data scripts for dev/demo with PostgreSQL.
 
 - [ ] 2.0 Authentication, Authorization, and Data Security
-  - [ ] 2.1 Implement signup/login/logout with email/password using JWT tokens and bcrypt password hashing.
+  - [x] 2.1 Implement signup/login/logout with email/password using JWT tokens and bcrypt password hashing.
 - [ ] 2.2 Protect all Express.js APIs with per-user authorization; enforce row-level ownership in PostgreSQL.
 - [ ] 2.3 Store credentials securely in PostgreSQL; enable encryption at rest and HTTPS in deployment.
 - [ ] 2.4 Implement rate limiting and input sanitization for all Express.js endpoints.
