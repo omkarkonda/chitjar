@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 
 // Load environment variables based on NODE_ENV
-const envFile = process.env.NODE_ENV === 'test' ? 'env.test' : '.env';
+const envFile = process.env['NODE_ENV'] === 'test' ? 'env.test' : '.env';
 dotenv.config({ path: envFile });
 
 // Configuration schema validation
@@ -17,7 +17,9 @@ const configSchema = z.object({
   
   // Authentication
   jwtSecret: z.string().min(32, 'JWT secret must be at least 32 characters'),
-  jwtExpiresIn: z.string().default('7d'),
+  jwtExpiresIn: z.string().default('1h'),
+  jwtRefreshSecret: z.string().min(32, 'JWT refresh secret must be at least 32 characters'),
+  jwtRefreshExpiresIn: z.string().default('7d'),
   bcryptRounds: z.string().transform(Number).default('12'),
   
   // Security
@@ -42,22 +44,24 @@ const configSchema = z.object({
 const parseConfig = () => {
   try {
     const config = configSchema.parse({
-      port: process.env.PORT,
-      nodeEnv: process.env.NODE_ENV,
-      databaseUrl: process.env.DATABASE_URL,
-      databaseTestUrl: process.env.DATABASE_TEST_URL,
-      jwtSecret: process.env.JWT_SECRET,
-      jwtExpiresIn: process.env.JWT_EXPIRES_IN,
-      bcryptRounds: process.env.BCRYPT_ROUNDS,
-      rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS,
-      rateLimitMaxRequests: process.env.RATE_LIMIT_MAX_REQUESTS,
-      corsOrigin: process.env.CORS_ORIGIN,
-      maxFileSize: process.env.MAX_FILE_SIZE,
-      uploadPath: process.env.UPLOAD_PATH,
-      logLevel: process.env.LOG_LEVEL,
-      logFile: process.env.LOG_FILE,
-      enableMetrics: process.env.ENABLE_METRICS,
-      metricsPort: process.env.METRICS_PORT,
+      port: process.env['PORT'],
+      nodeEnv: process.env['NODE_ENV'],
+      databaseUrl: process.env['DATABASE_URL'],
+      databaseTestUrl: process.env['DATABASE_TEST_URL'],
+      jwtSecret: process.env['JWT_SECRET'],
+      jwtExpiresIn: process.env['JWT_EXPIRES_IN'],
+      jwtRefreshSecret: process.env['JWT_REFRESH_SECRET'],
+      jwtRefreshExpiresIn: process.env['JWT_REFRESH_EXPIRES_IN'],
+      bcryptRounds: process.env['BCRYPT_ROUNDS'],
+      rateLimitWindowMs: process.env['RATE_LIMIT_WINDOW_MS'],
+      rateLimitMaxRequests: process.env['RATE_LIMIT_MAX_REQUESTS'],
+      corsOrigin: process.env['CORS_ORIGIN'],
+      maxFileSize: process.env['MAX_FILE_SIZE'],
+      uploadPath: process.env['UPLOAD_PATH'],
+      logLevel: process.env['LOG_LEVEL'],
+      logFile: process.env['LOG_FILE'],
+      enableMetrics: process.env['ENABLE_METRICS'],
+      metricsPort: process.env['METRICS_PORT'],
     });
     
     return config;

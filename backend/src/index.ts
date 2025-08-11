@@ -5,6 +5,12 @@ import morgan from 'morgan';
 import compression from 'compression';
 import { config, isDevelopment } from './lib/config';
 import { initializeDatabase, healthCheck } from './lib/db';
+import {
+  errorHandler,
+  notFoundHandler,
+  sendSuccess,
+  API_PATHS
+} from './lib/api-conventions';
 
 const app = express();
 const PORT = config.port;
@@ -24,40 +30,44 @@ app.use(express.urlencoded({ extended: true }));
 initializeDatabase();
 
 // Health check endpoint
-app.get('/api/health', async (req, res) => {
+app.get(API_PATHS.SYSTEM.HEALTH, async (_req, res) => {
   try {
     const dbHealthy = await healthCheck();
-    res.json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      database: dbHealthy ? 'connected' : 'disconnected'
+    sendSuccess(res, {
+      status: 'ok',
+      database: dbHealthy ? 'connected' : 'disconnected',
+      version: '1.0.0',
+      uptime: process.uptime(),
     });
   } catch (error) {
-    res.status(500).json({ 
-      status: 'error', 
-      timestamp: new Date().toISOString(),
+    sendSuccess(res, {
+      status: 'error',
       database: 'error',
       message: error instanceof Error ? error.message : 'Unknown error'
-    });
+    }, 500);
   }
 });
 
+// Version endpoint
+app.get(API_PATHS.SYSTEM.VERSION, (_req, res) => {
+  sendSuccess(res, {
+    version: '1.0.0',
+    name: 'ChitJar API',
+    environment: config.nodeEnv,
+  });
+});
+
 // API routes will be added here
-// app.use('/api/auth', authRoutes);
-// app.use('/api/funds', fundsRoutes);
-// app.use('/api/entries', entriesRoutes);
-// app.use('/api/analytics', analyticsRoutes);
+// app.use(API_PATHS.AUTH.BASE, authRoutes);
+// app.use(API_PATHS.FUNDS.BASE, fundsRoutes);
+// app.use(API_PATHS.ENTRIES.BASE, entriesRoutes);
+// app.use(API_PATHS.ANALYTICS.BASE, analyticsRoutes);
 
-// Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
+// Global error handling middleware
+app.use(errorHandler);
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+// 404 handler (must be last)
+app.use('*', notFoundHandler);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

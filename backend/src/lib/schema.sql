@@ -53,18 +53,6 @@ CREATE TABLE IF NOT EXISTS monthly_entries (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
-    -- Ensure prize_money doesn't exceed chit_value
-    CONSTRAINT valid_prize_money CHECK (
-        prize_money <= (SELECT chit_value FROM funds WHERE id = fund_id)
-    ),
-    -- Ensure month_key is within fund's date range
-    CONSTRAINT valid_month_key CHECK (
-        month_key >= (SELECT start_month FROM funds WHERE id = fund_id) AND
-        month_key <= COALESCE(
-            (SELECT early_exit_month FROM funds WHERE id = fund_id),
-            (SELECT end_month FROM funds WHERE id = fund_id)
-        )
-    ),
     -- Unique constraint per fund and month
     UNIQUE(fund_id, month_key)
 );
@@ -81,22 +69,6 @@ CREATE TABLE IF NOT EXISTS bids (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
-    -- Ensure winning_bid doesn't exceed chit_value
-    CONSTRAINT valid_winning_bid CHECK (
-        winning_bid <= (SELECT chit_value FROM funds WHERE id = fund_id)
-    ),
-    -- Ensure discount_amount doesn't exceed chit_value
-    CONSTRAINT valid_discount CHECK (
-        discount_amount <= (SELECT chit_value FROM funds WHERE id = fund_id)
-    ),
-    -- Ensure month_key is within fund's date range
-    CONSTRAINT valid_bid_month CHECK (
-        month_key >= (SELECT start_month FROM funds WHERE id = fund_id) AND
-        month_key <= COALESCE(
-            (SELECT early_exit_month FROM funds WHERE id = fund_id),
-            (SELECT end_month FROM funds WHERE id = fund_id)
-        )
-    ),
     -- Unique constraint per fund and month
     UNIQUE(fund_id, month_key)
 );
@@ -148,6 +120,86 @@ CREATE TRIGGER update_bids_updated_at BEFORE UPDATE ON bids
 
 CREATE TRIGGER update_settings_updated_at BEFORE UPDATE ON settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Validation functions for constraints that can't use subqueries
+CREATE OR REPLACE FUNCTION validate_monthly_entry()
+RETURNS TRIGGER AS $$
+DECLARE
+    fund_record RECORD;
+BEGIN
+    -- Get fund details
+    SELECT chit_value, start_month, end_month, early_exit_month
+    INTO fund_record
+    FROM funds
+    WHERE id = NEW.fund_id;
+    
+    -- Check if prize_money doesn't exceed chit_value
+    IF NEW.prize_money > fund_record.chit_value THEN
+        RAISE EXCEPTION 'Prize money (%) cannot exceed chit value (%)',
+            NEW.prize_money, fund_record.chit_value;
+    END IF;
+    
+    -- Check if month_key is within fund's date range
+    IF NEW.month_key < fund_record.start_month THEN
+        RAISE EXCEPTION 'Month key (%) cannot be before fund start month (%)',
+            NEW.month_key, fund_record.start_month;
+    END IF;
+    
+    IF NEW.month_key > COALESCE(fund_record.early_exit_month, fund_record.end_month) THEN
+        RAISE EXCEPTION 'Month key (%) cannot be after fund end month (%)',
+            NEW.month_key, COALESCE(fund_record.early_exit_month, fund_record.end_month);
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION validate_bid()
+RETURNS TRIGGER AS $$
+DECLARE
+    fund_record RECORD;
+BEGIN
+    -- Get fund details
+    SELECT chit_value, start_month, end_month, early_exit_month
+    INTO fund_record
+    FROM funds
+    WHERE id = NEW.fund_id;
+    
+    -- Check if winning_bid doesn't exceed chit_value
+    IF NEW.winning_bid > fund_record.chit_value THEN
+        RAISE EXCEPTION 'Winning bid (%) cannot exceed chit value (%)',
+            NEW.winning_bid, fund_record.chit_value;
+    END IF;
+    
+    -- Check if discount_amount doesn't exceed chit_value
+    IF NEW.discount_amount > fund_record.chit_value THEN
+        RAISE EXCEPTION 'Discount amount (%) cannot exceed chit value (%)',
+            NEW.discount_amount, fund_record.chit_value;
+    END IF;
+    
+    -- Check if month_key is within fund's date range
+    IF NEW.month_key < fund_record.start_month THEN
+        RAISE EXCEPTION 'Month key (%) cannot be before fund start month (%)',
+            NEW.month_key, fund_record.start_month;
+    END IF;
+    
+    IF NEW.month_key > COALESCE(fund_record.early_exit_month, fund_record.end_month) THEN
+        RAISE EXCEPTION 'Month key (%) cannot be after fund end month (%)',
+            NEW.month_key, COALESCE(fund_record.early_exit_month, fund_record.end_month);
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create triggers for validation
+CREATE TRIGGER validate_monthly_entry_trigger
+    BEFORE INSERT OR UPDATE ON monthly_entries
+    FOR EACH ROW EXECUTE FUNCTION validate_monthly_entry();
+
+CREATE TRIGGER validate_bid_trigger
+    BEFORE INSERT OR UPDATE ON bids
+    FOR EACH ROW EXECUTE FUNCTION validate_bid();
 
 -- Function to validate month_key format (YYYY-MM)
 CREATE OR REPLACE FUNCTION validate_month_key(month_key VARCHAR(7))
