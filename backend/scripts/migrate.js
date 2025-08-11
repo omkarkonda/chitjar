@@ -3,11 +3,21 @@
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
-require('dotenv').config();
+
+// Load environment variables based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'test' ? 'env.test' : '.env';
+require('dotenv').config({ path: envFile });
 
 // Database connection
+const getDatabaseUrl = () => {
+  if (process.env.NODE_ENV === 'test' && process.env.DATABASE_TEST_URL) {
+    return process.env.DATABASE_TEST_URL;
+  }
+  return process.env.DATABASE_URL;
+};
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || process.env.DATABASE_TEST_URL,
+  connectionString: getDatabaseUrl(),
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 

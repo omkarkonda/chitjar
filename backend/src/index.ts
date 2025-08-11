@@ -59,7 +59,13 @@ app.get(API_PATHS.SYSTEM.VERSION, (_req, res) => {
 
 // API routes will be added here
 import { router as authRoutes } from './api/auth';
+import { router as fundsRoutes } from './api/funds';
+import { router as entriesRoutes } from './api/monthly-entries';
+import { router as bidsRoutes } from './api/bids';
 app.use(API_PATHS.AUTH.BASE, authRoutes);
+app.use(API_PATHS.FUNDS.BASE, fundsRoutes);
+app.use(API_PATHS.ENTRIES.BASE, entriesRoutes);
+app.use(API_PATHS.BIDS.BASE, bidsRoutes);
 // app.use(API_PATHS.FUNDS.BASE, fundsRoutes);
 // app.use(API_PATHS.ENTRIES.BASE, entriesRoutes);
 // app.use(API_PATHS.ANALYTICS.BASE, analyticsRoutes);

@@ -91,7 +91,7 @@
 
 - [ ] 2.0 Authentication, Authorization, and Data Security
   - [x] 2.1 Implement signup/login/logout with email/password using JWT tokens and bcrypt password hashing.
-- [ ] 2.2 Protect all Express.js APIs with per-user authorization; enforce row-level ownership in PostgreSQL.
+- [x] 2.2 Protect all Express.js APIs with per-user authorization; enforce row-level ownership in PostgreSQL.
 - [ ] 2.3 Store credentials securely in PostgreSQL; enable encryption at rest and HTTPS in deployment.
 - [ ] 2.4 Implement rate limiting and input sanitization for all Express.js endpoints.
 - [ ] 2.5 Add auth guards in frontend router and persistent JWT session restore.

@@ -205,8 +205,19 @@ CREATE TRIGGER validate_bid_trigger
 CREATE OR REPLACE FUNCTION validate_month_key(month_key VARCHAR(7))
 RETURNS BOOLEAN AS $$
 BEGIN
-    RETURN month_key ~ '^\d{4}-\d{2}$' AND 
-           TO_DATE(month_key || '-01', 'YYYY-MM-DD') IS NOT NULL;
+    -- Check basic format first
+    IF NOT (month_key ~ '^\d{4}-\d{2}$') THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Try to convert to date, catch any exceptions
+    BEGIN
+        PERFORM TO_DATE(month_key || '-01', 'YYYY-MM-DD');
+        RETURN TRUE;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RETURN FALSE;
+    END;
 END;
 $$ LANGUAGE plpgsql;
 
