@@ -10,6 +10,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
 
 // ============================================================================
 // REST API Path Conventions
@@ -332,8 +333,33 @@ export function errorHandler(
     return;
   }
 
-  // Handle validation errors (from Zod or similar)
-  if (err.name === 'ValidationError' || err.name === 'ZodError') {
+  // Handle Zod validation errors
+  if (err instanceof ZodError) {
+    const fieldErrors: Record<string, string[]> = {};
+    err.issues.forEach((issue) => {
+      const field = issue.path.join('.');
+      if (!fieldErrors[field]) {
+        fieldErrors[field] = [];
+      }
+      fieldErrors[field].push(issue.message);
+    });
+
+    sendError(
+      res,
+      HTTP_STATUS.BAD_REQUEST,
+      ERROR_CODES.VALIDATION_ERROR,
+      'Validation failed',
+      {
+        fieldErrors,
+        issues: err.issues,
+        errorCount: err.issues.length
+      }
+    );
+    return;
+  }
+
+  // Handle other validation errors
+  if (err.name === 'ValidationError') {
     sendError(
       res,
       HTTP_STATUS.BAD_REQUEST,

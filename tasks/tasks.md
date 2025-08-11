@@ -84,7 +84,7 @@
 - [x] 1.3 Set up environment configs (.env), secret handling, and local dev scripts for Node.js + PostgreSQL.
 - [x] 1.4 Define PostgreSQL schema (users, funds, monthly_entries, bids, settings) and migrations using pg library.
 - [x] 1.5 Establish Express.js API conventions (REST paths, error shape, JWT auth headers).
-- [ ] 1.6 Add Zod validation library for server and client parity.
+- [x] 1.6 Add Zod validation library for server and client parity.
 - [ ] 1.7 Add utility modules for formatting (INR, DD/MM/YYYY) and date handling.
 - [ ] 1.8 Pick charting library (Chart.js) and set up a themed wrapper with accessible palettes.
 - [ ] 1.9 Create sample seed data scripts for dev/demo with PostgreSQL.
