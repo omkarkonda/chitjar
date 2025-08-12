@@ -13,11 +13,12 @@ import {
   HTTP_STATUS, 
   ERROR_CODES 
 } from '../lib/api-conventions';
-import { 
+import {
   validateBody,
   validateParams,
   validateQuery
 } from '../lib/validation-utils';
+import { sanitizeString, sanitizeQueryString, sanitizeParamString } from '../lib/sanitization';
 import {
   monthlyEntryCreationSchema,
   monthlyEntryUpdateSchema,
@@ -28,6 +29,11 @@ import {
   authenticateToken
 } from '../lib/auth-middleware';
 import { query, transaction } from '../lib/db';
+import {
+  dataModificationRateLimiter,
+  readOnlyRateLimiter,
+  methodRateLimiter
+} from '../lib/rate-limiting';
 
 const router = Router();
 
@@ -483,22 +489,56 @@ async function deleteMonthlyEntryHandler(req: Request, res: Response, next: Next
 // ============================================================================
 
 // POST /api/v1/entries
-router.post('/', validateBody(monthlyEntryCreationSchema), createMonthlyEntryHandler);
+router.post('/',
+  methodRateLimiter({ post: dataModificationRateLimiter }),
+  sanitizeString('notes'),
+  validateBody(monthlyEntryCreationSchema),
+  createMonthlyEntryHandler
+);
 
 // GET /api/v1/entries
-router.get('/', validateQuery(monthlyEntryListQuerySchema), getMonthlyEntriesHandler);
+router.get('/',
+  methodRateLimiter({ get: readOnlyRateLimiter }),
+  sanitizeQueryString('month_key'),
+  validateQuery(monthlyEntryListQuerySchema),
+  getMonthlyEntriesHandler
+);
 
 // GET /api/v1/entries/:id
-router.get('/:id', validateParams(uuidParamSchema), getMonthlyEntryHandler);
+router.get('/:id',
+  methodRateLimiter({ get: readOnlyRateLimiter }),
+  sanitizeParamString('id'),
+  validateParams(uuidParamSchema),
+  getMonthlyEntryHandler
+);
 
 // PUT /api/v1/entries/:id
-router.put('/:id', validateParams(uuidParamSchema), validateBody(monthlyEntryUpdateSchema), updateMonthlyEntryHandler);
+router.put('/:id',
+  methodRateLimiter({ put: dataModificationRateLimiter }),
+  sanitizeParamString('id'),
+  sanitizeString('notes'),
+  validateParams(uuidParamSchema),
+  validateBody(monthlyEntryUpdateSchema),
+  updateMonthlyEntryHandler
+);
 
 // DELETE /api/v1/entries/:id
-router.delete('/:id', validateParams(uuidParamSchema), deleteMonthlyEntryHandler);
+router.delete('/:id',
+  methodRateLimiter({ delete: dataModificationRateLimiter }),
+  sanitizeParamString('id'),
+  validateParams(uuidParamSchema),
+  deleteMonthlyEntryHandler
+);
 
 // GET /api/v1/funds/:fundId/entries
-router.get('/funds/:fundId/entries', validateParams(fundIdParamSchema), validateQuery(monthlyEntryListQuerySchema), getFundMonthlyEntriesHandler);
+router.get('/funds/:fundId/entries',
+  methodRateLimiter({ get: readOnlyRateLimiter }),
+  sanitizeParamString('fundId'),
+  sanitizeQueryString('month_key'),
+  validateParams(fundIdParamSchema),
+  validateQuery(monthlyEntryListQuerySchema),
+  getFundMonthlyEntriesHandler
+);
 
 export { router };
 export default router;

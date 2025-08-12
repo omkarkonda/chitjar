@@ -7,17 +7,18 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { 
-  sendSuccess, 
-  sendError, 
-  HTTP_STATUS, 
-  ERROR_CODES 
+import {
+  sendSuccess,
+  sendError,
+  HTTP_STATUS,
+  ERROR_CODES
 } from '../lib/api-conventions';
-import { 
+import {
   validateBody,
   validateParams,
   validateQuery
 } from '../lib/validation-utils';
+import { sanitizeString, sanitizeQueryString, sanitizeParamString } from '../lib/sanitization';
 import {
   fundCreationSchema,
   fundUpdateSchema,
@@ -30,6 +31,12 @@ import {
   
 } from '../lib/auth-middleware';
 import { query, transaction } from '../lib/db';
+import {
+  apiRateLimiter,
+  dataModificationRateLimiter,
+  readOnlyRateLimiter,
+  methodRateLimiter
+} from '../lib/rate-limiting';
 
 const router = Router();
 
@@ -358,22 +365,52 @@ async function deleteFundHandler(req: Request, res: Response, next: NextFunction
 // Route Definitions
 // ============================================================================
 
+// Apply method-based rate limiting to all routes
+router.use(methodRateLimiter({
+  get: readOnlyRateLimiter,
+  post: dataModificationRateLimiter,
+  put: dataModificationRateLimiter,
+  delete: dataModificationRateLimiter
+}));
+
 // POST /api/v1/funds
-router.post('/', validateBody(fundCreationSchema), createFundHandler);
+router.post('/',
+  sanitizeString('name'),
+  sanitizeString('notes'),
+  validateBody(fundCreationSchema),
+  createFundHandler
+);
 
 // GET /api/v1/funds
-router.get('/', validateQuery(fundListQuerySchema), getFundsHandler);
+router.get('/',
+  sanitizeQueryString('search'),
+  validateQuery(fundListQuerySchema),
+  getFundsHandler
+);
 
 // GET /api/v1/funds/:id
-router.get('/:id', validateParams(uuidParamSchema), getFundHandler);
-
-
+router.get('/:id',
+  sanitizeParamString('id'),
+  validateParams(uuidParamSchema),
+  getFundHandler
+);
 
 // PUT /api/v1/funds/:id
-router.put('/:id', validateParams(uuidParamSchema), validateBody(fundUpdateSchema), updateFundHandler);
+router.put('/:id',
+  sanitizeParamString('id'),
+  sanitizeString('name'),
+  sanitizeString('notes'),
+  validateParams(uuidParamSchema),
+  validateBody(fundUpdateSchema),
+  updateFundHandler
+);
 
 // DELETE /api/v1/funds/:id
-router.delete('/:id', validateParams(uuidParamSchema), deleteFundHandler);
+router.delete('/:id',
+  sanitizeParamString('id'),
+  validateParams(uuidParamSchema),
+  deleteFundHandler
+);
 
 export { router };
 export default router;

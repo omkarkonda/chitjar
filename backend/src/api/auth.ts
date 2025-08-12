@@ -17,6 +17,7 @@ import {
   HTTP_STATUS,
   ERROR_CODES
 } from '../lib/api-conventions';
+import { sanitizeString } from '../lib/sanitization';
 import {
   validateBody
 } from '../lib/validation-utils';
@@ -32,6 +33,9 @@ import {
   compareRefreshToken,
   decodeRefreshToken
 } from '../lib/token-store';
+import {
+  authRateLimiter
+} from '../lib/rate-limiting';
 
 // ============================================================================
 // Validation Schemas
@@ -416,13 +420,18 @@ export async function profileHandler(req: Request, res: Response, next: NextFunc
 export const router = Router();
 
 // POST /api/v1/auth/signup
-router.post('/signup', validateBody(userRegistrationSchema), signupHandler);
+router.post('/signup',
+  authRateLimiter,
+  sanitizeString('name'),
+  validateBody(userRegistrationSchema),
+  signupHandler
+);
 
 // POST /api/v1/auth/login
-router.post('/login', validateBody(userLoginSchema), loginHandler);
+router.post('/login', authRateLimiter, validateBody(userLoginSchema), loginHandler);
 
 // POST /api/v1/auth/logout
 router.post('/logout', logoutHandler);
 
 // POST /api/v1/auth/refresh
-router.post('/refresh', validateBody(tokenRefreshSchema), refreshHandler);
+router.post('/refresh', authRateLimiter, validateBody(tokenRefreshSchema), refreshHandler);

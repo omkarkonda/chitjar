@@ -10,7 +10,7 @@ class ChitJarApp {
       loading: false,
       error: null,
     };
-    
+
     this.init();
   }
 
@@ -23,14 +23,14 @@ class ChitJarApp {
   setupEventListeners() {
     // Navigation event listeners
     document.querySelectorAll('.nav__item').forEach(item => {
-      item.addEventListener('click', (e) => {
+      item.addEventListener('click', e => {
         const route = e.currentTarget.dataset.route;
         this.navigate(route);
       });
     });
 
     // Handle browser back/forward
-    window.addEventListener('popstate', (e) => {
+    window.addEventListener('popstate', e => {
       this.currentRoute = e.state?.route || 'dashboard';
       this.render();
     });
@@ -38,7 +38,7 @@ class ChitJarApp {
 
   async loadInitialData() {
     this.setState({ loading: true });
-    
+
     try {
       // Check if user is authenticated
       const token = localStorage.getItem('authToken');
@@ -67,16 +67,16 @@ class ChitJarApp {
 
   navigate(route) {
     this.currentRoute = route;
-    
+
     // Update URL
     const url = route === 'dashboard' ? '/' : `/${route}`;
     window.history.pushState({ route }, '', url);
-    
+
     // Update active nav item
     document.querySelectorAll('.nav__item').forEach(item => {
       item.classList.toggle('nav__item--active', item.dataset.route === route);
     });
-    
+
     this.render();
   }
 
@@ -87,7 +87,7 @@ class ChitJarApp {
 
   render() {
     const main = document.querySelector('.main');
-    
+
     if (this.state.loading) {
       main.innerHTML = `
         <div class="loading">

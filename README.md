@@ -201,6 +201,29 @@ The API follows RESTful conventions with the following endpoints:
 - `POST /api/funds/:id/entries` - Add entry to fund
 - `GET /api/analytics/xirr/:fundId` - Calculate XIRR for fund
 
+## Security
+
+- Rate limiting
+  - GET endpoints: 200 requests per 15 minutes per IP ([TypeScript.readOnlyRateLimiter](backend/src/lib/rate-limiting.ts:112))
+  - POST/PUT/DELETE endpoints: 50 requests per 15 minutes per IP ([TypeScript.dataModificationRateLimiter](backend/src/lib/rate-limiting.ts:101))
+  - Authentication endpoints (signup, login, refresh): strict limits ([TypeScript.authRateLimiter](backend/src/lib/rate-limiting.ts:69))
+  - Applied per-route using the method-aware middleware ([TypeScript.methodRateLimiter()](backend/src/lib/rate-limiting.ts:197))
+  - In development, limits are relaxed via ([TypeScript.getRateLimiter](backend/src/lib/rate-limiting.ts:175))
+
+- Input sanitization
+  - All body, query, and path parameters are sanitized before validation using:
+    - ([TypeScript.sanitizeString()](backend/src/lib/sanitization.ts:37)) for request bodies
+    - ([TypeScript.sanitizeQueryString()](backend/src/lib/sanitization.ts:43)) for query parameters
+    - ([TypeScript.sanitizeParamString()](backend/src/lib/sanitization.ts:49)) for route params
+  - Sanitization runs before Zod schema validation to reduce risk from XSS and script injection
+
+- Security headers, HTTPS, and CORS
+  - Helmet with HSTS is enabled in production and HTTPS is enforced behind a reverse proxy in ([backend/src/index.ts](backend/src/index.ts:31))
+  - CORS origin is configured via environment variable ([TypeScript.config.corsOrigin](backend/src/lib/config.ts:28))
+
+- Error responses
+  - Rate limit exceed responses return standardized error JSON with code ([TypeScript.ERROR_CODES.RATE_LIMIT_EXCEEDED](backend/src/lib/api-conventions.ts:1)) and HTTP 429
+
 ## Contributing
 
 1. Fork the repository

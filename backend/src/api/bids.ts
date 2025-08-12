@@ -13,11 +13,12 @@ import {
   HTTP_STATUS, 
   ERROR_CODES 
 } from '../lib/api-conventions';
-import { 
+import {
   validateBody,
   validateParams,
   validateQuery
 } from '../lib/validation-utils';
+import { sanitizeString, sanitizeQueryString, sanitizeParamString } from '../lib/sanitization';
 import {
   bidCreationSchema,
   bidUpdateSchema,
@@ -28,12 +29,13 @@ import {
   authenticateToken
 } from '../lib/auth-middleware';
 import { query, transaction } from '../lib/db';
+import { dataModificationRateLimiter, readOnlyRateLimiter, methodRateLimiter } from '../lib/rate-limiting';
 
 const router = Router();
 
+
 // Apply authentication middleware to all routes
 router.use(authenticateToken);
-
 // ============================================================================
 // Validation Schemas
 // ============================================================================
@@ -469,22 +471,58 @@ async function deleteBidHandler(req: Request, res: Response, next: NextFunction)
 // ============================================================================
 
 // POST /api/v1/bids
-router.post('/', validateBody(bidCreationSchema), createBidHandler);
+router.post('/',
+  methodRateLimiter({ post: dataModificationRateLimiter }),
+  sanitizeString('bidder_name'),
+  sanitizeString('notes'),
+  validateBody(bidCreationSchema),
+  createBidHandler
+);
 
 // GET /api/v1/bids
-router.get('/', validateQuery(bidListQuerySchema), getBidsHandler);
+router.get('/',
+  methodRateLimiter({ get: readOnlyRateLimiter }),
+  sanitizeQueryString('month_key'),
+  validateQuery(bidListQuerySchema),
+  getBidsHandler
+);
 
 // GET /api/v1/bids/:id
-router.get('/:id', validateParams(uuidParamSchema), getBidHandler);
+router.get('/:id',
+  methodRateLimiter({ get: readOnlyRateLimiter }),
+  sanitizeParamString('id'),
+  validateParams(uuidParamSchema),
+  getBidHandler
+);
 
 // PUT /api/v1/bids/:id
-router.put('/:id', validateParams(uuidParamSchema), validateBody(bidUpdateSchema), updateBidHandler);
+router.put('/:id',
+  methodRateLimiter({ put: dataModificationRateLimiter }),
+  sanitizeParamString('id'),
+  sanitizeString('bidder_name'),
+  sanitizeString('notes'),
+  validateParams(uuidParamSchema),
+  validateBody(bidUpdateSchema),
+  updateBidHandler
+);
 
 // DELETE /api/v1/bids/:id
-router.delete('/:id', validateParams(uuidParamSchema), deleteBidHandler);
+router.delete('/:id',
+  methodRateLimiter({ delete: dataModificationRateLimiter }),
+  sanitizeParamString('id'),
+  validateParams(uuidParamSchema),
+  deleteBidHandler
+);
 
 // GET /api/v1/funds/:fundId/bids
-router.get('/funds/:fundId/bids', validateParams(fundIdParamSchema), validateQuery(bidListQuerySchema), getFundBidsHandler);
+router.get('/funds/:fundId/bids',
+  methodRateLimiter({ get: readOnlyRateLimiter }),
+  sanitizeParamString('fundId'),
+  sanitizeQueryString('month_key'),
+  validateParams(fundIdParamSchema),
+  validateQuery(bidListQuerySchema),
+  getFundBidsHandler
+);
 
 export { router };
 export default router;

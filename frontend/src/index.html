@@ -1,48 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Personal Chit Fund Tracker - Track and analyze your chit fund investments">
-  <meta name="theme-color" content="#2563eb">
-  <title>ChitJar - Chit Fund Tracker</title>
-  <link rel="stylesheet" href="styles/main.css">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-</head>
-<body>
-  <div id="app">
-    <header class="header">
-      <h1 class="header__title">ChitJar</h1>
-      <p class="header__subtitle">Track your chit fund investments</p>
-    </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Personal Chit Fund Tracker - Track and analyze your chit fund investments"
+    />
+    <meta name="theme-color" content="#2563eb" />
+    <title>ChitJar - Chit Fund Tracker</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <h1 class="header__title">ChitJar</h1>
+        <p class="header__subtitle">Track your chit fund investments</p>
+      </header>
 
-    <main class="main">
-      <div class="loading">
-        <div class="loading__spinner"></div>
-        <p>Loading...</p>
-      </div>
-    </main>
+      <main class="main">
+        <div class="loading">
+          <div class="loading__spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </main>
 
-    <nav class="nav">
-      <button class="nav__item nav__item--active" data-route="dashboard">
-        <span class="nav__icon">📊</span>
-        <span class="nav__label">Dashboard</span>
-      </button>
-      <button class="nav__item" data-route="funds">
-        <span class="nav__icon">💰</span>
-        <span class="nav__label">Funds</span>
-      </button>
-      <button class="nav__item" data-route="add">
-        <span class="nav__icon">➕</span>
-        <span class="nav__label">Add</span>
-      </button>
-      <button class="nav__item" data-route="insights">
-        <span class="nav__icon">📈</span>
-        <span class="nav__label">Insights</span>
-      </button>
-    </nav>
-  </div>
+      <nav class="nav">
+        <button class="nav__item nav__item--active" data-route="dashboard">
+          <span class="nav__icon">📊</span>
+          <span class="nav__label">Dashboard</span>
+        </button>
+        <button class="nav__item" data-route="funds">
+          <span class="nav__icon">💰</span>
+          <span class="nav__label">Funds</span>
+        </button>
+        <button class="nav__item" data-route="add">
+          <span class="nav__icon">➕</span>
+          <span class="nav__label">Add</span>
+        </button>
+        <button class="nav__item" data-route="insights">
+          <span class="nav__icon">📈</span>
+          <span class="nav__label">Insights</span>
+        </button>
+      </nav>
+    </div>
 
-  <script type="module" src="app.js"></script>
-</body>
+    <script type="module" src="app.js"></script>
+  </body>
 </html>

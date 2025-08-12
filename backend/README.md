@@ -121,6 +121,21 @@ npm test
 
 ## Security: Credentials, HTTPS, and Encryption
 
+### Rate Limiting and Input Sanitization
+- Rate limiting
+  - GET endpoints: 200 requests per 15 minutes per IP ([TypeScript.readOnlyRateLimiter](src/lib/rate-limiting.ts:112))
+  - POST/PUT/DELETE endpoints: 50 requests per 15 minutes per IP ([TypeScript.dataModificationRateLimiter](src/lib/rate-limiting.ts:101))
+  - Authentication endpoints (signup, login, refresh): strict limits ([TypeScript.authRateLimiter](src/lib/rate-limiting.ts:69))
+  - Applied per-route using method-aware middleware ([TypeScript.methodRateLimiter()](src/lib/rate-limiting.ts:197))
+  - In development, limits are relaxed via ([TypeScript.getRateLimiter](src/lib/rate-limiting.ts:175))
+- Input sanitization
+  - Body fields sanitized with ([TypeScript.sanitizeString()](src/lib/sanitization.ts:37))
+  - Query params sanitized with ([TypeScript.sanitizeQueryString()](src/lib/sanitization.ts:43))
+  - Path params sanitized with ([TypeScript.sanitizeParamString()](src/lib/sanitization.ts:49))
+  - Sanitization runs before Zod schema validation to reduce XSS/script injection risk
+- Error responses
+  - Rate limit exceed responses use standardized error codes (see [src/lib/api-conventions.ts](src/lib/api-conventions.ts))
+
 ### Refresh Tokens: Secure Storage, Rotation, Revocation
 - Refresh tokens are now stored server-side in PostgreSQL as bcrypt hashes with unique JWT IDs (jti).
 - Table: refresh_tokens (migration 002). See [SQL](backend/src/lib/migrations/002_refresh_tokens.sql:1).

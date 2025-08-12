@@ -1,6 +1,6 @@
 /**
  * Client-side Validation Helpers for ChitJar Frontend
- * 
+ *
  * This module provides validation functions that mirror the server-side Zod schemas
  * ensuring consistent validation between frontend and backend.
  */
@@ -14,7 +14,8 @@
  */
 export function isValidUUID(value) {
   if (typeof value !== 'string') return false;
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(value);
 }
 
@@ -33,16 +34,21 @@ export function isValidEmail(value) {
 export function isValidMonthKey(value) {
   if (typeof value !== 'string') return false;
   if (!/^\d{4}-\d{2}$/.test(value)) return false;
-  
+
   const parts = value.split('-');
   if (parts.length !== 2 || !parts[0] || !parts[1]) return false;
-  
+
   const year = parseInt(parts[0]);
   const month = parseInt(parts[1]);
-  
-  return !isNaN(year) && !isNaN(month) && 
-         year >= 1900 && year <= 2100 && 
-         month >= 1 && month <= 12;
+
+  return (
+    !isNaN(year) &&
+    !isNaN(month) &&
+    year >= 1900 &&
+    year <= 2100 &&
+    month >= 1 &&
+    month <= 12
+  );
 }
 
 /**
@@ -50,9 +56,11 @@ export function isValidMonthKey(value) {
  */
 export function isValidPassword(value) {
   if (typeof value !== 'string') return false;
-  return value.length >= 8 && 
-         value.length <= 128 &&
-         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value);
+  return (
+    value.length >= 8 &&
+    value.length <= 128 &&
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)
+  );
 }
 
 /**
@@ -60,10 +68,7 @@ export function isValidPassword(value) {
  */
 export function isValidMonetaryAmount(value) {
   const num = parseFloat(value);
-  return !isNaN(num) && 
-         num >= 0 && 
-         num <= 99999999.99 && 
-         (num * 100) % 1 === 0; // Check for at most 2 decimal places
+  return !isNaN(num) && num >= 0 && num <= 99999999.99 && (num * 100) % 1 === 0; // Check for at most 2 decimal places
 }
 
 /**
@@ -151,7 +156,10 @@ export function validateUserRegistration(data) {
   if (!data.password) {
     result.addError('password', 'Password is required');
   } else if (!isValidPassword(data.password)) {
-    result.addError('password', 'Password must be at least 8 characters with uppercase, lowercase, and number');
+    result.addError(
+      'password',
+      'Password must be at least 8 characters with uppercase, lowercase, and number'
+    );
   }
 
   // Name validation
@@ -196,7 +204,10 @@ export function validatePasswordChange(data) {
   if (!data.newPassword) {
     result.addError('newPassword', 'New password is required');
   } else if (!isValidPassword(data.newPassword)) {
-    result.addError('newPassword', 'Password must be at least 8 characters with uppercase, lowercase, and number');
+    result.addError(
+      'newPassword',
+      'Password must be at least 8 characters with uppercase, lowercase, and number'
+    );
   }
 
   if (!data.confirmPassword) {
@@ -243,7 +254,10 @@ export function validateFundCreation(data) {
   if (!data.total_months) {
     result.addError('total_months', 'Total months is required');
   } else if (!isPositiveInteger(data.total_months) || data.total_months > 120) {
-    result.addError('total_months', 'Total months must be a positive integer not exceeding 120');
+    result.addError(
+      'total_months',
+      'Total months must be a positive integer not exceeding 120'
+    );
   }
 
   // Start month validation
@@ -261,7 +275,11 @@ export function validateFundCreation(data) {
   }
 
   // Date range validation
-  if (data.start_month && data.end_month && data.start_month >= data.end_month) {
+  if (
+    data.start_month &&
+    data.end_month &&
+    data.start_month >= data.end_month
+  ) {
     result.addError('end_month', 'End month must be after start month');
   }
 
@@ -269,11 +287,16 @@ export function validateFundCreation(data) {
   if (data.start_month && data.end_month && data.total_months) {
     const startDate = new Date(data.start_month + '-01');
     const endDate = new Date(data.end_month + '-01');
-    const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
-                       (endDate.getMonth() - startDate.getMonth()) + 1;
-    
+    const monthsDiff =
+      (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+      (endDate.getMonth() - startDate.getMonth()) +
+      1;
+
     if (monthsDiff !== parseInt(data.total_months)) {
-      result.addError('total_months', 'Total months must match the difference between start and end months');
+      result.addError(
+        'total_months',
+        'Total months must match the difference between start and end months'
+      );
     }
   }
 
@@ -300,17 +323,26 @@ export function validateFundUpdate(data) {
     }
   }
 
-  if (data.chit_value !== undefined && !isValidMonetaryAmount(data.chit_value)) {
+  if (
+    data.chit_value !== undefined &&
+    !isValidMonetaryAmount(data.chit_value)
+  ) {
     result.addError('chit_value', 'Invalid chit value');
   }
 
-  if (data.installment_amount !== undefined && !isValidMonetaryAmount(data.installment_amount)) {
+  if (
+    data.installment_amount !== undefined &&
+    !isValidMonetaryAmount(data.installment_amount)
+  ) {
     result.addError('installment_amount', 'Invalid installment amount');
   }
 
   if (data.total_months !== undefined) {
     if (!isPositiveInteger(data.total_months) || data.total_months > 120) {
-      result.addError('total_months', 'Total months must be a positive integer not exceeding 120');
+      result.addError(
+        'total_months',
+        'Total months must be a positive integer not exceeding 120'
+      );
     }
   }
 
@@ -322,8 +354,15 @@ export function validateFundUpdate(data) {
     result.addError('end_month', 'Invalid end month format (YYYY-MM)');
   }
 
-  if (data.early_exit_month !== undefined && data.early_exit_month !== null && !isValidMonthKey(data.early_exit_month)) {
-    result.addError('early_exit_month', 'Invalid early exit month format (YYYY-MM)');
+  if (
+    data.early_exit_month !== undefined &&
+    data.early_exit_month !== null &&
+    !isValidMonthKey(data.early_exit_month)
+  ) {
+    result.addError(
+      'early_exit_month',
+      'Invalid early exit month format (YYYY-MM)'
+    );
   }
 
   if (data.notes !== undefined && data.notes && data.notes.length > 1000) {
@@ -355,11 +394,17 @@ export function validateMonthlyEntryCreation(data) {
     result.addError('month_key', 'Invalid month key format (YYYY-MM)');
   }
 
-  if (data.dividend_amount !== undefined && !isValidMonetaryAmount(data.dividend_amount)) {
+  if (
+    data.dividend_amount !== undefined &&
+    !isValidMonetaryAmount(data.dividend_amount)
+  ) {
     result.addError('dividend_amount', 'Invalid dividend amount');
   }
 
-  if (data.prize_money !== undefined && !isValidMonetaryAmount(data.prize_money)) {
+  if (
+    data.prize_money !== undefined &&
+    !isValidMonetaryAmount(data.prize_money)
+  ) {
     result.addError('prize_money', 'Invalid prize money amount');
   }
 
@@ -398,7 +443,10 @@ export function validateBidCreation(data) {
     result.addError('winning_bid', 'Invalid winning bid amount');
   }
 
-  if (data.discount_amount !== undefined && !isValidMonetaryAmount(data.discount_amount)) {
+  if (
+    data.discount_amount !== undefined &&
+    !isValidMonetaryAmount(data.discount_amount)
+  ) {
     result.addError('discount_amount', 'Invalid discount amount');
   }
 
@@ -450,8 +498,8 @@ export function validateFormData(validator, data) {
   return {
     isValid: result.isValid,
     errors: result.getAllErrors(),
-    getError: (field) => result.getFirstError(field),
-    hasError: (field) => result.hasError(field)
+    getError: field => result.getFirstError(field),
+    hasError: field => result.hasError(field),
   };
 }
 
@@ -464,8 +512,8 @@ export function validateFormData(validator, data) {
  */
 export function createDebouncedValidator(validator, delay = 300) {
   let timeoutId;
-  
-  return function(data, callback) {
+
+  return function (data, callback) {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
       const result = validator(data);
@@ -478,39 +526,40 @@ export function createDebouncedValidator(validator, delay = 300) {
  * Field-specific validators for real-time validation
  */
 export const fieldValidators = {
-  email: (value) => {
+  email: value => {
     if (!value) return 'Email is required';
     if (!isValidEmail(value)) return 'Invalid email format';
     return null;
   },
-  
-  password: (value) => {
+
+  password: value => {
     if (!value) return 'Password is required';
-    if (!isValidPassword(value)) return 'Password must be at least 8 characters with uppercase, lowercase, and number';
+    if (!isValidPassword(value))
+      return 'Password must be at least 8 characters with uppercase, lowercase, and number';
     return null;
   },
-  
-  name: (value) => {
+
+  name: value => {
     if (!value || !value.trim()) return 'Name is required';
     if (value.trim().length > 255) return 'Name is too long';
     return null;
   },
-  
-  monthKey: (value) => {
+
+  monthKey: value => {
     if (!value) return 'Month is required';
     if (!isValidMonthKey(value)) return 'Invalid month format (YYYY-MM)';
     return null;
   },
-  
-  monetaryAmount: (value) => {
+
+  monetaryAmount: value => {
     if (!value) return 'Amount is required';
     if (!isValidMonetaryAmount(value)) return 'Invalid amount';
     return null;
   },
-  
-  positiveInteger: (value) => {
+
+  positiveInteger: value => {
     if (!value) return 'Value is required';
     if (!isPositiveInteger(value)) return 'Must be a positive integer';
     return null;
-  }
+  },
 };
