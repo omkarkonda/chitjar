@@ -1,5 +1,7 @@
 // Main application entry point
 import './styles/main.css';
+import { apiClient } from './lib/apiClient.js';
+import { navBar } from './components/NavBar.js';
 
 class ChitJarApp {
   constructor() {
@@ -21,18 +23,20 @@ class ChitJarApp {
   }
 
   setupEventListeners() {
-    // Navigation event listeners
-    document.querySelectorAll('.nav__item').forEach(item => {
-      item.addEventListener('click', e => {
-        const route = e.currentTarget.dataset.route;
-        this.navigate(route);
-      });
+    // Handle route changes from NavBar
+    window.addEventListener('routeChange', e => {
+      this.currentRoute = e.detail.route;
+      this.render();
     });
 
     // Handle browser back/forward
     window.addEventListener('popstate', e => {
       this.currentRoute = e.state?.route || 'dashboard';
       this.render();
+    });
+    // Handle logout event from NavBar
+    window.addEventListener('logout', () => {
+      this.logout();
     });
   }
 
@@ -41,14 +45,42 @@ class ChitJarApp {
 
     try {
       // Check if user is authenticated
-      const token = localStorage.getItem('authToken');
-      if (token) {
+      if (apiClient.isAuthenticated()) {
         // Load user data and funds
         await this.loadUserData();
         await this.loadFunds();
+      } else {
+        // Check for token in localStorage and try to restore session
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          try {
+            // Try to refresh the token
+            await apiClient.refreshToken();
+            // Load user data and funds
+            await this.loadUserData();
+            await this.loadFunds();
+          } catch (error) {
+            // Failed to restore session
+            // Clear invalid token
+            apiClient.clearToken();
+            // Redirect to login for protected routes
+            if (
+              ['dashboard', 'funds', 'add', 'insights'].includes(
+                this.currentRoute
+              )
+            ) {
+              this.currentRoute = 'login';
+            }
+          }
+        } else if (
+          ['dashboard', 'funds', 'add', 'insights'].includes(this.currentRoute)
+        ) {
+          // Redirect to login for protected routes when not authenticated
+          this.currentRoute = 'login';
+        }
       }
     } catch (error) {
-      console.error('Failed to load initial data:', error);
+      // Failed to load initial data
       this.setState({ error: 'Failed to load data' });
     } finally {
       this.setState({ loading: false });
@@ -56,28 +88,48 @@ class ChitJarApp {
   }
 
   async loadUserData() {
-    // TODO: Implement API call to load user data
-    console.log('Loading user data...');
+    const response = await apiClient.getProfile();
+    this.setState({ user: response.data });
   }
 
   async loadFunds() {
     // TODO: Implement API call to load funds
-    console.log('Loading funds...');
   }
 
   navigate(route) {
+    // Auth guard for protected routes
+    const protectedRoutes = ['dashboard', 'funds', 'add', 'insights'];
+    if (protectedRoutes.includes(route) && !apiClient.isAuthenticated()) {
+      // Redirect to login
+      this.currentRoute = 'login';
+      this.render();
+      return;
+    }
+
     this.currentRoute = route;
 
     // Update URL
     const url = route === 'dashboard' ? '/' : `/${route}`;
     window.history.pushState({ route }, '', url);
 
-    // Update active nav item
-    document.querySelectorAll('.nav__item').forEach(item => {
-      item.classList.toggle('nav__item--active', item.dataset.route === route);
-    });
+    // Update active nav item through NavBar
+    navBar.updateAuthState();
 
     this.render();
+  }
+
+  async logout() {
+    try {
+      await apiClient.logout();
+      // Reset state
+      this.setState({ user: null });
+      // Navigate to login
+      this.navigate('login');
+    } catch (error) {
+      // Even if logout fails, clear local state and navigate to login
+      this.setState({ user: null });
+      this.navigate('login');
+    }
   }
 
   setState(newState) {
@@ -108,6 +160,15 @@ class ChitJarApp {
       return;
     }
 
+    // Auth guard: redirect to login for protected routes when not authenticated
+    const protectedRoutes = ['dashboard', 'funds', 'add', 'insights'];
+    if (
+      protectedRoutes.includes(this.currentRoute) &&
+      !apiClient.isAuthenticated()
+    ) {
+      this.currentRoute = 'login';
+    }
+
     // Render based on current route
     switch (this.currentRoute) {
       case 'dashboard':
@@ -122,8 +183,16 @@ class ChitJarApp {
       case 'insights':
         main.innerHTML = this.renderInsights();
         break;
+      case 'login':
+        main.innerHTML = this.renderLogin();
+        break;
       default:
-        main.innerHTML = this.renderDashboard();
+        // If not authenticated, show login, otherwise show dashboard
+        if (apiClient.isAuthenticated()) {
+          main.innerHTML = this.renderDashboard();
+        } else {
+          main.innerHTML = this.renderLogin();
+        }
     }
   }
 
@@ -172,9 +241,47 @@ class ChitJarApp {
       </div>
     `;
   }
+
+  renderLogin() {
+    return `
+      <div class="login">
+        <h2>Login to ChitJar</h2>
+        <form id="loginForm" class="login__form">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+          </div>
+          <button type="submit" class="btn btn--primary">Login</button>
+        </form>
+        <p>Don't have an account? <a href="/signup.html">Sign up</a></p>
+      </div>
+    `;
+  }
 }
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  new ChitJarApp();
+  const app = new ChitJarApp();
+  // Setup form submission handler for login
+  document.addEventListener('submit', async e => {
+    if (e.target.id === 'loginForm') {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const credentials = {
+        email: formData.get('email'),
+        password: formData.get('password'),
+      };
+      try {
+        await apiClient.login(credentials);
+        // Navigate to dashboard on successful login
+        app.navigate('dashboard');
+      } catch (error) {
+        alert('Login failed: ' + error.message);
+      }
+    }
+  });
 });
