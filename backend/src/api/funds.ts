@@ -32,7 +32,6 @@ import {
 } from '../lib/auth-middleware';
 import { query, transaction } from '../lib/db';
 import {
-  apiRateLimiter,
   dataModificationRateLimiter,
   readOnlyRateLimiter,
   methodRateLimiter

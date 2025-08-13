@@ -42,7 +42,7 @@ function createRateLimiter(options: {
       const ip = xffStr || req.ip || req.connection.remoteAddress || 'unknown';
       return ip.toString();
     }),
-    handler: (req: Request, res: Response) => {
+    handler: (_req: Request, res: Response) => {
       sendError(
         res,
         HTTP_STATUS.TOO_MANY_REQUESTS,
