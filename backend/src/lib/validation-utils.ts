@@ -442,8 +442,68 @@ export function isApiError(error: unknown): error is ApiError {
 }
 
 // ============================================================================
-// Authentication Middleware
+
+/**
+ * Generate a series of months between start and end months (inclusive)
+ * Handles mid-year starts and early exits
+ */
+export function generateMonthSeries(
+  startMonth: string,
+  endMonth: string
+): string[] {
+  const months: string[] = [];
+  const startDate = new Date(startMonth + '-01');
+  const endDate = new Date(endMonth + '-01');
+  
+  // Validate that start is before end
+  if (startDate > endDate) {
+    throw new Error('Start month must be before end month');
+  }
+  
+  let currentDate = new Date(startDate);
+  
+  while (currentDate <= endDate) {
+    const year = currentDate.getFullYear();
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+    months.push(`${year}-${month}`);
+    
+    // Move to next month
+    currentDate.setMonth(currentDate.getMonth() + 1);
+  }
+  
+  return months;
+}
+
+/**
+ * Generate a series of months for a fund, considering early exit
+ * Handles mid-year starts and early exits
+ */
+export function generateFundMonthSeries(
+  fundStartMonth: string,
+  fundEndMonth: string,
+  fundEarlyExitMonth?: string | null
+): string[] {
+  const effectiveEndMonth = fundEarlyExitMonth || fundEndMonth;
+  return generateMonthSeries(fundStartMonth, effectiveEndMonth);
+}
+
+/**
+ * Check if a month series has missing months
+ * Useful for identifying zero/missing months
+ */
+export function findMissingMonths(
+  existingMonths: string[],
+  expectedMonths: string[]
+): string[] {
+  const existingSet = new Set(existingMonths);
+  return expectedMonths.filter(month => !existingSet.has(month));
+}
+
 // ============================================================================
+
+/**
+ * Authentication middleware
+ */
 
 /**
  * Authentication middleware

@@ -7,6 +7,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
 import { 
   sendSuccess, 
   sendError, 
@@ -23,15 +24,32 @@ import {
   bidCreationSchema,
   bidUpdateSchema,
   bidListQuerySchema,
-  uuidSchema
+  uuidSchema,
+  csvBidImportSchema,
+  CsvBidImport
 } from '../lib/validation';
 import {
   authenticateToken
 } from '../lib/auth-middleware';
 import { query, transaction } from '../lib/db';
+import { parseCsvData, validateBidsAgainstFunds, formatCsvErrors } from '../lib/csv';
 import { dataModificationRateLimiter, readOnlyRateLimiter, methodRateLimiter } from '../lib/rate-limiting';
 
 const router = Router();
+
+// Configure multer for file upload
+const upload = multer({
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.mimetype === 'application/vnd.ms-excel' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'));
+    }
+  }
+});
 
 
 // Apply authentication middleware to all routes
@@ -466,6 +484,142 @@ async function deleteBidHandler(req: Request, res: Response, next: NextFunction)
   }
 }
 
+/**
+ * Import bids from CSV
+ * POST /api/v1/bids/import/csv
+ */
+async function importBidsFromCsvHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const authenticatedReq = req as any;
+    const userId = authenticatedReq.user.id;
+    
+    // Check if file was uploaded
+    if (!req.file) {
+      sendError(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.INVALID_INPUT,
+        'CSV file is required'
+      );
+      return;
+    }
+    
+    // Parse CSV data
+    const csvData = req.file.buffer.toString('utf8');
+    const { validRows, errors: parseErrors } = await parseCsvData<CsvBidImport>(csvData, csvBidImportSchema, 'bids');
+    
+    // Validate bids against fund constraints
+    const { validBids, errors: validationErrors } = await validateBidsAgainstFunds(validRows, userId);
+    
+    // Combine all errors
+    const allErrors = [...parseErrors, ...validationErrors];
+    
+    // Return preview with errors
+    sendSuccess(res, {
+      totalRows: validRows.length + parseErrors.length,
+      validRows: validBids.length,
+      errors: formatCsvErrors(allErrors),
+      preview: validBids.slice(0, 10), // Limit preview to first 10 rows
+      canImport: allErrors.length === 0
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Confirm bids import from CSV
+ * POST /api/v1/bids/import/csv/confirm
+ */
+async function confirmBidsImportHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const authenticatedReq = req as any;
+    const userId = authenticatedReq.user.id;
+    const { bids } = req.body;
+    
+    // Validate input
+    if (!bids || !Array.isArray(bids) || bids.length === 0) {
+      sendError(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.INVALID_INPUT,
+        'Bids array is required'
+      );
+      return;
+    }
+    
+    // Import bids in transaction
+    const result = await transaction(async (client) => {
+      let importedCount = 0;
+      const errors: any[] = [];
+      
+      for (const bid of bids) {
+        try {
+          // Check fund ownership
+          const ownsFund = await checkFundOwnership(userId, bid.fund_id);
+          if (!ownsFund) {
+            errors.push({
+              message: 'Access denied: fund not found or insufficient permissions',
+              fund_id: bid.fund_id,
+              month_key: bid.month_key
+            });
+            continue;
+          }
+          
+          // Insert bid
+          await client.query(`
+            INSERT INTO bids (
+              fund_id, month_key, winning_bid, discount_amount, bidder_name, notes
+            ) VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (fund_id, month_key) 
+            DO UPDATE SET
+              winning_bid = EXCLUDED.winning_bid,
+              discount_amount = EXCLUDED.discount_amount,
+              bidder_name = EXCLUDED.bidder_name,
+              notes = EXCLUDED.notes,
+              updated_at = CURRENT_TIMESTAMP
+          `, [
+            bid.fund_id, 
+            bid.month_key, 
+            bid.winning_bid, 
+            bid.discount_amount, 
+            bid.bidder_name || null, 
+            bid.notes || null
+          ]);
+          
+          importedCount++;
+        } catch (error) {
+          errors.push({
+            message: error instanceof Error ? error.message : 'Unknown error',
+            fund_id: bid.fund_id,
+            month_key: bid.month_key
+          });
+        }
+      }
+      
+      return { importedCount, errors };
+    });
+    
+    if (result.errors.length > 0) {
+      sendError(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.INVALID_INPUT,
+        'Some bids failed to import',
+        { errors: result.errors }
+      );
+      return;
+    }
+    
+    sendSuccess(res, {
+      message: `Successfully imported ${result.importedCount} bids`,
+      importedCount: result.importedCount
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // ============================================================================
 // Route Definitions
 // ============================================================================
@@ -522,6 +676,19 @@ router.get('/funds/:fundId/bids',
   validateParams(fundIdParamSchema),
   validateQuery(bidListQuerySchema),
   getFundBidsHandler
+);
+
+// POST /api/v1/bids/import/csv
+router.post('/import/csv',
+  methodRateLimiter({ post: dataModificationRateLimiter }),
+  upload.single('file'),
+  importBidsFromCsvHandler
+);
+
+// POST /api/v1/bids/import/csv/confirm
+router.post('/import/csv/confirm',
+  methodRateLimiter({ post: dataModificationRateLimiter }),
+  confirmBidsImportHandler
 );
 
 export { router };

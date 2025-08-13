@@ -164,6 +164,69 @@ async function countUserMonthlyEntries(userId: string, filters: any = {}): Promi
   return parseInt(result.rows[0].count);
 }
 
+/**
+ * Get all expected months for a fund, including missing ones
+ * Handles mid-year starts, early exits, and identifies zero/missing months
+ */
+async function getFundMonthSeriesWithEntries(userId: string, fundId: string): Promise<any[]> {
+  // First get the fund details
+  const fundResult = await query(`
+    SELECT 
+      f.start_month, f.end_month, f.early_exit_month,
+      f.chit_value, f.installment_amount
+    FROM funds f
+    WHERE f.id = $1 AND f.user_id = $2
+  `, [fundId, userId]);
+  
+  if (fundResult.rowCount === 0) {
+    return [];
+  }
+  
+  const fund = fundResult.rows[0];
+  
+  // Generate expected month series
+  const { generateFundMonthSeries } = await import('../lib/validation-utils');
+  const expectedMonths = generateFundMonthSeries(
+    fund.start_month,
+    fund.end_month,
+    fund.early_exit_month
+  );
+  
+  // Get existing entries for this fund
+  const entriesResult = await query(`
+    SELECT 
+      me.month_key, me.dividend_amount, me.prize_money, 
+      me.is_paid, me.notes, me.created_at, me.updated_at
+    FROM monthly_entries me
+    WHERE me.fund_id = $1
+    ORDER BY me.month_key
+  `, [fundId]);
+  
+  const existingEntries = entriesResult.rows;
+  const entryMap = new Map(existingEntries.map(entry => [entry.month_key, entry]));
+  
+  // Combine expected months with existing entries
+  const result = expectedMonths.map(monthKey => {
+    const entry = entryMap.get(monthKey);
+    
+    return {
+      month_key: monthKey,
+      dividend_amount: entry ? entry.dividend_amount : 0,
+      prize_money: entry ? entry.prize_money : 0,
+      is_paid: entry ? entry.is_paid : false,
+      notes: entry ? entry.notes : null,
+      created_at: entry ? entry.created_at : null,
+      updated_at: entry ? entry.updated_at : null,
+      is_missing: !entry, // Flag to indicate if this is a missing month
+      fund_id: fundId,
+      chit_value: fund.chit_value,
+      installment_amount: fund.installment_amount
+    };
+  });
+  
+  return result;
+}
+
 // ============================================================================
 // Route Handlers
 // ============================================================================
@@ -551,4 +614,5 @@ router.get('/funds/:fundId/entries',
 );
 
 export { router };
+export { getFundMonthSeriesWithEntries };
 export default router;

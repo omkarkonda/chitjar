@@ -31,8 +31,8 @@
 - README.md - Comprehensive project documentation with setup instructions and API reference.
 - backend/api/auth.ts - Auth handlers for signup, login, session management; enforce per-user data isolation.
 - backend/api/funds.ts - CRUD endpoints for funds, input validation, ownership checks. Fixed authentication token access pattern.
-- backend/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers. Modified to always mark entries as paid when saved.
-- backend/api/bids.ts - CRUD for bids plus CSV import endpoint with schema validation and preview.
+- backend/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers. Modified to always mark entries as paid when saved. Added functions to handle irregularities like zero/missing months, mid-year start, and early exit flags.
+- backend/api/bids.ts - CRUD for bids plus CSV import endpoint with schema validation and preview. Added CSV import functionality for historical winning bids.
 - backend/api/analytics.ts - Server-side heavy calculations (XIRR, projections, FD comparison) to ensure consistency with Excel.
 - backend/lib/db.ts - Database client/ORM setup and schema helpers with connection pooling and transaction support.
 - backend/lib/schema.sql - PostgreSQL schema with tables for users, funds, monthly_entries, bids, settings including constraints, indexes, and triggers.
@@ -41,10 +41,11 @@
 - backend/src/test/db.test.ts - Database connection and schema validation tests.
 - backend/README.md - Backend documentation with database setup instructions and API reference.
 - backend/lib/validation.ts - Shared schemas (e.g., zod/yup) for server-side validation.
+- backend/lib/validation-utils.ts - Utility functions for validation including new functions to handle irregularities in month series.
+- backend/lib/csv.ts - CSV parsing, sanitization, template generation, and error reporting helpers. New library for handling CSV import functionality.
 - backend/lib/xirr.ts - Wrapper around a proven XIRR library; parity tests vs Excel.
 - backend/lib/forecast.ts - Average-based forecasting utilities, encapsulated for future upgrades.
 - backend/lib/format.ts - INR currency formatting, Indian digit grouping, DD/MM/YYYY utilities (server).
-- backend/lib/csv.ts - CSV parsing, sanitization, template generation, and error reporting helpers.
 - frontend/index.html - App shell with mobile-first meta and base layout.
 - frontend/styles/main.css - Global styles; accessible color palette; responsive layout; print-friendly tables.
 - frontend/app.js - App bootstrap, simple router, and centralized state management.
@@ -99,9 +100,9 @@
 - [ ] 3.0 Data Model and Backend APIs
   - [x] 3.1 Express.js Funds API: create, read (list/detail), update, delete; validate inputs and uniqueness per user with Zod.
   - [x] 3.2 Express.js Monthly Entries API: create/update/delete entries; mark month as paid on save with PostgreSQL transactions.
-- [ ] 3.3 Handle irregularities: zero/missing months, mid-year start, early exit flag in PostgreSQL queries.
-- [ ] 3.4 Express.js Bids API: manual entry of historical winning bids and notes with PostgreSQL.
-- [ ] 3.5 CSV Import for bids: upload, schema validation with Zod, preview response with per-line errors using Node.js file processing.
+  - [x] 3.3 Handle irregularities: zero/missing months, mid-year start, early exit flag in PostgreSQL queries.
+  - [x] 3.4 Express.js Bids API: manual entry of historical winning bids and notes with PostgreSQL.
+  - [x] 3.5 CSV Import for bids: upload, schema validation with Zod, preview response with per-line errors using Node.js file processing.
 - [ ] 3.6 Export endpoints: CSV for funds/entries using Node.js streams; JSON for full backup/restore from PostgreSQL.
 - [ ] 3.7 Express.js Analytics API: XIRR using financial libraries, cash flow series, projections, FD comparison; cache results per fund/version.
 - [ ] 3.8 Recalculation triggers on data edits (entries, bids) to keep analytics consistent using PostgreSQL triggers or application logic.
