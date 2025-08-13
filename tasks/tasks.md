@@ -31,7 +31,7 @@
 - README.md - Comprehensive project documentation with setup instructions and API reference.
 - backend/api/auth.ts - Auth handlers for signup, login, session management; enforce per-user data isolation.
 - backend/api/funds.ts - CRUD endpoints for funds, input validation, ownership checks. Fixed authentication token access pattern.
-- backend/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers.
+- backend/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers. Modified to always mark entries as paid when saved.
 - backend/api/bids.ts - CRUD for bids plus CSV import endpoint with schema validation and preview.
 - backend/api/analytics.ts - Server-side heavy calculations (XIRR, projections, FD comparison) to ensure consistency with Excel.
 - backend/lib/db.ts - Database client/ORM setup and schema helpers with connection pooling and transaction support.
@@ -65,7 +65,6 @@
 - tests/backend/validation.test.ts - Server-side validation and edge case tests.
 - tests/backend/api-funds.test.ts - Funds API contract tests.
 - tests/backend/api-entries.test.ts - Monthly entries API tests including recalculation triggers.
-- tests/backend/api-bids.test.ts - Bids API and CSV import tests.
 - tests/frontend/formatters.test.js - UI formatting utilities tests.
 - tests/frontend/flows.test.js - E2E: create fund, add entry, view analytics on mobile.
 - tests/frontend/csv-import.test.js - CSV import preview and error handling tests.
@@ -99,7 +98,7 @@
 
 - [ ] 3.0 Data Model and Backend APIs
   - [x] 3.1 Express.js Funds API: create, read (list/detail), update, delete; validate inputs and uniqueness per user with Zod.
-- [ ] 3.2 Express.js Monthly Entries API: create/update/delete entries; mark month as paid on save with PostgreSQL transactions.
+  - [x] 3.2 Express.js Monthly Entries API: create/update/delete entries; mark month as paid on save with PostgreSQL transactions.
 - [ ] 3.3 Handle irregularities: zero/missing months, mid-year start, early exit flag in PostgreSQL queries.
 - [ ] 3.4 Express.js Bids API: manual entry of historical winning bids and notes with PostgreSQL.
 - [ ] 3.5 CSV Import for bids: upload, schema validation with Zod, preview response with per-line errors using Node.js file processing.

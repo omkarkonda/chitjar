@@ -171,10 +171,13 @@ async function countUserMonthlyEntries(userId: string, filters: any = {}): Promi
 /**
  * Create a new monthly entry
  * POST /api/v1/entries
+ * 
+ * Note: When saving a monthly entry, the month is automatically marked as "paid"
+ * as per requirement AC2 in the PRD.
  */
 async function createMonthlyEntryHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { fund_id, month_key, dividend_amount, prize_money, is_paid, notes } = req.body;
+    const { fund_id, month_key, dividend_amount, prize_money, notes } = req.body;
     const authenticatedReq = req as any;
     const userId = authenticatedReq.user.id;
     
@@ -191,6 +194,7 @@ async function createMonthlyEntryHandler(req: Request, res: Response, next: Next
     }
     
     // Create entry in transaction
+    // Note: is_paid is always set to true when creating an entry (AC2)
     const result = await transaction(async (client) => {
       const entryResult = await client.query(`
         INSERT INTO monthly_entries (
@@ -198,7 +202,7 @@ async function createMonthlyEntryHandler(req: Request, res: Response, next: Next
         ) VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id, fund_id, month_key, dividend_amount, prize_money, 
                   is_paid, notes, created_at, updated_at
-      `, [fund_id, month_key, dividend_amount || 0, prize_money || 0, is_paid || false, notes || null]);
+      `, [fund_id, month_key, dividend_amount || 0, prize_money || 0, true, notes || null]);
       
       return entryResult.rows[0];
     });
@@ -352,6 +356,9 @@ async function getMonthlyEntryHandler(req: Request, res: Response, next: NextFun
 /**
  * Update a monthly entry
  * PUT /api/v1/entries/:id
+ * 
+ * Note: When updating a monthly entry, the month is automatically marked as "paid"
+ * as per requirement AC2 in the PRD.
  */
 async function updateMonthlyEntryHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -388,9 +395,12 @@ async function updateMonthlyEntryHandler(req: Request, res: Response, next: Next
     const values = [];
     let index = 1;
     
-    for (const [key, value] of Object.entries(updateData)) {
+    // Process update data, but always set is_paid to true (AC2)
+    const processedUpdateData = { ...updateData, is_paid: true };
+    
+    for (const [key, value] of Object.entries(processedUpdateData)) {
       if (value !== undefined && key !== 'id' && key !== 'fund_id') {
-        fields.push(`${key} = $${index}`);
+        fields.push(`${key} = ${index}`);
         values.push(value);
         index++;
       }
@@ -406,8 +416,8 @@ async function updateMonthlyEntryHandler(req: Request, res: Response, next: Next
     const result = await query(`
       UPDATE monthly_entries 
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $${index}
-      AND fund_id IN (SELECT id FROM funds WHERE user_id = $${index + 1})
+      WHERE id = ${index}
+      AND fund_id IN (SELECT id FROM funds WHERE user_id = ${index + 1})
       RETURNING id, fund_id, month_key, dividend_amount, prize_money, 
                 is_paid, notes, created_at, updated_at
     `, [...values, userId]);

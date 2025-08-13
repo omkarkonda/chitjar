@@ -26,9 +26,7 @@ import {
   uuidSchema
 } from '../lib/validation';
 import {
-  authenticateToken,
-  
-  
+  authenticateToken
 } from '../lib/auth-middleware';
 import { query, transaction } from '../lib/db';
 import {
@@ -315,7 +313,50 @@ async function updateFundHandler(req: Request, res: Response, next: NextFunction
   }
 }
 
-/**\n * Delete a fund\n * DELETE /api/v1/funds/:id\n */\nasync function deleteFundHandler(req: Request, res: Response, next: NextFunction): Promise<void> {\n  try {\n    const { id } = req.params;\n    const authenticatedReq = req as any;\n    const userId = authenticatedReq.user.id;\n    \n    // Check ownership\n    const fund = await getUserFundById(userId, id!);\n    \n    if (!fund) {\n      sendError(\n        res,\n        HTTP_STATUS.NOT_FOUND,\n        ERROR_CODES.RESOURCE_NOT_FOUND,\n        'Fund not found'\n      );\n      return;\n    }\n    \n    // Delete fund (cascades to entries and bids)\n    const result = await query(\n      'DELETE FROM funds WHERE id = $1 AND user_id = $2',\n      [id, userId]\n    );\n    \n    if (result.rowCount === 0) {\n      sendError(\n        res,\n        HTTP_STATUS.NOT_FOUND,\n        ERROR_CODES.RESOURCE_NOT_FOUND,\n        'Fund not found'\n      );\n      return;\n    }\n    \n    sendSuccess(res, null, HTTP_STATUS.NO_CONTENT);\n  } catch (error) {\n    next(error);\n  }\n}
+/**
+ * Delete a fund
+ * DELETE /api/v1/funds/:id
+ */
+async function deleteFundHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    const authenticatedReq = req as any;
+    const userId = authenticatedReq.user.id;
+    
+    // Check ownership
+    const fund = await getUserFundById(userId, id!);
+    
+    if (!fund) {
+      sendError(
+        res,
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
+      );
+      return;
+    }
+    
+    // Delete fund (cascades to entries and bids)
+    const result = await query(
+      'DELETE FROM funds WHERE id = $1 AND user_id = $2',
+      [id, userId]
+    );
+    
+    if (result.rowCount === 0) {
+      sendError(
+        res,
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
+      );
+      return;
+    }
+    
+    sendSuccess(res, null, HTTP_STATUS.NO_CONTENT);
+  } catch (error) {
+    next(error);
+  }
+}
 
 // ============================================================================
 // Route Definitions
@@ -369,5 +410,5 @@ router.delete('/:id',
 );
 
 export { router };
-export default router;"export { router };" 
+export default router; 
 "export { router };" 
