@@ -13,6 +13,7 @@ import {
   ERROR_CODES, 
   sendError 
 } from './api-conventions';
+import { authenticateToken, authenticateOptionalToken } from './auth-utils';
 
 // ============================================================================
 // Validation Error Handling
@@ -436,9 +437,15 @@ export function isZodError(error: unknown): error is ZodError {
   return error instanceof ZodError;
 }
 
-/**
- * Type guard for checking if error is an ApiError
- */
 export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
+
+// ============================================================================
+// Authentication Middleware
+// ============================================================================
+
+/**
+ * Authentication middleware
+ */
+export { authenticateToken, authenticateOptionalToken };

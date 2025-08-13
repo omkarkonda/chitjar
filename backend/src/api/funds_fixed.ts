@@ -45,7 +45,7 @@ router.use(authenticateToken);
 // Apply user ID injection middleware to all routes for automatic filtering
 
 
-// ============================================================================ 
+// ============================================================================
 // Validation Schemas
 // ============================================================================
 
@@ -53,7 +53,7 @@ const uuidParamSchema = z.object({
   id: uuidSchema
 });
 
-// ============================================================================ 
+// ============================================================================
 // Helper Functions
 // ============================================================================
 
@@ -144,7 +144,7 @@ async function countUserFunds(userId: string, filters: any = {}): Promise<number
   return parseInt(result.rows[0].count);
 }
 
-// ============================================================================ 
+// ============================================================================
 // Route Handlers
 // ============================================================================
 
@@ -277,7 +277,7 @@ async function updateFundHandler(req: Request, res: Response, next: NextFunction
     
     for (const [key, value] of Object.entries(updateData)) {
       if (value !== undefined && key !== 'id' && key !== 'user_id') {
-        fields.push(`${key} = $${index}`);
+        fields.push(`${key} = ${index}`);
         values.push(value);
         index++;
       }
@@ -293,7 +293,7 @@ async function updateFundHandler(req: Request, res: Response, next: NextFunction
     const result = await query(`
       UPDATE funds 
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $${index} AND user_id = $${index + 1}
+      WHERE id = ${index} AND user_id = ${index + 1}
       RETURNING id, user_id, name, chit_value, installment_amount, 
                 total_months, start_month, end_month, is_active, 
                 early_exit_month, notes, created_at, updated_at
@@ -315,52 +315,9 @@ async function updateFundHandler(req: Request, res: Response, next: NextFunction
   }
 }
 
-/**
- * Delete a fund
- * DELETE /api/v1/funds/:id
- */
-async function deleteFundHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const { id } = req.params;
-    const authenticatedReq = req as any;
-    const userId = authenticatedReq.user.id;
-    
-    // Check ownership
-    const fund = await getUserFundById(userId, id!);
-    
-    if (!fund) {
-      sendError(
-        res,
-        HTTP_STATUS.NOT_FOUND,
-        ERROR_CODES.RESOURCE_NOT_FOUND,
-        'Fund not found'
-      );
-      return;
-    }
-    
-    // Delete fund (cascades to entries and bids)
-    const result = await query(
-      'DELETE FROM funds WHERE id = $1 AND user_id = $2',
-      [id, userId]
-    );
-    
-    if (result.rowCount === 0) {
-      sendError(
-        res,
-        HTTP_STATUS.NOT_FOUND,
-        ERROR_CODES.RESOURCE_NOT_FOUND,
-        'Fund not found'
-      );
-      return;
-    }
-    
-    sendSuccess(res, null, HTTP_STATUS.NO_CONTENT);
-  } catch (error) {
-    next(error);
-  }
-}
+/**\n * Delete a fund\n * DELETE /api/v1/funds/:id\n */\nasync function deleteFundHandler(req: Request, res: Response, next: NextFunction): Promise<void> {\n  try {\n    const { id } = req.params;\n    const authenticatedReq = req as any;\n    const userId = authenticatedReq.user.id;\n    \n    // Check ownership\n    const fund = await getUserFundById(userId, id!);\n    \n    if (!fund) {\n      sendError(\n        res,\n        HTTP_STATUS.NOT_FOUND,\n        ERROR_CODES.RESOURCE_NOT_FOUND,\n        'Fund not found'\n      );\n      return;\n    }\n    \n    // Delete fund (cascades to entries and bids)\n    const result = await query(\n      'DELETE FROM funds WHERE id = $1 AND user_id = $2',\n      [id, userId]\n    );\n    \n    if (result.rowCount === 0) {\n      sendError(\n        res,\n        HTTP_STATUS.NOT_FOUND,\n        ERROR_CODES.RESOURCE_NOT_FOUND,\n        'Fund not found'\n      );\n      return;\n    }\n    \n    sendSuccess(res, null, HTTP_STATUS.NO_CONTENT);\n  } catch (error) {\n    next(error);\n  }\n}
 
-// ============================================================================ 
+// ============================================================================
 // Route Definitions
 // ============================================================================
 
@@ -412,3 +369,5 @@ router.delete('/:id',
 );
 
 export { router };
+export default router;"export { router };" 
+"export { router };" 

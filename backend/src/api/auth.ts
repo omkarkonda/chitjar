@@ -1,437 +1,412 @@
-/**
- * Authentication API Routes
- * 
- * This module implements user authentication endpoints including:
- * - User signup with email/password
- * - User login with email/password
- * - User logout
- * - Token refresh
- * - User profile retrieval
- */
-
-import { Router, Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
+import { Router } from 'express';
+import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import { config } from '../lib/config';
+import { query, transaction } from '../lib/db';
+import { 
+  userRegistrationSchema, 
+  userLoginSchema 
+} from '../lib/validation';
+import { validateBody } from '../lib/validation-utils';
+import { authenticateToken } from '../lib/auth-utils';
 import {
   sendSuccess,
   sendError,
   HTTP_STATUS,
-  ERROR_CODES
+  ERROR_CODES,
+  ApiError
 } from '../lib/api-conventions';
-import { sanitizeString } from '../lib/sanitization';
-import {
-  validateBody
-} from '../lib/validation-utils';
-import {
-  verifyRefreshToken,
-  createTokenResponse
-} from '../lib/auth-middleware';
-import { query } from '../lib/db';
-import {
-  saveRefreshToken,
-  findRefreshTokenByJti,
-  revokeRefreshTokenByJti,
-  compareRefreshToken,
-  decodeRefreshToken
-} from '../lib/token-store';
-import {
-  authRateLimiter
-} from '../lib/rate-limiting';
 
-// ============================================================================
-// Validation Schemas
-// ============================================================================
+const router = Router();
 
-/**
- * User registration schema
- */
-export const userRegistrationSchema = z.object({
-  email: z.string().email('Invalid email format').max(255, 'Email too long'),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(128, 'Password too long')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one lowercase letter, one uppercase letter, and one digit'),
-  name: z.string().min(1, 'Name is required').max(255, 'Name too long').trim()
-});
-
-/**
- * User login schema
- */
-export const userLoginSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  password: z.string().min(1, 'Password is required')
-});
-
-/**
- * Token refresh schema
- */
-export const tokenRefreshSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token is required')
-});
-
-// ============================================================================
+// ============================================================================  
 // Helper Functions
 // ============================================================================
 
 /**
- * Extract client metadata (user-agent and IP)
+ * Generate JWT tokens for a user
  */
-function getClientMeta(req: Request): { userAgent: string | null; ipAddress: string | null } {
-  const uaHeader = req.headers['user-agent'];
-  const xff = req.headers['x-forwarded-for'];
-  const xffStr = Array.isArray(xff) ? xff[0] : xff;
-
-  let ipFromHeader: string | undefined = undefined;
-  if (typeof xffStr === 'string') {
-    const parts = xffStr.split(',');
-    if (parts.length > 0 && typeof parts[0] === 'string' && parts[0]) {
-      ipFromHeader = parts[0].trim();
-    }
-  }
-
-  const expressIp = typeof (req as any).ip === 'string' ? (req as any).ip : undefined;
-  const ip = expressIp || ipFromHeader || null;
-
-  return {
-    userAgent: typeof uaHeader === 'string' ? uaHeader : null,
-    ipAddress: ip,
-  };
-}
-
-/**
- * Check if email is already registered
- */
-async function isEmailRegistered(email: string): Promise<boolean> {
-  const result = await query(
-    'SELECT 1 FROM users WHERE email = $1',
-    [email.toLowerCase()]
-  );
-  return (result.rowCount || 0) > 0;
-}
-
-/**
- * Create a new user
- */
-async function createUser(email: string, password: string, name: string): Promise<any> {
-  // Hash password using the secrets utility
-  const bcrypt = await import('bcryptjs');
-  const hashedPassword = await bcrypt.hash(password, 10);
-  
-  // Insert user
-  const result = await query(
-    `INSERT INTO users (email, password_hash, name)
-     VALUES ($1, $2, $3)
-     RETURNING id, email, name, created_at, updated_at, last_login_at, is_active`,
-    [email.toLowerCase(), hashedPassword, name]
+function generateTokens(userId: string): { accessToken: string; refreshToken: string } {
+  const accessToken = jwt.sign(
+    { userId },
+    config.jwtSecret,
+    { expiresIn: '1h' }
   );
   
-  return result.rows[0];
-}
-
-/**
- * Get user by email
- */
-async function getUserByEmail(email: string): Promise<any> {
-  const result = await query(
-    `SELECT id, email, password_hash, name, created_at, updated_at, last_login_at, is_active
-     FROM users
-     WHERE email = $1`,
-    [email.toLowerCase()]
+  const refreshToken = jwt.sign(
+    { userId },
+    config.jwtRefreshSecret,
+    { expiresIn: '7d' }
   );
   
-  return result.rows[0] || null;
+  return { accessToken, refreshToken };
 }
 
 /**
- * Get user by id
+ * Hash a password
  */
-async function getUserById(id: string): Promise<any> {
-  const result = await query(
-    `SELECT id, email, name, created_at, updated_at, last_login_at, is_active
-     FROM users
-     WHERE id = $1`,
-    [id]
-  );
-  return result.rows[0] || null;
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, config.bcryptRounds);
 }
 
 /**
- * Update user's last login timestamp
+ * Verify a password against a hash
  */
-async function updateLastLogin(userId: string): Promise<void> {
-  await query(
-    'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1',
-    [userId]
-  );
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
 }
 
-// ============================================================================
-// Route Handlers
+// ============================================================================  
+// Routes
 // ============================================================================
 
 /**
- * User signup endpoint
  * POST /api/v1/auth/signup
+ * User registration
  */
-export async function signupHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const { email, password, name } = req.body;
-    
-    // Check if email is already registered
-    const emailExists = await isEmailRegistered(email);
-    if (emailExists) {
-      sendError(
-        res,
-        HTTP_STATUS.CONFLICT,
-        ERROR_CODES.VALIDATION_ERROR,
-        'Email already registered',
-        { field: 'email' }
+router.post('/signup', 
+  validateBody(userRegistrationSchema),
+  async (req, res) => {
+    try {
+      const { email, password, name } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await query(
+        'SELECT id FROM users WHERE email = $1',
+        [email.toLowerCase()]
       );
-      return;
-    }
-    
-    // Create user
-    const user = await createUser(email, password, name);
-    
-    // Update last login
-    await updateLastLogin(user.id);
-    
-    // Create tokens and persist refresh token (hashed) with rotation support
-    const tokens = createTokenResponse(user.id, user.email);
-    const meta = getClientMeta(req);
-    await saveRefreshToken({
-      userId: user.id,
-      refreshToken: tokens.refreshToken,
-      userAgent: meta.userAgent,
-      ipAddress: meta.ipAddress,
-    });
-
-    // Send success response
-    sendSuccess(res, {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        created_at: user.created_at,
-        updated_at: user.updated_at,
-        last_login_at: user.last_login_at,
-        is_active: user.is_active
-      },
-      ...tokens
-    }, HTTP_STATUS.CREATED);
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * User login endpoint
- * POST /api/v1/auth/login
- */
-export async function loginHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const { email, password } = req.body;
-    
-    // Get user by email
-    const user = await getUserByEmail(email);
-    if (!user) {
-      sendError(
-        res,
-        HTTP_STATUS.UNAUTHORIZED,
-        ERROR_CODES.VALIDATION_ERROR,
-        'Invalid email or password'
-      );
-      return;
-    }
-    
-    // Verify password
-    const bcrypt = await import('bcryptjs');
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    if (!isPasswordValid) {
-      sendError(
-        res,
-        HTTP_STATUS.UNAUTHORIZED,
-        ERROR_CODES.VALIDATION_ERROR,
-        'Invalid email or password'
-      );
-      return;
-    }
-    
-    // Check if user is active
-    if (!user.is_active) {
-      sendError(
-        res,
-        HTTP_STATUS.FORBIDDEN,
-        ERROR_CODES.VALIDATION_ERROR,
-        'Account is disabled'
-      );
-      return;
-    }
-    
-    // Update last login
-    await updateLastLogin(user.id);
-    
-    // Create tokens and persist refresh token (hashed) with rotation support
-    const tokens = createTokenResponse(user.id, user.email);
-    const meta = getClientMeta(req);
-    await saveRefreshToken({
-      userId: user.id,
-      refreshToken: tokens.refreshToken,
-      userAgent: meta.userAgent,
-      ipAddress: meta.ipAddress,
-    });
-
-    // Send success response
-    sendSuccess(res, {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        created_at: user.created_at,
-        updated_at: user.updated_at,
-        last_login_at: user.last_login_at,
-        is_active: user.is_active
-      },
-      ...tokens
-    }, HTTP_STATUS.OK);
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
- * User logout endpoint
- * POST /api/v1/auth/logout
- */
-export async function logoutHandler(req: Request, res: Response): Promise<void> {
-  try {
-    // Optional: revoke provided refresh token
-    const body: any = req.body || {};
-    if (body.refreshToken) {
-      const { jti } = decodeRefreshToken(body.refreshToken);
-      if (jti) {
-        await revokeRefreshTokenByJti(jti);
+      
+      if (existingUser.rows.length > 0) {
+        throw new ApiError(
+          HTTP_STATUS.CONFLICT,
+          ERROR_CODES.RESOURCE_ALREADY_EXISTS,
+          'User with this email already exists'
+        );
+      }
+      
+      // Hash password
+      const passwordHash = await hashPassword(password);
+      
+      // Create user in database
+      const result = await transaction(async (client) => {
+        const userResult = await client.query(
+          `INSERT INTO users (id, email, password_hash, name, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, NOW(), NOW())
+           RETURNING id, email, name, created_at, updated_at`,
+          [uuidv4(), email.toLowerCase(), passwordHash, name]
+        );
+        
+        // Update last login timestamp
+        await client.query(
+          'UPDATE users SET last_login_at = NOW() WHERE id = $1',
+          [userResult.rows[0].id]
+        );
+        
+        return userResult.rows[0];
+      });
+      
+      // Generate tokens
+      const { accessToken, refreshToken } = generateTokens(result.id);
+      
+      // Send success response
+      sendSuccess(res, {
+        user: {
+          id: result.id,
+          email: result.email,
+          name: result.name,
+          created_at: result.created_at,
+          updated_at: result.updated_at
+        },
+        accessToken,
+        refreshToken
+      }, HTTP_STATUS.CREATED);
+      
+    } catch (error) {
+      if (error instanceof ApiError) {
+        sendError(res, error.statusCode, error.code, error.message, error.details);
+      } else {
+        console.error('Signup error:', error);
+        sendError(
+          res,
+          HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          ERROR_CODES.INTERNAL_ERROR,
+          'An error occurred during signup'
+        );
       }
     }
-  } catch (_e) {
-    // Intentionally ignore errors to avoid leaking token validation info
-  } finally {
-    sendSuccess(res, null, HTTP_STATUS.OK);
   }
-}
+);
 
 /**
- * Token refresh endpoint
- * POST /api/v1/auth/refresh
+ * POST /api/v1/auth/login
+ * User login
  */
-export async function refreshHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+router.post('/login',
+  validateBody(userLoginSchema),
+  async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // Find user by email
+      const result = await query(
+        `SELECT id, email, password_hash, name, is_active, created_at, updated_at, last_login_at
+         FROM users 
+         WHERE email = $1`,
+        [email.toLowerCase()]
+      );
+      
+      if (result.rows.length === 0) {
+        throw new ApiError(
+          HTTP_STATUS.UNAUTHORIZED,
+          ERROR_CODES.UNAUTHORIZED,
+          'Invalid email or password'
+        );
+      }
+      
+      const user = result.rows[0];
+      
+      // Check if user is active
+      if (!user.is_active) {
+        throw new ApiError(
+          HTTP_STATUS.FORBIDDEN,
+          ERROR_CODES.FORBIDDEN,
+          'Account is deactivated'
+        );
+      }
+      
+      // Verify password
+      const isValidPassword = await verifyPassword(password, user.password_hash);
+      if (!isValidPassword) {
+        throw new ApiError(
+          HTTP_STATUS.UNAUTHORIZED,
+          ERROR_CODES.UNAUTHORIZED,
+          'Invalid email or password'
+        );
+      }
+      
+      // Update last login timestamp
+      await query(
+        'UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1',
+        [user.id]
+      );
+      
+      // Generate tokens
+      const { accessToken, refreshToken } = generateTokens(user.id);
+      
+      // Send success response
+      sendSuccess(res, {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          is_active: user.is_active,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+          last_login_at: user.last_login_at
+        },
+        accessToken,
+        refreshToken
+      });
+      
+    } catch (error) {
+      if (error instanceof ApiError) {
+        sendError(res, error.statusCode, error.code, error.message, error.details);
+      } else {
+        console.error('Login error:', error);
+        sendError(
+          res,
+          HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          ERROR_CODES.INTERNAL_ERROR,
+          'An error occurred during login'
+        );
+      }
+    }
+  }
+);
+
+/**
+ * POST /api/v1/auth/logout
+ * User logout
+ */
+router.post('/logout', authenticateToken, async (_req, res) => {
   try {
-    const { refreshToken } = req.body;
-
-    // Verify refresh token signature and expiry
-    const verified: any = verifyRefreshToken(refreshToken);
-
-    // Decode to get JTI and EXP for DB lookup
-    const { jti } = decodeRefreshToken(refreshToken);
-    if (!jti) {
-      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_INVALID, 'Invalid refresh token');
-      return;
-    }
-
-    // Lookup token record
-    const record = await findRefreshTokenByJti(jti);
-    if (!record || record.is_revoked) {
-      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_INVALID, 'Refresh token revoked or not found');
-      return;
-    }
-
-    // Validate ownership
-    if (record.user_id !== verified.userId) {
-      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_INVALID, 'Refresh token does not match user');
-      return;
-    }
-
-    // Validate not expired (defense in depth, in addition to JWT exp)
-    if (new Date(record.expires_at).getTime() <= Date.now()) {
-      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_EXPIRED, 'Refresh token expired');
-      return;
-    }
-
-    // Compare token hash (anti-theft even if DB leaked)
-    const ok = await compareRefreshToken(refreshToken, record.token_hash);
-    if (!ok) {
-      sendError(res, HTTP_STATUS.UNAUTHORIZED, ERROR_CODES.TOKEN_INVALID, 'Invalid refresh token');
-      return;
-    }
-
-    // Rotate: revoke old token and issue a new pair
-    await revokeRefreshTokenByJti(jti);
-
-    // Fetch user info (email required for access token payload)
-    const user = await getUserById(verified.userId);
-    if (!user || !user.is_active) {
-      sendError(res, HTTP_STATUS.FORBIDDEN, ERROR_CODES.VALIDATION_ERROR, 'Account is disabled');
-      return;
-    }
-
-    const tokens = createTokenResponse(user.id, user.email);
-    const meta = getClientMeta(req);
-    await saveRefreshToken({
-      userId: user.id,
-      refreshToken: tokens.refreshToken,
-      userAgent: meta.userAgent,
-      ipAddress: meta.ipAddress,
-    });
-
-    sendSuccess(res, { ...tokens }, HTTP_STATUS.OK);
+    // In a real implementation, you might want to invalidate the token
+    // by adding it to a blacklist or using a different token strategy
+    // For now, we'll just send a success response
+    
+    sendSuccess(res, { message: 'Logged out successfully' });
   } catch (error) {
-    next(error);
+    console.error('Logout error:', error);
+    sendError(
+      res,
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      ERROR_CODES.INTERNAL_ERROR,
+      'An error occurred during logout'
+    );
   }
-}
+});
 
 /**
- * Get user profile endpoint
- * GET /api/v1/auth/profile
+ * POST /api/v1/auth/refresh
+ * Refresh access token
  */
-export async function profileHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+router.post('/refresh', async (req, res) => {
   try {
-    // Get authenticated user from request (added by authenticateToken middleware)
-    const authenticatedReq = req as any;
-    const user = authenticatedReq.user;
+    const refreshToken = req.body.refreshToken;
+    
+    if (!refreshToken) {
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.MISSING_REQUIRED_FIELD,
+        'Refresh token is required'
+      );
+    }
+    
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, config.jwtRefreshSecret) as { userId: string };
+    
+    // Generate new tokens
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(decoded.userId);
     
     // Send success response
     sendSuccess(res, {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-      last_login_at: user.last_login_at,
-      is_active: user.is_active
-    }, HTTP_STATUS.OK);
+      accessToken,
+      refreshToken: newRefreshToken
+    });
+    
   } catch (error) {
-    next(error);
+    if (error instanceof jwt.TokenExpiredError) {
+      sendError(
+        res,
+        HTTP_STATUS.UNAUTHORIZED,
+        ERROR_CODES.TOKEN_EXPIRED,
+        'Refresh token expired'
+      );
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      sendError(
+        res,
+        HTTP_STATUS.UNAUTHORIZED,
+        ERROR_CODES.TOKEN_INVALID,
+        'Invalid refresh token'
+      );
+    } else if (error instanceof ApiError) {
+      sendError(res, error.statusCode, error.code, error.message, error.details);
+    } else {
+      console.error('Token refresh error:', error);
+      sendError(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        ERROR_CODES.INTERNAL_ERROR,
+        'An error occurred during token refresh'
+      );
+    }
   }
-}
+});
 
-// ============================================================================
-// Router Setup
-// ============================================================================
+/**
+ * GET /api/v1/auth/profile
+ * Get current user profile
+ */
+router.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    // req.user is set by authenticateToken middleware
+    const userId = (req as any).user.userId;
+    
+    const result = await query(
+      `SELECT id, email, name, is_active, created_at, updated_at, last_login_at
+       FROM users 
+       WHERE id = $1 AND is_active = true`,
+      [userId]
+    );
+    
+    if (result.rows.length === 0) {
+      throw new ApiError(
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'User not found'
+      );
+    }
+    
+    sendSuccess(res, {
+      user: result.rows[0]
+    });
+    
+  } catch (error) {
+    if (error instanceof ApiError) {
+      sendError(res, error.statusCode, error.code, error.message, error.details);
+    } else {
+      console.error('Profile fetch error:', error);
+      sendError(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        ERROR_CODES.INTERNAL_ERROR,
+        'An error occurred while fetching profile'
+      );
+    }
+  }
+});
 
-export const router = Router();
+/**
+ * PUT /api/v1/auth/profile
+ * Update current user profile
+ */
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    // req.user is set by authenticateToken middleware
+    const userId = (req as any).user.userId;
+    const { name } = req.body;
+    
+    // Validate input
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.INVALID_INPUT,
+        'Name is required'
+      );
+    }
+    
+    if (name.trim().length > 255) {
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.INVALID_INPUT,
+        'Name must be less than 255 characters'
+      );
+    }
+    
+    const result = await query(
+      `UPDATE users 
+       SET name = $1, updated_at = NOW()
+       WHERE id = $2 AND is_active = true
+       RETURNING id, email, name, is_active, created_at, updated_at, last_login_at`,
+      [name.trim(), userId]
+    );
+    
+    if (result.rows.length === 0) {
+      throw new ApiError(
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'User not found'
+      );
+    }
+    
+    sendSuccess(res, {
+      user: result.rows[0]
+    });
+    
+  } catch (error) {
+    if (error instanceof ApiError) {
+      sendError(res, error.statusCode, error.code, error.message, error.details);
+    } else {
+      console.error('Profile update error:', error);
+      sendError(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        ERROR_CODES.INTERNAL_ERROR,
+        'An error occurred while updating profile'
+      );
+    }
+  }
+});
 
-// POST /api/v1/auth/signup
-router.post('/signup',
-  authRateLimiter,
-  sanitizeString('name'),
-  validateBody(userRegistrationSchema),
-  signupHandler
-);
-
-// POST /api/v1/auth/login
-router.post('/login', authRateLimiter, validateBody(userLoginSchema), loginHandler);
-
-// POST /api/v1/auth/logout
-router.post('/logout', logoutHandler);
-
-// POST /api/v1/auth/refresh
-router.post('/refresh', authRateLimiter, validateBody(tokenRefreshSchema), refreshHandler);
+export { router };

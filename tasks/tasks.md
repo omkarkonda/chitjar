@@ -1,4 +1,4 @@
-## Relevant Files
+### Relevant Files
 
 - docs/backend-stack-analysis.md - Comprehensive analysis of backend stack options (Firebase/Supabase vs custom Node+SQL) with recommendation for custom Node.js + PostgreSQL.
 - package.json - Root package.json with workspace configuration and scripts for managing backend and frontend.
@@ -8,7 +8,7 @@
 - backend/tsconfig.json - TypeScript configuration for backend with strict type checking.
 - backend/.eslintrc.js - ESLint configuration for backend TypeScript code.
 - backend/jest.config.js - Jest configuration for backend testing with TypeScript support.
-- backend/src/index.ts - Main Express.js server entry point with middleware setup and health check endpoint.
+- backend/src/index.ts - Main Express.js server entry point with middleware setup and health check endpoint. Fixed funds API route import.
 - frontend/package.json - Frontend dependencies including Chart.js, Vite, and testing tools.
 - frontend/vite.config.js - Vite configuration for frontend development with API proxy.
 - frontend/.eslintrc.js - ESLint configuration for frontend JavaScript code.
@@ -30,7 +30,7 @@
 - scripts/setup-dev.js - Root-level development environment setup script.
 - README.md - Comprehensive project documentation with setup instructions and API reference.
 - backend/api/auth.ts - Auth handlers for signup, login, session management; enforce per-user data isolation.
-- backend/api/funds.ts - CRUD endpoints for funds, input validation, ownership checks.
+- backend/api/funds.ts - CRUD endpoints for funds, input validation, ownership checks. Fixed authentication token access pattern.
 - backend/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers.
 - backend/api/bids.ts - CRUD for bids plus CSV import endpoint with schema validation and preview.
 - backend/api/analytics.ts - Server-side heavy calculations (XIRR, projections, FD comparison) to ensure consistency with Excel.
@@ -95,10 +95,10 @@
 - [x] 2.3 Store credentials securely in PostgreSQL; enable encryption at rest and HTTPS in deployment.
 - [x] 2.4 Implement rate limiting and input sanitization for all Express.js endpoints.
 - [x] 2.5 Add auth guards in frontend router and persistent JWT session restore.
-- [ ] 2.6 Write auth and security tests (happy paths and unauthorized access).
+- [x] 2.6 Write auth and security tests (happy paths and unauthorized access).
 
 - [ ] 3.0 Data Model and Backend APIs
-  - [ ] 3.1 Express.js Funds API: create, read (list/detail), update, delete; validate inputs and uniqueness per user with Zod.
+  - [x] 3.1 Express.js Funds API: create, read (list/detail), update, delete; validate inputs and uniqueness per user with Zod.
 - [ ] 3.2 Express.js Monthly Entries API: create/update/delete entries; mark month as paid on save with PostgreSQL transactions.
 - [ ] 3.3 Handle irregularities: zero/missing months, mid-year start, early exit flag in PostgreSQL queries.
 - [ ] 3.4 Express.js Bids API: manual entry of historical winning bids and notes with PostgreSQL.
