@@ -77,10 +77,12 @@ import { router as authRoutes } from './api/auth';
 import { router as fundsRoutes } from './api/funds';
 import { router as entriesRoutes } from './api/monthly-entries';
 import { router as bidsRoutes } from './api/bids';
+import { router as exportRoutes } from './api/export';
 app.use(API_PATHS.AUTH.BASE, authRoutes);
 app.use(API_PATHS.FUNDS.BASE, fundsRoutes);
 app.use(API_PATHS.ENTRIES.BASE, entriesRoutes);
 app.use(API_PATHS.BIDS.BASE, bidsRoutes);
+app.use(API_PATHS.IMPORT_EXPORT.EXPORT_FUNDS.replace('/api/v1/export/funds', '/api/v1/export'), exportRoutes);
 
 // Global error handling middleware
 app.use(errorHandler);
