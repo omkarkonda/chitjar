@@ -46,6 +46,12 @@ chitjar/
 ├── backend/                 # Express.js API server
 │   ├── src/
 │   │   ├── api/            # API route handlers
+│   │   │   ├── analytics.ts # Analytics API endpoints
+│   │   │   ├── auth.ts     # Authentication API
+│   │   │   ├── bids.ts     # Bids API
+│   │   │   ├── export.ts   # Export API endpoints
+│   │   │   ├── funds.ts    # Funds API
+│   │   │   └── monthly-entries.ts # Monthly entries API
 │   │   ├── lib/            # Utility libraries
 │   │   ├── test/           # Test files
 │   │   └── index.ts        # Server entry point
@@ -102,10 +108,19 @@ The backend API follows RESTful conventions with the following key endpoints:
 - `GET /api/v1/funds/:fundId/bids` - Get bids for specific fund
 
 ### Analytics
-- `GET /api/v1/analytics/dashboard` - Dashboard analytics
-- `GET /api/v1/funds/:id/analytics` - Fund-specific analytics
-- `POST /api/v1/funds/:id/fd-comparison` - Compare fund XIRR with FD rate
-- `GET /api/v1/funds/:id/insights` - Strategic bidding insights
+- `GET /api/v1/analytics/dashboard` - Dashboard analytics with total profit and fund performance
+- `GET /api/v1/analytics/funds/:id` - Fund-specific analytics including XIRR and cash flow series
+- `POST /api/v1/analytics/funds/:id/fd-comparison` - Compare fund XIRR with FD rate
+- `GET /api/v1/analytics/insights` - Strategic bidding insights based on historical data
+
+### Import/Export
+- `GET /api/v1/export/funds.csv` - Export all funds as CSV
+- `GET /api/v1/export/funds.json` - Export all funds as JSON
+- `GET /api/v1/export/entries.csv` - Export all monthly entries as CSV
+- `GET /api/v1/export/entries.json` - Export all monthly entries as JSON
+- `GET /api/v1/export/bids.csv` - Export all bids as CSV
+- `GET /api/v1/export/bids.json` - Export all bids as JSON
+- `GET /api/v1/export/backup.json` - Complete backup export in JSON format
 
 ## Data Model
 
@@ -211,14 +226,13 @@ Based on the task tracking file, the project has made significant progress:
 ### Completed Major Components
 - ✅ Project setup and architecture
 - ✅ Authentication, authorization, and data security
-- ✅ Data model and backend APIs (Funds API completed)
+- ✅ Data model and backend APIs
 - ✅ Basic frontend UI structure with routing
+- ✅ Analytics and calculations
+- ✅ Import/Export functionality
 
 ### In Progress
-- 🔄 Data Model and Backend APIs (remaining endpoints)
 - 🔄 Frontend UI implementation
-- 🔄 Analytics and calculations
-- 🔄 Import/Export functionality
 - 🔄 Charts and visualizations
 
 ## Key Development Considerations
@@ -249,12 +263,9 @@ Based on the task tracking file, the project has made significant progress:
 
 The project is still in development with several key areas to be completed:
 
-1. Complete remaining backend API endpoints
-2. Implement full frontend UI with all components
-3. Add comprehensive analytics and calculations
-4. Implement CSV import/export functionality
-5. Add charting and data visualization
-6. Complete testing coverage
-7. Finalize documentation
+1. Implement full frontend UI with all components
+2. Add charting and data visualization
+3. Complete testing coverage
+4. Finalize documentation
 
 This context should provide Qwen Code with the necessary information to understand and work with the ChitJar project effectively.
