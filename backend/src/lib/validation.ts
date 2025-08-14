@@ -56,14 +56,32 @@ export const monetarySchema = z
   .max(99999999.99, 'Amount too large')
   .multipleOf(0.01, 'Amount can have at most 2 decimal places');
 
-/**
- * Non-negative decimal validation for monetary values (allows 0)
- */
+/**\n * Non-negative decimal validation for monetary values (allows 0)\n */
 export const nonNegativeMonetarySchema = z
   .number()
   .nonnegative('Amount cannot be negative')
   .max(99999999.99, 'Amount too large')
   .multipleOf(0.01, 'Amount can have at most 2 decimal places');
+
+/**
+ * Custom validation for monetary values that must not exceed a chit value
+ */
+export const monetaryWithinChitValueSchema = (chitValue: number) => 
+  z.number()
+    .positive('Amount must be positive')
+    .max(chitValue, `Amount cannot exceed chit value of ${chitValue}`)
+    .max(99999999.99, 'Amount too large')
+    .multipleOf(0.01, 'Amount can have at most 2 decimal places');
+
+/**
+ * Custom validation for non-negative monetary values that must not exceed a chit value
+ */
+export const nonNegativeMonetaryWithinChitValueSchema = (chitValue: number) => 
+  z.number()
+    .nonnegative('Amount cannot be negative')
+    .max(chitValue, `Amount cannot exceed chit value of ${chitValue}`)
+    .max(99999999.99, 'Amount too large')
+    .multipleOf(0.01, 'Amount can have at most 2 decimal places');
 
 /**
  * Positive integer validation

@@ -31,8 +31,8 @@
 - README.md - Comprehensive project documentation with setup instructions and API reference.
 - backend/api/auth.ts - Auth handlers for signup, login, session management; enforce per-user data isolation.
 - backend/api/funds.ts - CRUD endpoints for funds, input validation, ownership checks. Fixed authentication token access pattern.
-- backend/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers. Modified to always mark entries as paid when saved. Added functions to handle irregularities like zero/missing months, mid-year start, and early exit flags.
-- backend/api/bids.ts - CRUD for bids plus CSV import endpoint with schema validation and preview. Added CSV import functionality for historical winning bids.
+- backend/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers. Modified to always mark entries as paid when saved. Added functions to handle irregularities like zero/missing months, mid-year start, and early exit flags. Added validation for prize_money not exceeding chit_value.
+- backend/api/bids.ts - CRUD for bids plus CSV import endpoint with schema validation and preview. Added CSV import functionality for historical winning bids. Added validation for winning_bid and discount_amount not exceeding chit_value.
 - backend/api/analytics.ts - Server-side heavy calculations (XIRR, projections, FD comparison) to ensure consistency with Excel.
 - backend/lib/db.ts - Database client/ORM setup and schema helpers with connection pooling and transaction support.
 - backend/lib/schema.sql - PostgreSQL schema with tables for users, funds, monthly_entries, bids, settings including constraints, indexes, and triggers.
@@ -109,7 +109,7 @@
 - [x] 3.6 Export endpoints: CSV for funds/entries using Node.js streams; JSON for full backup/restore from PostgreSQL.
 - [x] 3.7 Express.js Analytics API: XIRR using financial libraries, cash flow series, projections, FD comparison; cache results per fund/version.
 - [x] 3.8 Recalculation triggers on data edits (entries, bids) to keep analytics consistent using PostgreSQL triggers or application logic.
-- [ ] 3.9 Input validation rules for unrealistic values (negative dividends, prizeMoney > chitValue) using Zod schemas.
+- [x] 3.9 Input validation rules for unrealistic values (negative dividends, prizeMoney > chitValue) using Zod schemas.
 
 - [ ] 4.0 Frontend UI: Mobile-first Screens and Navigation
   - [ ] 4.1 Global layout: index.html, responsive grid, accessible color tokens, typography.

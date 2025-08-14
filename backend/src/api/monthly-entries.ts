@@ -56,15 +56,22 @@ const fundIdParamSchema = z.object({
 // Helper Functions
 // ============================================================================
 
-/**
- * Check if user owns the fund
- */
+/**\n * Check if user owns the fund\n */
 async function checkFundOwnership(userId: string, fundId: string): Promise<boolean> {
   const result = await query(
     'SELECT 1 FROM funds WHERE id = $1 AND user_id = $2',
     [fundId, userId]
   );
   return (result.rowCount || 0) > 0;
+}
+
+/**\n * Check if user owns the fund and get fund details\n */
+async function getFundDetails(userId: string, fundId: string): Promise<any> {
+  const result = await query(
+    'SELECT chit_value, start_month, end_month, early_exit_month FROM funds WHERE id = $1 AND user_id = $2',
+    [fundId, userId]
+  );
+  return result.rows[0] || null;
 }
 
 /**
@@ -244,14 +251,25 @@ async function createMonthlyEntryHandler(req: Request, res: Response, next: Next
     const authenticatedReq = req as any;
     const userId = authenticatedReq.user.id;
     
-    // Check fund ownership
-    const ownsFund = await checkFundOwnership(userId, fund_id);
-    if (!ownsFund) {
+    // Get fund details
+    const fund = await getFundDetails(userId, fund_id);
+    if (!fund) {
       sendError(
         res,
         HTTP_STATUS.FORBIDDEN,
         ERROR_CODES.FORBIDDEN,
         'Access denied: fund not found or insufficient permissions'
+      );
+      return;
+    }
+    
+    // Validate that prize_money doesn't exceed chit_value
+    if (prize_money > fund.chit_value) {
+      sendError(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.INVALID_INPUT,
+        `Prize money (${prize_money}) cannot exceed chit value (${fund.chit_value})`
       );
       return;
     }
@@ -449,6 +467,17 @@ async function updateMonthlyEntryHandler(req: Request, res: Response, next: Next
         HTTP_STATUS.NOT_FOUND,
         ERROR_CODES.RESOURCE_NOT_FOUND,
         'Monthly entry not found'
+      );
+      return;
+    }
+    
+    // If prize_money is being updated, validate it against the fund's chit_value
+    if (updateData.prize_money !== undefined && updateData.prize_money > entry.chit_value) {
+      sendError(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.INVALID_INPUT,
+        `Prize money (${updateData.prize_money}) cannot exceed chit value (${entry.chit_value})`
       );
       return;
     }
