@@ -67,6 +67,7 @@
 - tests/backend/api-funds.test.ts - Funds API contract tests.
 - tests/backend/api-entries.test.ts - Monthly entries API tests including recalculation triggers.
 - backend/src/api/export.ts - Export endpoints for funds, entries, and bids in CSV and JSON formats.
+- backend/src/api/analytics.ts - Analytics endpoints for XIRR calculations, cash flow series, projections, and FD comparison.
 - tests/frontend/formatters.test.js - UI formatting utilities tests.
 - tests/frontend/flows.test.js - E2E: create fund, add entry, view analytics on mobile.
 - tests/frontend/csv-import.test.js - CSV import preview and error handling tests.
@@ -105,7 +106,7 @@
   - [x] 3.4 Express.js Bids API: manual entry of historical winning bids and notes with PostgreSQL.
   - [x] 3.5 CSV Import for bids: upload, schema validation with Zod, preview response with per-line errors using Node.js file processing.
 - [x] 3.6 Export endpoints: CSV for funds/entries using Node.js streams; JSON for full backup/restore from PostgreSQL.
-- [ ] 3.7 Express.js Analytics API: XIRR using financial libraries, cash flow series, projections, FD comparison; cache results per fund/version.
+- [x] 3.7 Express.js Analytics API: XIRR using financial libraries, cash flow series, projections, FD comparison; cache results per fund/version.
 - [ ] 3.8 Recalculation triggers on data edits (entries, bids) to keep analytics consistent using PostgreSQL triggers or application logic.
 - [ ] 3.9 Input validation rules for unrealistic values (negative dividends, prizeMoney > chitValue) using Zod schemas.
 
