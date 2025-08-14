@@ -362,7 +362,7 @@ async function getFundAnalyticsHandler(req: Request, res: Response, next: NextFu
     );
     
     const fund = fundResult.rows[0];
-    let needsRecalculation = fund ? fund.needs_recalculation : true;
+    const needsRecalculation = fund ? fund.needs_recalculation : true;
     
     // Get cash flow series
     const cashFlow = await getFundCashFlowSeries(userId, id);

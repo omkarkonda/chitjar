@@ -25,7 +25,7 @@ function createRateLimiter(options: {
   skipFailedRequests?: boolean;
   standardHeaders?: boolean;
   legacyHeaders?: boolean;
-  keyGenerator?: (req: Request) => string;
+  keyGenerator?: (req: Request) => string; // eslint-disable-line no-unused-vars
 }) {
   return rateLimit({
     windowMs: options.windowMs,

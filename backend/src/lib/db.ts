@@ -61,7 +61,7 @@ export async function query(
  * Execute a query within a transaction
  */
 export async function transaction<T>(
-  callback: (client: PoolClient) => Promise<T>
+  callback: (client: PoolClient) => Promise<T> // eslint-disable-line no-unused-vars
 ): Promise<T> {
   const client = await getPool().connect();
   try {

@@ -451,7 +451,6 @@ export function generateMonthSeries(
   startMonth: string,
   endMonth: string
 ): string[] {
-  const months: string[] = [];
   const startDate = new Date(startMonth + '-01');
   const endDate = new Date(endMonth + '-01');
   
@@ -460,7 +459,8 @@ export function generateMonthSeries(
     throw new Error('Start month must be before end month');
   }
   
-  let currentDate = new Date(startDate);
+  const months: string[] = [];
+  let currentDate = new Date(startDate); // eslint-disable-line prefer-const
   
   while (currentDate <= endDate) {
     const year = currentDate.getFullYear();
