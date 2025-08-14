@@ -8,6 +8,8 @@ export class SecretManager {
 
   /**
    * Generate a secure random string for JWT secrets
+   * @param length - Length of the secret in bytes (default: 64)
+   * @returns Hex-encoded random string
    */
   static generateJWTSecret(length: number = 64): string {
     return crypto.randomBytes(length).toString('hex');
@@ -15,6 +17,8 @@ export class SecretManager {
 
   /**
    * Generate a secure random string for API keys
+   * @param length - Length of the API key in bytes (default: 32)
+   * @returns Base64URL-encoded random string
    */
   static generateAPIKey(length: number = 32): string {
     return crypto.randomBytes(length).toString('base64url');
@@ -22,6 +26,8 @@ export class SecretManager {
 
   /**
    * Hash a password using bcrypt (wrapper for bcryptjs)
+   * @param password - Password to hash
+   * @returns Promise that resolves to the hashed password
    */
   static async hashPassword(password: string): Promise<string> {
     const bcrypt = await import('bcryptjs');
@@ -30,6 +36,9 @@ export class SecretManager {
 
   /**
    * Verify a password against a hash
+   * @param password - Password to verify
+   * @param hash - Hash to compare against
+   * @returns Promise that resolves to true if password matches hash, false otherwise
    */
   static async verifyPassword(password: string, hash: string): Promise<boolean> {
     const bcrypt = await import('bcryptjs');
@@ -39,6 +48,9 @@ export class SecretManager {
   /**
    * Encrypt sensitive data (for future use)
    * TODO: Implement proper AES-GCM encryption when needed
+   * @param text - Text to encrypt
+   * @param key - Encryption key
+   * @returns Base64-encoded encrypted string
    */
   static encrypt(text: string, key: string): string {
     // Simple base64 encoding for now - replace with proper encryption later
@@ -49,6 +61,9 @@ export class SecretManager {
   /**
    * Decrypt sensitive data (for future use)
    * TODO: Implement proper AES-GCM decryption when needed
+   * @param encryptedData - Base64-encoded encrypted text
+   * @param key - Decryption key
+   * @returns Decrypted text
    */
   static decrypt(encryptedData: string, key: string): string {
     // Simple base64 decoding for now - replace with proper decryption later

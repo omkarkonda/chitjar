@@ -70,7 +70,12 @@ const fundIdParamSchema = z.object({
 // Helper Functions
 // ============================================================================
 
-/**\n * Check if user owns the fund\n */
+/**
+ * Check if user owns the fund
+ * @param userId - The ID of the user
+ * @param fundId - The ID of the fund to check ownership for
+ * @returns Promise that resolves to true if user owns the fund, false otherwise
+ */
 async function checkFundOwnership(userId: string, fundId: string): Promise<boolean> {
   const result = await query(
     'SELECT 1 FROM funds WHERE id = $1 AND user_id = $2',
@@ -79,7 +84,12 @@ async function checkFundOwnership(userId: string, fundId: string): Promise<boole
   return (result.rowCount || 0) > 0;
 }
 
-/**\n * Check if user owns the fund and get fund details\n */
+/**
+ * Check if user owns the fund and get fund details
+ * @param userId - The ID of the user
+ * @param fundId - The ID of the fund to get details for
+ * @returns Promise that resolves to fund details object or null if not found
+ */
 async function getFundDetails(userId: string, fundId: string): Promise<any> {
   const result = await query(
     'SELECT chit_value, start_month, end_month, early_exit_month FROM funds WHERE id = $1 AND user_id = $2',
@@ -90,6 +100,9 @@ async function getFundDetails(userId: string, fundId: string): Promise<any> {
 
 /**
  * Get bids with user filtering through fund ownership
+ * @param userId - The ID of the user to get bids for
+ * @param filters - Optional filters for pagination and filtering (page, limit, fund_id, month_key)
+ * @returns Promise that resolves to an array of bid objects
  */
 async function getUserBids(userId: string, filters: any = {}): Promise<any[]> {
   const { page = 1, limit = 20, fund_id, month_key } = filters;
@@ -128,6 +141,9 @@ async function getUserBids(userId: string, filters: any = {}): Promise<any[]> {
 
 /**
  * Get bid by ID with user ownership check through fund
+ * @param userId - The ID of the user who should own the bid's fund
+ * @param bidId - The ID of the bid to retrieve
+ * @returns Promise that resolves to the bid object or null if not found
  */
 async function getUserBidById(userId: string, bidId: string): Promise<any> {
   const result = await query(`
@@ -145,6 +161,9 @@ async function getUserBidById(userId: string, bidId: string): Promise<any> {
 
 /**
  * Count bids with user filtering through fund ownership
+ * @param userId - The ID of the user to count bids for
+ * @param filters - Optional filters for counting (fund_id, month_key)
+ * @returns Promise that resolves to the count of matching bids
  */
 async function countUserBids(userId: string, filters: any = {}): Promise<number> {
   let whereClause = 'WHERE f.user_id = $1';
@@ -180,6 +199,10 @@ async function countUserBids(userId: string, filters: any = {}): Promise<number>
 /**
  * Create a new bid
  * POST /api/v1/bids
+ * @param req - Express request object containing bid data in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function createBidHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -243,6 +266,10 @@ async function createBidHandler(req: Request, res: Response, next: NextFunction)
 /**
  * Get all bids for the authenticated user
  * GET /api/v1/bids
+ * @param req - Express request object with optional query parameters for filtering
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getBidsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -281,6 +308,10 @@ async function getBidsHandler(req: Request, res: Response, next: NextFunction): 
 /**
  * Get bids for a specific fund
  * GET /api/v1/funds/:fundId/bids
+ * @param req - Express request object containing fundId in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getFundBidsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -342,6 +373,10 @@ async function getFundBidsHandler(req: Request, res: Response, next: NextFunctio
 /**
  * Get a specific bid by ID
  * GET /api/v1/bids/:id
+ * @param req - Express request object containing bid ID in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getBidHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -381,6 +416,10 @@ async function getBidHandler(req: Request, res: Response, next: NextFunction): P
 /**
  * Update a bid
  * PUT /api/v1/bids/:id
+ * @param req - Express request object containing bid ID in params and update data in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function updateBidHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -482,6 +521,10 @@ async function updateBidHandler(req: Request, res: Response, next: NextFunction)
 /**
  * Delete a bid
  * DELETE /api/v1/bids/:id
+ * @param req - Express request object containing bid ID in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function deleteBidHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -538,6 +581,10 @@ async function deleteBidHandler(req: Request, res: Response, next: NextFunction)
 /**
  * Import bids from CSV
  * POST /api/v1/bids/import/csv
+ * @param req - Express request object containing CSV file in multipart form data
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function importBidsFromCsvHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -581,6 +628,10 @@ async function importBidsFromCsvHandler(req: Request, res: Response, next: NextF
 /**
  * Confirm bids import from CSV
  * POST /api/v1/bids/import/csv/confirm
+ * @param req - Express request object containing bids data in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function confirmBidsImportHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {

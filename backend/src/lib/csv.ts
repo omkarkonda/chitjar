@@ -52,6 +52,11 @@ export class CsvValidationError extends Error {
 
 /**
  * Parse CSV data from a string
+ * Converts CSV string data into an array of validated objects using a Zod schema
+ * @param csvData - CSV data as a string
+ * @param schema - Zod schema to validate each row against
+ * @param type - Type of data being parsed ('bids', 'funds', or 'entries')
+ * @returns Promise that resolves to an object containing valid rows and errors
  */
 export async function parseCsvData<T>(
   csvData: string,
@@ -203,7 +208,11 @@ function toCamelCase(str: string): string {
 }
 
 /**
- * Validate bids data against fund constraints
+ * Validate bids against fund constraints
+ * Checks that bids are associated with valid funds and meet fund constraints
+ * @param bids - Array of bid objects to validate
+ * @param userId - ID of the user who owns the bids
+ * @returns Promise that resolves to an object containing valid bids and errors
  */
 export async function validateBidsAgainstFunds(
   bids: CsvBidImport[],
@@ -309,7 +318,10 @@ export function generateCsvTemplate(type: 'bids' | 'funds' | 'entries'): string 
 }
 
 /**
- * Format errors for API response
+ * Format CSV errors for API response
+ * Converts CSV errors into a format suitable for API responses
+ * @param errors - Array of CSV errors to format
+ * @returns Array of formatted error objects
  */
 export function formatCsvErrors(errors: (CsvParseError | CsvValidationError)[]): any[] {
   return errors.map(error => ({

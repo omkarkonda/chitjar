@@ -40,7 +40,12 @@ const configSchema = z.object({
   metricsPort: z.string().transform(Number).default('9090'),
 });
 
-// Parse and validate configuration
+/**
+ * Parse and validate configuration
+ * Loads environment variables and validates them against the schema
+ * @returns Validated configuration object
+ * @throws Error if configuration validation fails
+ */
 const parseConfig = () => {
   try {
     const config = configSchema.parse({
@@ -86,10 +91,28 @@ export const config = parseConfig();
 export type Config = typeof config;
 
 // Helper functions
+/**
+ * Check if the application is running in development mode
+ * @returns True if NODE_ENV is 'development', false otherwise
+ */
 export const isDevelopment = () => config.nodeEnv === 'development';
+
+/**
+ * Check if the application is running in production mode
+ * @returns True if NODE_ENV is 'production', false otherwise
+ */
 export const isProduction = () => config.nodeEnv === 'production';
+
+/**
+ * Check if the application is running in test mode
+ * @returns True if NODE_ENV is 'test', false otherwise
+ */
 export const isTest = () => config.nodeEnv === 'test';
 
+/**
+ * Get the appropriate database URL based on the environment
+ * @returns Database URL for the current environment
+ */
 export const getDatabaseUrl = () => {
   if (isTest() && config.databaseTestUrl) {
     return config.databaseTestUrl;

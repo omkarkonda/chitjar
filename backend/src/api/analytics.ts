@@ -52,6 +52,9 @@ const uuidParamSchema = z.object({
 
 /**
  * Check if user owns the fund
+ * @param userId - The ID of the user
+ * @param fundId - The ID of the fund to check ownership for
+ * @returns Promise that resolves to true if user owns the fund, false otherwise
  */
 async function checkFundOwnership(userId: string, fundId: string): Promise<boolean> {
   const result = await query(
@@ -63,7 +66,12 @@ async function checkFundOwnership(userId: string, fundId: string): Promise<boole
 
 /**
  * Get cash flow series for a fund
- * Returns an array of { date: Date, amount: number } objects
+ * Returns an array of { date: Date, amount: number } objects representing the cash flow
+ * for each month of the fund. Negative values represent outflows (installments), 
+ * positive values represent inflows (dividends + prize money).
+ * @param userId - The ID of the user who owns the fund
+ * @param fundId - The ID of the fund to get cash flow series for
+ * @returns Promise that resolves to an array of cash flow objects with date and amount
  */
 async function getFundCashFlowSeries(userId: string, fundId: string): Promise<Array<{ date: Date, amount: number }>> {
   // First get the fund details
@@ -147,7 +155,12 @@ async function getFundCashFlowSeries(userId: string, fundId: string): Promise<Ar
 }
 
 /**
- * Calculate XIRR for a fund
+ * Calculate XIRR (Internal Rate of Return) for a fund
+ * Uses the cash flow series to calculate the XIRR using the xirr library.
+ * Returns null if calculation fails or if there's no cash flow data.
+ * @param userId - The ID of the user who owns the fund
+ * @param fundId - The ID of the fund to calculate XIRR for
+ * @returns Promise that resolves to the XIRR percentage value or null if calculation fails
  */
 async function calculateFundXirr(userId: string, fundId: string): Promise<number | null> {
   try {
@@ -176,6 +189,11 @@ async function calculateFundXirr(userId: string, fundId: string): Promise<number
 
 /**
  * Calculate simple projections based on average cash flows
+ * Projects future cash flows based on the average of historical cash flows.
+ * @param userId - The ID of the user who owns the fund
+ * @param fundId - The ID of the fund to calculate projections for
+ * @param months - Number of months to project (default: 12)
+ * @returns Promise that resolves to an object containing projected cash flows and average values
  */
 async function calculateProjections(userId: string, fundId: string, months: number = 12): Promise<any> {
   // Get cash flow series
@@ -224,7 +242,13 @@ async function calculateProjections(userId: string, fundId: string, months: numb
 }
 
 /**
- * Compare fund XIRR with FD rate
+ * Compare fund XIRR with FD (Fixed Deposit) rate
+ * Calculates the difference between the fund's XIRR and a given FD rate to determine
+ * which investment option is better.
+ * @param userId - The ID of the user who owns the fund
+ * @param fundId - The ID of the fund to compare
+ * @param fdRate - The fixed deposit rate to compare against (as percentage)
+ * @returns Promise that resolves to an object containing comparison results
  */
 async function compareWithFd(userId: string, fundId: string, fdRate: number): Promise<any> {
   const fundXirr = await calculateFundXirr(userId, fundId);
@@ -238,7 +262,11 @@ async function compareWithFd(userId: string, fundId: string, fdRate: number): Pr
 }
 
 /**
- * Get dashboard analytics
+ * Get dashboard analytics for a user
+ * Calculates total profit and fund performance metrics for all active funds
+ * owned by the user.
+ * @param userId - The ID of the user to get dashboard analytics for
+ * @returns Promise that resolves to an object containing dashboard analytics data
  */
 async function getDashboardAnalytics(userId: string): Promise<any> {
   // Get all active funds for the user
@@ -308,6 +336,11 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
 /**
  * Get dashboard analytics
  * GET /api/v1/analytics/dashboard
+ * Returns total profit and fund performance metrics for all active funds.
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getDashboardHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -325,6 +358,11 @@ async function getDashboardHandler(req: Request, res: Response, next: NextFuncti
 /**
  * Get fund-specific analytics
  * GET /api/v1/analytics/funds/:id
+ * Returns cash flow series, XIRR, and projections for a specific fund.
+ * @param req - Express request object containing fund ID in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getFundAnalyticsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -395,6 +433,11 @@ async function getFundAnalyticsHandler(req: Request, res: Response, next: NextFu
 /**
  * Compare fund XIRR with FD rate
  * POST /api/v1/analytics/funds/:id/fd-comparison
+ * Compares the fund's XIRR with a provided fixed deposit rate.
+ * @param req - Express request object containing fund ID in params and FD rate in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function compareFundWithFdHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -438,6 +481,11 @@ async function compareFundWithFdHandler(req: Request, res: Response, next: NextF
 /**
  * Get strategic bidding insights
  * GET /api/v1/analytics/insights
+ * Returns historical bidding trends and strategic insights for all funds.
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getInsightsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {

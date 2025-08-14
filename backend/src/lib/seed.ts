@@ -130,7 +130,9 @@ const sampleSettings = [
 // ============================================================================
 
 /**
- * Seed users table
+ * Seed users with sample data
+ * Creates sample users in the database
+ * @returns Promise that resolves to an array of user IDs
  */
 async function seedUsers(): Promise<string[]> {
   console.log('Seeding users...');
@@ -157,7 +159,10 @@ async function seedUsers(): Promise<string[]> {
 }
 
 /**
- * Seed funds table
+ * Seed funds with sample data
+ * Creates sample funds in the database for the given users
+ * @param userIds - Array of user IDs to create funds for
+ * @returns Promise that resolves to an array of fund IDs
  */
 async function seedFunds(userIds: string[]): Promise<Map<string, string>> {
   console.log('Seeding funds...');
@@ -189,7 +194,10 @@ async function seedFunds(userIds: string[]): Promise<Map<string, string>> {
 }
 
 /**
- * Seed monthly_entries table
+ * Seed monthly entries with sample data
+ * Creates sample monthly entries in the database for the given funds
+ * @param fundIds - Map of fund names to fund IDs to create entries for
+ * @returns Promise that resolves when entries are created
  */
 async function seedMonthlyEntries(fundIds: Map<string, string>): Promise<void> {
   console.log('Seeding monthly entries...');
@@ -217,7 +225,10 @@ async function seedMonthlyEntries(fundIds: Map<string, string>): Promise<void> {
 }
 
 /**
- * Seed bids table
+ * Seed bids with sample data
+ * Creates sample bids in the database for the given funds
+ * @param fundIds - Map of fund names to fund IDs to create bids for
+ * @returns Promise that resolves when bids are created
  */
 async function seedBids(fundIds: Map<string, string>): Promise<void> {
   console.log('Seeding bids...');
@@ -245,7 +256,10 @@ async function seedBids(fundIds: Map<string, string>): Promise<void> {
 }
 
 /**
- * Seed settings table
+ * Seed settings with sample data
+ * Creates sample settings in the database for the given users
+ * @param userIds - Array of user IDs to create settings for
+ * @returns Promise that resolves when settings are created
  */
 async function seedSettings(userIds: string[]): Promise<void> {
   console.log('Seeding settings...');
@@ -280,6 +294,8 @@ async function seedSettings(userIds: string[]): Promise<void> {
 
 /**
  * Clear existing seed data
+ * Deletes all sample data from the database
+ * @returns Promise that resolves when data is cleared
  */
 async function clearSeedData(): Promise<void> {
   console.log('Clearing existing seed data...');
@@ -303,6 +319,8 @@ async function clearSeedData(): Promise<void> {
 
 /**
  * Seed the database with sample data
+ * Populates the database with sample users, funds, entries, bids, and settings
+ * @returns Promise that resolves when seeding is complete
  */
 async function seed(): Promise<void> {
   try {

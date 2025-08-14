@@ -20,6 +20,8 @@ export interface RefreshTokenRow {
 
 /**
  * Hash a refresh token with bcrypt
+ * @param token - Refresh token to hash
+ * @returns Promise that resolves to the hashed token
  */
 export async function hashRefreshToken(token: string): Promise<string> {
   const rounds = config.bcryptRounds;
@@ -28,6 +30,9 @@ export async function hashRefreshToken(token: string): Promise<string> {
 
 /**
  * Compare raw token with stored hash
+ * @param token - Raw refresh token
+ * @param hash - Hashed refresh token from storage
+ * @returns Promise that resolves to true if tokens match, false otherwise
  */
 export async function compareRefreshToken(token: string, hash: string): Promise<boolean> {
   return bcrypt.compare(token, hash);
@@ -35,6 +40,8 @@ export async function compareRefreshToken(token: string, hash: string): Promise<
 
 /**
  * Decode JWT to get jti and exp
+ * @param token - JWT refresh token to decode
+ * @returns Object containing jti and exp properties if available
  */
 export function decodeRefreshToken(token: string): { jti?: string; exp?: number } {
   const decoded = jwt.decode(token) as { jti?: string; exp?: number } | null;
@@ -43,6 +50,12 @@ export function decodeRefreshToken(token: string): { jti?: string; exp?: number 
 
 /**
  * Save a refresh token record for a user
+ * @param params - Parameters for saving the refresh token
+ * @param params.userId - ID of the user
+ * @param params.refreshToken - Refresh token to save
+ * @param params.userAgent - Optional user agent string
+ * @param params.ipAddress - Optional IP address
+ * @returns Promise that resolves when the token is saved
  */
 export async function saveRefreshToken(params: {
   userId: string;
@@ -78,6 +91,8 @@ export async function saveRefreshToken(params: {
 
 /**
  * Find a refresh token by JTI
+ * @param tokenJti - JTI (JWT ID) of the token to find
+ * @returns Promise that resolves to the token row or null if not found
  */
 export async function findRefreshTokenByJti(tokenJti: string): Promise<RefreshTokenRow | null> {
   const result = await query(
@@ -94,6 +109,9 @@ export async function findRefreshTokenByJti(tokenJti: string): Promise<RefreshTo
 
 /**
  * Revoke a refresh token by JTI
+ * Marks the token as revoked in the database
+ * @param tokenJti - JTI (JWT ID) of the token to revoke
+ * @returns Promise that resolves when the token is revoked
  */
 export async function revokeRefreshTokenByJti(tokenJti: string): Promise<void> {
   await query(
@@ -104,6 +122,9 @@ export async function revokeRefreshTokenByJti(tokenJti: string): Promise<void> {
 
 /**
  * Revoke all refresh tokens for a user
+ * Marks all tokens for the user as revoked in the database
+ * @param userId - ID of the user whose tokens should be revoked
+ * @returns Promise that resolves when all tokens are revoked
  */
 export async function revokeAllTokensForUser(userId: string): Promise<void> {
   await query(
@@ -114,6 +135,8 @@ export async function revokeAllTokensForUser(userId: string): Promise<void> {
 
 /**
  * Cleanup expired tokens (optional maintenance)
+ * Deletes all tokens that have expired from the database
+ * @returns Promise that resolves to the number of deleted tokens
  */
 export async function deleteExpiredTokens(): Promise<number> {
   const result = await query(

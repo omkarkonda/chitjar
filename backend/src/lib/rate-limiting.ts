@@ -16,6 +16,16 @@ import { isProduction } from './config';
 
 /**
  * Create a rate limiter with custom configuration
+ * @param options - Configuration options for the rate limiter
+ * @param options.windowMs - Window size in milliseconds
+ * @param options.max - Maximum number of requests in the window
+ * @param options.message - Custom error message
+ * @param options.skipSuccessfulRequests - Whether to skip successful requests
+ * @param options.skipFailedRequests - Whether to skip failed requests
+ * @param options.standardHeaders - Whether to enable standard headers
+ * @param options.legacyHeaders - Whether to enable legacy headers
+ * @param options.keyGenerator - Function to generate keys for rate limiting (default: IP address)
+ * @returns Express rate limiting middleware
  */
 function createRateLimiter(options: {
   windowMs: number;
@@ -95,8 +105,8 @@ export const apiRateLimiter = createRateLimiter({
 });
 
 /**
- * Strict rate limiter for data modification endpoints (POST, PUT, DELETE)
- * - 50 requests per 15 minutes per IP
+ * Rate limiter for data modification endpoints (lower limits)
+ * Allows 20 requests per minute for data modification operations
  */
 export const dataModificationRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -106,8 +116,8 @@ export const dataModificationRateLimiter = createRateLimiter({
 });
 
 /**
- * Relaxed rate limiter for read-only endpoints (GET)
- * - 200 requests per 15 minutes per IP
+ * Rate limiter for read-only endpoints (higher limits)
+ * Allows 100 requests per minute for read operations
  */
 export const readOnlyRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -192,7 +202,10 @@ export function getRateLimiter(limiter: any) {
 // ============================================================================
 
 /**
- * Apply rate limiting based on HTTP method
+ * Rate limiter based on HTTP method
+ * Applies different rate limits based on the HTTP method used
+ * @param limits - Object mapping HTTP methods to rate limiters
+ * @returns Express middleware that applies method-specific rate limiting
  */
 export function methodRateLimiter(options: {
   get?: any;

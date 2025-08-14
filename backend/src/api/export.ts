@@ -26,6 +26,9 @@ router.use(authenticateToken);
 
 /**
  * Convert array of objects to CSV string
+ * @param data - Array of objects to convert to CSV
+ * @param headers - Array of header objects with id and title properties
+ * @returns CSV string representation of the data
  */
 function convertToCsv(data: any[], headers: { id: string; title: string }[]): string {
   if (data.length === 0) {
@@ -136,8 +139,12 @@ async function getUserBackupData(userId: string): Promise<any> {
 // ============================================================================
 
 /**
- * Export all funds as CSV
+ * Export all funds for the authenticated user as CSV
  * GET /api/v1/export/funds.csv
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function exportFundsCsvHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -180,8 +187,12 @@ async function exportFundsCsvHandler(req: Request, res: Response, next: NextFunc
 }
 
 /**
- * Export all funds as JSON
+ * Export all funds for the authenticated user as JSON
  * GET /api/v1/export/funds.json
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function exportFundsJsonHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -207,8 +218,12 @@ async function exportFundsJsonHandler(req: Request, res: Response, next: NextFun
 }
 
 /**
- * Export all monthly entries as CSV
+ * Export all monthly entries for the authenticated user as CSV
  * GET /api/v1/export/entries.csv
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function exportEntriesCsvHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -247,8 +262,12 @@ async function exportEntriesCsvHandler(req: Request, res: Response, next: NextFu
 }
 
 /**
- * Export all monthly entries as JSON
+ * Export all monthly entries for the authenticated user as JSON
  * GET /api/v1/export/entries.json
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function exportEntriesJsonHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -274,8 +293,12 @@ async function exportEntriesJsonHandler(req: Request, res: Response, next: NextF
 }
 
 /**
- * Export all bids as CSV
+ * Export all bids for the authenticated user as CSV
  * GET /api/v1/export/bids.csv
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function exportBidsCsvHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -314,8 +337,12 @@ async function exportBidsCsvHandler(req: Request, res: Response, next: NextFunct
 }
 
 /**
- * Export all bids as JSON
+ * Export all bids for the authenticated user as JSON
  * GET /api/v1/export/bids.json
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function exportBidsJsonHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -341,8 +368,12 @@ async function exportBidsJsonHandler(req: Request, res: Response, next: NextFunc
 }
 
 /**
- * Export complete backup as JSON
+ * Export complete backup for the authenticated user as JSON
  * GET /api/v1/export/backup.json
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function exportBackupJsonHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {

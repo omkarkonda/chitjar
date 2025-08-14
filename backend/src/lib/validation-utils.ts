@@ -80,6 +80,8 @@ export function zodErrorToApiError(error: ZodError): ApiError {
 
 /**
  * Validate request body against a Zod schema
+ * @param schema - Zod schema to validate the request body against
+ * @returns Express middleware function that validates the request body
  */
 export function validateBody<T>(schema: ZodSchema<T>) {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -106,6 +108,8 @@ export function validateBody<T>(schema: ZodSchema<T>) {
 
 /**
  * Validate request query parameters against a Zod schema
+ * @param schema - Zod schema to validate the query parameters against
+ * @returns Express middleware function that validates the query parameters
  */
 export function validateQuery<T>(schema: ZodSchema<T>) {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -132,6 +136,8 @@ export function validateQuery<T>(schema: ZodSchema<T>) {
 
 /**
  * Validate request parameters against a Zod schema
+ * @param schema - Zod schema to validate the request parameters against
+ * @returns Express middleware function that validates the request parameters
  */
 export function validateParams<T>(schema: ZodSchema<T>) {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -158,6 +164,8 @@ export function validateParams<T>(schema: ZodSchema<T>) {
 
 /**
  * Combined validation middleware for body, query, and params
+ * @param options - Object containing optional schemas for body, query, and params validation
+ * @returns Express middleware function that validates all specified request parts
  */
 export function validate<TBody = any, TQuery = any, TParams = any>(options: {
   body?: ZodSchema<TBody>;
@@ -205,6 +213,9 @@ export function validate<TBody = any, TQuery = any, TParams = any>(options: {
 
 /**
  * Safe validation that returns result or error
+ * @param schema - Zod schema to validate data against
+ * @param data - Data to validate
+ * @returns Object with success flag and either validated data or error
  */
 export function safeValidate<T>(
   schema: ZodSchema<T>,
@@ -223,6 +234,10 @@ export function safeValidate<T>(
 
 /**
  * Validate data and throw API error on failure
+ * @param schema - Zod schema to validate data against
+ * @param data - Data to validate
+ * @returns Validated data if successful
+ * @throws ApiError if validation fails
  */
 export function validateOrThrow<T>(schema: ZodSchema<T>, data: unknown): T {
   try {
@@ -238,6 +253,9 @@ export function validateOrThrow<T>(schema: ZodSchema<T>, data: unknown): T {
 /**
  * Partial validation - only validate provided fields
  * Note: This works with ZodObject schemas only
+ * @param schema - ZodObject schema to validate against
+ * @param data - Data to validate
+ * @returns Validated partial data
  */
 export function validatePartial(
   schema: z.ZodObject<any>,
@@ -325,6 +343,9 @@ export function sanitizeString(value: string): string {
 
 /**
  * Validate and sanitize monetary amount
+ * @param value - Numeric value to validate and sanitize
+ * @returns Sanitized monetary amount rounded to 2 decimal places
+ * @throws ApiError if value is invalid, negative, or too large
  */
 export function validateMonetaryAmount(value: number): number {
   if (typeof value !== 'number' || isNaN(value)) {
@@ -361,6 +382,10 @@ export function validateMonetaryAmount(value: number): number {
 
 /**
  * Validate fund date range
+ * @param startMonth - Start month in YYYY-MM format
+ * @param endMonth - End month in YYYY-MM format
+ * @param totalMonths - Total number of months expected
+ * @throws ApiError if date range is invalid
  */
 export function validateFundDateRange(
   startMonth: string,
@@ -391,6 +416,10 @@ export function validateFundDateRange(
 
 /**
  * Validate early exit month
+ * @param earlyExitMonth - Early exit month in YYYY-MM format
+ * @param startMonth - Fund start month in YYYY-MM format
+ * @param endMonth - Fund end month in YYYY-MM format
+ * @throws ApiError if early exit month is invalid
  */
 export function validateEarlyExitMonth(
   earlyExitMonth: string,
@@ -408,6 +437,11 @@ export function validateEarlyExitMonth(
 
 /**
  * Validate month key is within fund range
+ * @param monthKey - Month key to validate in YYYY-MM format
+ * @param fundStartMonth - Fund start month in YYYY-MM format
+ * @param fundEndMonth - Fund end month in YYYY-MM format
+ * @param fundEarlyExitMonth - Optional fund early exit month in YYYY-MM format
+ * @throws ApiError if month key is outside fund range
  */
 export function validateMonthInFundRange(
   monthKey: string,
@@ -446,6 +480,10 @@ export function isApiError(error: unknown): error is ApiError {
 /**
  * Generate a series of months between start and end months (inclusive)
  * Handles mid-year starts and early exits
+ * @param startMonth - Start month in YYYY-MM format
+ * @param endMonth - End month in YYYY-MM format
+ * @returns Array of month keys in YYYY-MM format
+ * @throws Error if start month is after end month
  */
 export function generateMonthSeries(
   startMonth: string,
@@ -477,6 +515,10 @@ export function generateMonthSeries(
 /**
  * Generate a series of months for a fund, considering early exit
  * Handles mid-year starts and early exits
+ * @param fundStartMonth - Fund start month in YYYY-MM format
+ * @param fundEndMonth - Fund end month in YYYY-MM format
+ * @param fundEarlyExitMonth - Optional fund early exit month in YYYY-MM format
+ * @returns Array of month keys in YYYY-MM format
  */
 export function generateFundMonthSeries(
   fundStartMonth: string,
@@ -490,6 +532,9 @@ export function generateFundMonthSeries(
 /**
  * Check if a month series has missing months
  * Useful for identifying zero/missing months
+ * @param existingMonths - Array of existing month keys
+ * @param expectedMonths - Array of expected month keys
+ * @returns Array of missing month keys
  */
 export function findMissingMonths(
   existingMonths: string[],

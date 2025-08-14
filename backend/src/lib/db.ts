@@ -6,6 +6,8 @@ let pool: Pool | null = null;
 
 /**
  * Initialize the database connection pool
+ * Creates a new PostgreSQL connection pool with configured settings
+ * @returns The initialized database connection pool
  */
 export function initializeDatabase(): Pool {
   if (pool) {
@@ -33,6 +35,8 @@ export function initializeDatabase(): Pool {
 
 /**
  * Get the database pool instance
+ * Returns the existing pool if initialized, otherwise initializes a new one
+ * @returns The database connection pool
  */
 export function getPool(): Pool {
   if (!pool) {
@@ -43,6 +47,10 @@ export function getPool(): Pool {
 
 /**
  * Execute a query with parameters
+ * Executes a PostgreSQL query and returns the result
+ * @param text - SQL query string
+ * @param params - Optional array of query parameters
+ * @returns Promise that resolves to the query result
  */
 export async function query(
   text: string,
@@ -59,6 +67,9 @@ export async function query(
 
 /**
  * Execute a query within a transaction
+ * Wraps a callback function in a database transaction with BEGIN/COMMIT/ROLLBACK
+ * @param callback - Function that executes queries within the transaction context
+ * @returns Promise that resolves to the result of the callback function
  */
 export async function transaction<T>(
   callback: (client: PoolClient) => Promise<T> // eslint-disable-line no-unused-vars
@@ -79,6 +90,9 @@ export async function transaction<T>(
 
 /**
  * Execute multiple queries in a transaction
+ * Executes an array of queries within a single database transaction
+ * @param queries - Array of query objects with text and optional params
+ * @returns Promise that resolves when all queries are executed
  */
 export async function executeQueries(queries: Array<{ text: string; params?: any[] }>): Promise<void> {
   await transaction(async (client) => {
@@ -90,6 +104,8 @@ export async function executeQueries(queries: Array<{ text: string; params?: any
 
 /**
  * Check if the database connection is healthy
+ * Performs a simple query to verify database connectivity
+ * @returns Promise that resolves to true if database is healthy, false otherwise
  */
 export async function healthCheck(): Promise<boolean> {
   try {

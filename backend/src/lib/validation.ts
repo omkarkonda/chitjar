@@ -49,6 +49,7 @@ export const monthKeySchema = z
 
 /**
  * Positive decimal validation for monetary values
+ * @returns Zod schema for positive monetary values
  */
 export const monetarySchema = z
   .number()
@@ -56,7 +57,10 @@ export const monetarySchema = z
   .max(99999999.99, 'Amount too large')
   .multipleOf(0.01, 'Amount can have at most 2 decimal places');
 
-/**\n * Non-negative decimal validation for monetary values (allows 0)\n */
+/**
+ * Non-negative decimal validation for monetary values (allows 0)
+ * @returns Zod schema for non-negative monetary values
+ */
 export const nonNegativeMonetarySchema = z
   .number()
   .nonnegative('Amount cannot be negative')
@@ -65,6 +69,8 @@ export const nonNegativeMonetarySchema = z
 
 /**
  * Custom validation for monetary values that must not exceed a chit value
+ * @param chitValue - Maximum allowed value (chit value)
+ * @returns Zod schema for monetary values within chit value limits
  */
 export const monetaryWithinChitValueSchema = (chitValue: number) => 
   z.number()
@@ -75,6 +81,8 @@ export const monetaryWithinChitValueSchema = (chitValue: number) =>
 
 /**
  * Custom validation for non-negative monetary values that must not exceed a chit value
+ * @param chitValue - Maximum allowed value (chit value)
+ * @returns Zod schema for non-negative monetary values within chit value limits
  */
 export const nonNegativeMonetaryWithinChitValueSchema = (chitValue: number) => 
   z.number()

@@ -63,7 +63,10 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 
 /**
  * POST /api/v1/auth/signup
- * User registration
+ * User registration endpoint
+ * @param req - Express request object containing user registration data in body
+ * @param res - Express response object
+ * @returns Promise that resolves when response is sent
  */
 router.post('/signup', 
   validateBody(userRegistrationSchema),
@@ -140,7 +143,10 @@ router.post('/signup',
 
 /**
  * POST /api/v1/auth/login
- * User login
+ * User login endpoint
+ * @param req - Express request object containing user credentials in body
+ * @param res - Express response object
+ * @returns Promise that resolves when response is sent
  */
 router.post('/login',
   validateBody(userLoginSchema),
@@ -227,7 +233,10 @@ router.post('/login',
 
 /**
  * POST /api/v1/auth/logout
- * User logout
+ * User logout endpoint
+ * @param req - Express request object
+ * @param res - Express response object
+ * @returns Promise that resolves when response is sent
  */
 router.post('/logout', authenticateToken, async (_req, res) => {
   try {
@@ -249,7 +258,10 @@ router.post('/logout', authenticateToken, async (_req, res) => {
 
 /**
  * POST /api/v1/auth/refresh
- * Refresh access token
+ * Refresh access token endpoint
+ * @param req - Express request object containing refresh token in body
+ * @param res - Express response object
+ * @returns Promise that resolves when response is sent
  */
 router.post('/refresh', async (req, res) => {
   try {
@@ -306,7 +318,11 @@ router.post('/refresh', async (req, res) => {
 
 /**
  * GET /api/v1/auth/profile
- * Get current user profile
+ * Get user profile endpoint
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
@@ -349,7 +365,11 @@ router.get('/profile', authenticateToken, async (req, res) => {
 
 /**
  * PUT /api/v1/auth/profile
- * Update current user profile
+ * Update user profile endpoint
+ * @param req - Express request object containing profile update data in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 router.put('/profile', authenticateToken, async (req, res) => {
   try {

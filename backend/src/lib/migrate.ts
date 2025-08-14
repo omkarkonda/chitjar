@@ -7,6 +7,8 @@ const MIGRATION_TABLE = 'schema_migrations';
 
 /**
  * Initialize the migration system
+ * Creates the migration tracking table if it doesn't exist
+ * @returns Promise that resolves when initialization is complete
  */
 async function initializeMigrationTable(): Promise<void> {
   const tableExists = await schema.tableExists(MIGRATION_TABLE);
@@ -26,6 +28,7 @@ async function initializeMigrationTable(): Promise<void> {
 
 /**
  * Get all applied migrations
+ * @returns Promise that resolves to an array of applied migration versions
  */
 async function getAppliedMigrations(): Promise<string[]> {
   const result = await query(`SELECT version FROM ${MIGRATION_TABLE} ORDER BY version`);
@@ -34,6 +37,11 @@ async function getAppliedMigrations(): Promise<string[]> {
 
 /**
  * Apply a single migration
+ * Executes migration SQL and records it in the migration tracking table
+ * @param version - Migration version identifier
+ * @param name - Migration name
+ * @param sql - SQL to execute for the migration
+ * @returns Promise that resolves when migration is applied
  */
 async function applyMigration(version: string, name: string, sql: string): Promise<void> {
   await transaction(async (client) => {
@@ -52,6 +60,8 @@ async function applyMigration(version: string, name: string, sql: string): Promi
 
 /**
  * Run all pending migrations
+ * Applies any migrations that haven't been applied yet
+ * @returns Promise that resolves when all migrations are complete
  */
 export async function runMigrations(): Promise<void> {
   try {
@@ -102,6 +112,8 @@ export async function runMigrations(): Promise<void> {
 
 /**
  * Rollback the last migration
+ * Removes the last applied migration from the tracking table
+ * @returns Promise that resolves when rollback is complete
  */
 export async function rollbackLastMigration(): Promise<void> {
   try {
@@ -140,6 +152,8 @@ export async function rollbackLastMigration(): Promise<void> {
 
 /**
  * Show migration status
+ * Displays information about applied migrations
+ * @returns Promise that resolves when status is displayed
  */
 export async function showMigrationStatus(): Promise<void> {
   try {
@@ -166,6 +180,7 @@ export async function showMigrationStatus(): Promise<void> {
 /**
  * Reset database (drop all tables and re-run migrations)
  * WARNING: This will delete all data!
+ * @returns Promise that resolves when database is reset
  */
 export async function resetDatabase(): Promise<void> {
   try {

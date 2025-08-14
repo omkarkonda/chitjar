@@ -59,6 +59,9 @@ const uuidParamSchema = z.object({
 
 /**
  * Get funds with user filtering
+ * @param userId - The ID of the user to get funds for
+ * @param filters - Optional filters for pagination and filtering (page, limit, is_active, search)
+ * @returns Promise that resolves to an array of fund objects with entry and bid counts
  */
 async function getUserFunds(userId: string, filters: any = {}): Promise<any[]> {
   const { page = 1, limit = 20, is_active, search } = filters;
@@ -101,6 +104,9 @@ async function getUserFunds(userId: string, filters: any = {}): Promise<any[]> {
 
 /**
  * Get fund by ID with user ownership check
+ * @param userId - The ID of the user who should own the fund
+ * @param fundId - The ID of the fund to retrieve
+ * @returns Promise that resolves to the fund object or null if not found
  */
 async function getUserFundById(userId: string, fundId: string): Promise<any> {
   const result = await query(`
@@ -117,6 +123,9 @@ async function getUserFundById(userId: string, fundId: string): Promise<any> {
 
 /**
  * Count funds with user filtering
+ * @param userId - The ID of the user to count funds for
+ * @param filters - Optional filters for counting (is_active, search)
+ * @returns Promise that resolves to the count of matching funds
  */
 async function countUserFunds(userId: string, filters: any = {}): Promise<number> {
   let whereClause = 'WHERE f.user_id = $1';
@@ -151,6 +160,10 @@ async function countUserFunds(userId: string, filters: any = {}): Promise<number
 /**
  * Create a new fund
  * POST /api/v1/funds
+ * @param req - Express request object containing fund data in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function createFundHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -182,6 +195,10 @@ async function createFundHandler(req: Request, res: Response, next: NextFunction
 /**
  * Get all funds for the authenticated user
  * GET /api/v1/funds
+ * @param req - Express request object with optional query parameters for filtering
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getFundsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -220,6 +237,10 @@ async function getFundsHandler(req: Request, res: Response, next: NextFunction):
 /**
  * Get a specific fund by ID
  * GET /api/v1/funds/:id
+ * @param req - Express request object containing fund ID in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getFundHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -249,6 +270,10 @@ async function getFundHandler(req: Request, res: Response, next: NextFunction): 
 /**
  * Update a fund
  * PUT /api/v1/funds/:id
+ * @param req - Express request object containing fund ID in params and update data in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function updateFundHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -318,6 +343,10 @@ async function updateFundHandler(req: Request, res: Response, next: NextFunction
 /**
  * Delete a fund
  * DELETE /api/v1/funds/:id
+ * @param req - Express request object containing fund ID in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function deleteFundHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {

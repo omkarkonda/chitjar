@@ -4,6 +4,7 @@ import { ERROR_CODES } from './api-conventions';
 import { HTTP_STATUS } from './api-conventions';
 
 // Custom sanitizer to prevent XSS
+// Removes script tags, HTML tags, and dangerous attributes from strings
 const sanitizeHtml = (value: string): string => {
   if (typeof value !== 'string') return value;
   return value
@@ -15,6 +16,7 @@ const sanitizeHtml = (value: string): string => {
 };
 
 // Validation error handler
+// Checks for validation errors and sends appropriate error response
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -30,6 +32,7 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
 };
 
 // Common sanitizers
+// Sanitize string field in request body
 export const sanitizeString = (field: string) => 
   body(field)
     .optional()
@@ -37,6 +40,7 @@ export const sanitizeString = (field: string) =>
     .escape()
     .customSanitizer(sanitizeHtml);
 
+// Sanitize string field in query parameters
 export const sanitizeQueryString = (field: string) =>
   query(field)
     .optional()
@@ -44,6 +48,7 @@ export const sanitizeQueryString = (field: string) =>
     .escape()
     .customSanitizer(sanitizeHtml);
 
+// Sanitize string field in route parameters
 export const sanitizeParamString = (field: string) =>
   param(field)
     .trim()

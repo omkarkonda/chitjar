@@ -56,7 +56,12 @@ const fundIdParamSchema = z.object({
 // Helper Functions
 // ============================================================================
 
-/**\n * Check if user owns the fund\n */
+/**
+ * Check if user owns the fund
+ * @param userId - The ID of the user
+ * @param fundId - The ID of the fund to check ownership for
+ * @returns Promise that resolves to true if user owns the fund, false otherwise
+ */
 async function checkFundOwnership(userId: string, fundId: string): Promise<boolean> {
   const result = await query(
     'SELECT 1 FROM funds WHERE id = $1 AND user_id = $2',
@@ -65,7 +70,12 @@ async function checkFundOwnership(userId: string, fundId: string): Promise<boole
   return (result.rowCount || 0) > 0;
 }
 
-/**\n * Check if user owns the fund and get fund details\n */
+/**
+ * Check if user owns the fund and get fund details
+ * @param userId - The ID of the user
+ * @param fundId - The ID of the fund to get details for
+ * @returns Promise that resolves to fund details object or null if not found
+ */
 async function getFundDetails(userId: string, fundId: string): Promise<any> {
   const result = await query(
     'SELECT chit_value, start_month, end_month, early_exit_month FROM funds WHERE id = $1 AND user_id = $2',
@@ -76,6 +86,9 @@ async function getFundDetails(userId: string, fundId: string): Promise<any> {
 
 /**
  * Get monthly entries with user filtering through fund ownership
+ * @param userId - The ID of the user to get entries for
+ * @param filters - Optional filters for pagination and filtering (page, limit, fund_id, month_key, is_paid)
+ * @returns Promise that resolves to an array of monthly entry objects
  */
 async function getUserMonthlyEntries(userId: string, filters: any = {}): Promise<any[]> {
   const { page = 1, limit = 20, fund_id, month_key, is_paid } = filters;
@@ -120,6 +133,9 @@ async function getUserMonthlyEntries(userId: string, filters: any = {}): Promise
 
 /**
  * Get monthly entry by ID with user ownership check through fund
+ * @param userId - The ID of the user who should own the entry's fund
+ * @param entryId - The ID of the monthly entry to retrieve
+ * @returns Promise that resolves to the entry object or null if not found
  */
 async function getUserMonthlyEntryById(userId: string, entryId: string): Promise<any> {
   const result = await query(`
@@ -137,6 +153,9 @@ async function getUserMonthlyEntryById(userId: string, entryId: string): Promise
 
 /**
  * Count monthly entries with user filtering through fund ownership
+ * @param userId - The ID of the user to count entries for
+ * @param filters - Optional filters for counting (fund_id, month_key, is_paid)
+ * @returns Promise that resolves to the count of matching entries
  */
 async function countUserMonthlyEntries(userId: string, filters: any = {}): Promise<number> {
   let whereClause = 'WHERE f.user_id = $1';
@@ -174,6 +193,9 @@ async function countUserMonthlyEntries(userId: string, filters: any = {}): Promi
 /**
  * Get all expected months for a fund, including missing ones
  * Handles mid-year starts, early exits, and identifies zero/missing months
+ * @param userId - The ID of the user who owns the fund
+ * @param fundId - The ID of the fund to get month series for
+ * @returns Promise that resolves to an array of month objects with entry details
  */
 async function getFundMonthSeriesWithEntries(userId: string, fundId: string): Promise<any[]> {
   // First get the fund details
@@ -241,9 +263,12 @@ async function getFundMonthSeriesWithEntries(userId: string, fundId: string): Pr
 /**
  * Create a new monthly entry
  * POST /api/v1/entries
- * 
  * Note: When saving a monthly entry, the month is automatically marked as "paid"
  * as per requirement AC2 in the PRD.
+ * @param req - Express request object containing entry data in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function createMonthlyEntryHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -297,6 +322,10 @@ async function createMonthlyEntryHandler(req: Request, res: Response, next: Next
 /**
  * Get all monthly entries for the authenticated user
  * GET /api/v1/entries
+ * @param req - Express request object with optional query parameters for filtering
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getMonthlyEntriesHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -336,6 +365,10 @@ async function getMonthlyEntriesHandler(req: Request, res: Response, next: NextF
 /**
  * Get monthly entries for a specific fund
  * GET /api/v1/funds/:fundId/entries
+ * @param req - Express request object containing fundId in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getFundMonthlyEntriesHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -398,6 +431,10 @@ async function getFundMonthlyEntriesHandler(req: Request, res: Response, next: N
 /**
  * Get a specific monthly entry by ID
  * GET /api/v1/entries/:id
+ * @param req - Express request object containing entry ID in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function getMonthlyEntryHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -437,9 +474,12 @@ async function getMonthlyEntryHandler(req: Request, res: Response, next: NextFun
 /**
  * Update a monthly entry
  * PUT /api/v1/entries/:id
- * 
  * Note: When updating a monthly entry, the month is automatically marked as "paid"
  * as per requirement AC2 in the PRD.
+ * @param req - Express request object containing entry ID in params and update data in body
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function updateMonthlyEntryHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -533,6 +573,10 @@ async function updateMonthlyEntryHandler(req: Request, res: Response, next: Next
 /**
  * Delete a monthly entry
  * DELETE /api/v1/entries/:id
+ * @param req - Express request object containing entry ID in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
  */
 async function deleteMonthlyEntryHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
