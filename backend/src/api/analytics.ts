@@ -245,7 +245,7 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
   const fundsResult = await query(`
     SELECT 
       f.id, f.name, f.chit_value, f.installment_amount, f.total_months,
-      f.start_month, f.end_month, f.early_exit_month
+      f.start_month, f.end_month, f.early_exit_month, f.needs_recalculation
     FROM funds f
     WHERE f.user_id = $1 AND f.is_active = true
     ORDER BY f.created_at DESC
@@ -256,6 +256,9 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
   // Calculate analytics for each fund
   const fundAnalytics = [];
   let totalProfit = 0;
+  
+  // Track which funds need recalculation
+  const fundsNeedingRecalculation = [];
   
   for (const fund of funds) {
     const cashFlow = await getFundCashFlowSeries(userId, fund.id);
@@ -275,7 +278,20 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
         xirr: fundXirr,
         cash_flow_count: cashFlow.length
       });
+      
+      // Track if this fund needs recalculation
+      if (fund.needs_recalculation) {
+        fundsNeedingRecalculation.push(fund.id);
+      }
     }
+  }
+  
+  // Mark all funds that needed recalculation as recalculated
+  if (fundsNeedingRecalculation.length > 0) {
+    await query(
+      `UPDATE funds SET needs_recalculation = false WHERE id = ANY($1)`,
+      [fundsNeedingRecalculation]
+    );
   }
   
   return {
@@ -339,6 +355,15 @@ async function getFundAnalyticsHandler(req: Request, res: Response, next: NextFu
       return;
     }
     
+    // Get fund details to check if recalculation is needed
+    const fundResult = await query(
+      'SELECT needs_recalculation FROM funds WHERE id = $1 AND user_id = $2',
+      [id, userId]
+    );
+    
+    const fund = fundResult.rows[0];
+    let needsRecalculation = fund ? fund.needs_recalculation : true;
+    
     // Get cash flow series
     const cashFlow = await getFundCashFlowSeries(userId, id);
     
@@ -347,6 +372,14 @@ async function getFundAnalyticsHandler(req: Request, res: Response, next: NextFu
     
     // Calculate projections
     const projections = await calculateProjections(userId, id);
+    
+    // If we determined that recalculation was needed, mark the fund as recalculated
+    if (needsRecalculation) {
+      await query(
+        'UPDATE funds SET needs_recalculation = false WHERE id = $1',
+        [id]
+      );
+    }
     
     sendSuccess(res, {
       fund_id: id,

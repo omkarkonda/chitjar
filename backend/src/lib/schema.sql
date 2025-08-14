@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS funds (
     end_month VARCHAR(7) NOT NULL, -- Format: YYYY-MM
     is_active BOOLEAN DEFAULT true,
     early_exit_month VARCHAR(7), -- Format: YYYY-MM, NULL if not exited early
+    needs_recalculation BOOLEAN DEFAULT true, -- Flag to indicate if analytics need recalculation
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -200,6 +201,28 @@ CREATE TRIGGER validate_monthly_entry_trigger
 CREATE TRIGGER validate_bid_trigger
     BEFORE INSERT OR UPDATE ON bids
     FOR EACH ROW EXECUTE FUNCTION validate_bid();
+
+-- Function to mark fund as needing recalculation
+CREATE OR REPLACE FUNCTION mark_fund_for_recalculation()
+RETURNS TRIGGER AS $
+BEGIN
+    -- Update the fund to mark it as needing recalculation
+    UPDATE funds 
+    SET needs_recalculation = true
+    WHERE id = COALESCE(NEW.fund_id, OLD.fund_id);
+    
+    RETURN COALESCE(NEW, OLD);
+END;
+$ LANGUAGE plpgsql;
+
+-- Triggers to mark funds for recalculation when entries or bids change
+CREATE TRIGGER monthly_entry_recalc_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON monthly_entries
+    FOR EACH ROW EXECUTE FUNCTION mark_fund_for_recalculation();
+
+CREATE TRIGGER bid_recalc_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON bids
+    FOR EACH ROW EXECUTE FUNCTION mark_fund_for_recalculation();
 
 -- Function to validate month_key format (YYYY-MM)
 CREATE OR REPLACE FUNCTION validate_month_key(month_key VARCHAR(7))

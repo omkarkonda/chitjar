@@ -69,10 +69,15 @@ export async function runMigrations(): Promise<void> {
         version: '001',
         name: 'Initial Schema',
         sql: fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8')
+      },
+      {
+        version: '002',
+        name: 'Add recalculation triggers',
+        sql: fs.readFileSync(path.join(__dirname, '..', 'migrations', '002-add-recalculation-triggers.sql'), 'utf8')
       }
       // Future migrations can be added here
       // {
-      //   version: '002',
+      //   version: '003',
       //   name: 'Add new feature',
       //   sql: 'ALTER TABLE funds ADD COLUMN new_column VARCHAR(255);'
       // }
