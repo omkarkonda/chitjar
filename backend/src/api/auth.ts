@@ -31,13 +31,21 @@ function generateTokens(userId: string): { accessToken: string; refreshToken: st
   const accessToken = jwt.sign(
     { userId },
     config.jwtSecret,
-    { expiresIn: '1h' }
+    { 
+      expiresIn: '1h',
+      issuer: 'chitjar-api',
+      audience: 'chitjar-app'
+    }
   );
   
   const refreshToken = jwt.sign(
     { userId },
     config.jwtRefreshSecret,
-    { expiresIn: '7d' }
+    { 
+      expiresIn: '7d',
+      issuer: 'chitjar-api',
+      audience: 'chitjar-app'
+    }
   );
   
   return { accessToken, refreshToken };

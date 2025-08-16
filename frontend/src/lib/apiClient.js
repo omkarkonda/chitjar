@@ -90,6 +90,7 @@ class ApiClient {
       headers: this.getAuthHeaders(),
       ...options,
     };
+
     const response = await fetch(url, config);
 
     // Handle successful responses
@@ -173,6 +174,14 @@ class ApiClient {
     const response = await this.post('/auth/login', credentials);
     if (response.data && response.data.accessToken) {
       this.setAuthToken(response.data.accessToken);
+      // Save refresh token if provided
+      if (response.data.refreshToken) {
+        try {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        } catch (error) {
+          // Failed to save refresh token to storage
+        }
+      }
     }
     return response;
   }
