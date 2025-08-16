@@ -541,38 +541,100 @@ p {
   margin: 0 auto;
 }
 
-.dashboard h2,
+.dashboard__header,
 .funds h2,
 .add h2,
 .insights h2 {
   font-size: var(--font-size-2xl);
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
   margin-bottom: var(--spacing-6);
-  color: var(--gray-900);
+  color: var(--text-primary);
 }
 
 .dashboard__stats {
   margin-bottom: var(--spacing-8);
 }
 
-.dashboard__chart {
-  background: var(--white);
+.dashboard__chart-container {
+  background: var(--bg-primary);
   border-radius: var(--radius-lg);
   padding: var(--spacing-6);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--border-primary);
+  margin-bottom: var(--spacing-8);
+}
+
+.chart-header {
+  margin-bottom: var(--spacing-4);
+}
+
+.chart-header h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.chart-placeholder {
   text-align: center;
-  color: var(--gray-500);
+  padding: var(--spacing-8);
+  color: var(--text-tertiary);
+}
+
+.chart-placeholder p {
+  margin: 0;
+}
+
+.chart-canvas {
+  width: 100% !important;
+  height: 300px !important;
+}
+
+.dashboard__error {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-primary);
+  text-align: center;
 }
 
 .funds__list {
-  background: var(--white);
+  background: var(--bg-primary);
   border-radius: var(--radius-lg);
   padding: var(--spacing-6);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--border-primary);
   text-align: center;
-  color: var(--gray-500);
+  color: var(--text-tertiary);
+}
+
+/* Loading skeletons */
+.loading__skeleton {
+  background: linear-gradient(90deg, var(--gray-200), var(--gray-300), var(--gray-200));
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.stat-value-skeleton {
+  height: 2.5rem;
+  width: 80%;
+  margin: var(--spacing-2) 0;
+}
+
+.chart-skeleton {
+  height: 300px;
+  width: 100%;
 }
 
 /* Responsive design */

@@ -2,6 +2,7 @@
 import './styles/main.css';
 import { apiClient } from './lib/apiClient.js';
 import { navBar } from './components/NavBar.js';
+import { dashboard } from './components/Dashboard.js';
 
 class ChitJarApp {
   constructor() {
@@ -197,17 +198,17 @@ class ChitJarApp {
   }
 
   renderDashboard() {
+    // Initialize dashboard component
+    setTimeout(() => {
+      dashboard.loadData();
+    }, 0);
+
     return `
       <div class="dashboard">
-        <h2>Dashboard</h2>
-        <div class="dashboard__stats">
-          <div class="stat-card">
-            <h3>Total Profit</h3>
-            <p class="stat-value">₹0</p>
-          </div>
-        </div>
-        <div class="dashboard__chart">
-          <p>Chart will be implemented here</p>
+        <!-- Dashboard content will be rendered by the Dashboard component -->
+        <div class="loading">
+          <div class="loading__spinner"></div>
+          <p>Loading dashboard...</p>
         </div>
       </div>
     `;
