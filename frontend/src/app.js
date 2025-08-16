@@ -4,6 +4,7 @@ import { apiClient } from './lib/apiClient.js';
 import { navBar } from './components/NavBar.js';
 import { dashboard } from './components/Dashboard.js';
 import { fundsList } from './components/FundsList.js';
+import { fundForm } from './components/FundForm.js';
 
 class ChitJarApp {
   constructor() {
@@ -205,7 +206,15 @@ class ChitJarApp {
         }
         break;
       case 'add':
-        main.innerHTML = this.renderAdd();
+        // Check authentication before rendering add form
+        if (!apiClient.isAuthenticated()) {
+          this.currentRoute = 'login';
+          main.innerHTML = this.renderLogin();
+        } else {
+          main.innerHTML = this.renderAdd();
+          // Initialize fund form component after rendering
+          fundForm.initCreate();
+        }
         break;
       case 'insights':
         main.innerHTML = this.renderInsights();
@@ -276,10 +285,54 @@ class ChitJarApp {
   }
 
   renderAdd() {
+    // Return the initial fund form HTML structure
     return `
       <div class="add">
-        <h2>Add Fund</h2>
-        <p>Fund creation form will be implemented here</p>
+        <div class="fund-form-container">
+          <div class="fund-form__header">
+            <h2>Add New Fund</h2>
+            <p class="fund-form__subtitle">Create a new chit fund to track</p>
+          </div>
+          
+          <form class="fund-form">
+            <div class="form-group">
+              <div class="loading__skeleton form-skeleton"></div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <div class="loading__skeleton form-skeleton"></div>
+              </div>
+              
+              <div class="form-group">
+                <div class="loading__skeleton form-skeleton"></div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <div class="loading__skeleton form-skeleton"></div>
+              </div>
+              
+              <div class="form-group">
+                <div class="loading__skeleton form-skeleton"></div>
+              </div>
+              
+              <div class="form-group">
+                <div class="loading__skeleton form-skeleton"></div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <div class="loading__skeleton form-skeleton-textarea"></div>
+            </div>
+            
+            <div class="form-actions">
+              <div class="loading__skeleton form-button-skeleton"></div>
+              <div class="loading__skeleton form-button-skeleton"></div>
+            </div>
+          </form>
+        </div>
       </div>
     `;
   }
