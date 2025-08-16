@@ -174,6 +174,8 @@ class ChitJarApp {
     switch (this.currentRoute) {
       case 'dashboard':
         main.innerHTML = this.renderDashboard();
+        // Initialize dashboard component after rendering
+        dashboard.loadData();
         break;
       case 'funds':
         main.innerHTML = this.renderFunds();
@@ -191,6 +193,8 @@ class ChitJarApp {
         // If not authenticated, show login, otherwise show dashboard
         if (apiClient.isAuthenticated()) {
           main.innerHTML = this.renderDashboard();
+          // Initialize dashboard component after rendering
+          dashboard.loadData();
         } else {
           main.innerHTML = this.renderLogin();
         }
@@ -198,17 +202,27 @@ class ChitJarApp {
   }
 
   renderDashboard() {
-    // Initialize dashboard component
-    setTimeout(() => {
-      dashboard.loadData();
-    }, 0);
-
+    // Return the initial dashboard HTML structure
     return `
       <div class="dashboard">
-        <!-- Dashboard content will be rendered by the Dashboard component -->
-        <div class="loading">
-          <div class="loading__spinner"></div>
-          <p>Loading dashboard...</p>
+        <div class="dashboard__header">
+          <h2>Dashboard</h2>
+        </div>
+        
+        <div class="dashboard__stats">
+          <div class="stat-card">
+            <h3>Total Profit</h3>
+            <div class="loading__skeleton stat-value-skeleton"></div>
+          </div>
+        </div>
+        
+        <div class="dashboard__chart-container">
+          <div class="chart-header">
+            <h3>Fund vs Profit</h3>
+          </div>
+          <div class="chart-placeholder">
+            <div class="loading__skeleton chart-skeleton"></div>
+          </div>
         </div>
       </div>
     `;

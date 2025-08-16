@@ -45,44 +45,25 @@ class Dashboard {
     if (!container) return;
 
     if (this.isLoading) {
-      container.innerHTML = this.renderLoadingState();
+      // Already showing loading state from app.js, no need to re-render
       return;
     }
 
     if (this.error) {
       container.innerHTML = this.renderErrorState();
+      // Add event listener for retry button
+      const retryButton = container.querySelector('#retry-dashboard');
+      if (retryButton) {
+        retryButton.addEventListener('click', () => {
+          this.loadData();
+        });
+      }
       return;
     }
 
+    // Render the dashboard content
     container.innerHTML = this.renderDashboard();
     this.renderChart();
-  }
-
-  /**
-   * Render the loading state
-   */
-  renderLoadingState() {
-    return `
-      <div class="dashboard__header">
-        <h2>Dashboard</h2>
-      </div>
-      
-      <div class="dashboard__stats">
-        <div class="stat-card">
-          <h3>Total Profit</h3>
-          <div class="loading__skeleton stat-value-skeleton"></div>
-        </div>
-      </div>
-      
-      <div class="dashboard__chart-container">
-        <div class="chart-header">
-          <h3>Fund vs Profit</h3>
-        </div>
-        <div class="chart-placeholder">
-          <div class="loading__skeleton chart-skeleton"></div>
-        </div>
-      </div>
-    `;
   }
 
   /**
@@ -90,8 +71,11 @@ class Dashboard {
    */
   renderErrorState() {
     return `
-      <div class="dashboard__header">
-        <h2>Dashboard</h2>
+      <div class="dashboard__stats">
+        <div class="stat-card">
+          <h3>Total Profit</h3>
+          <p class="stat-value">₹0</p>
+        </div>
       </div>
       
       <div class="dashboard__error">
@@ -108,10 +92,6 @@ class Dashboard {
    */
   renderDashboard() {
     return `
-      <div class="dashboard__header">
-        <h2>Dashboard</h2>
-      </div>
-      
       <div class="dashboard__stats">
         <div class="stat-card">
           <h3>Total Profit</h3>
