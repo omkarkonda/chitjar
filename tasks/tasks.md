@@ -113,7 +113,7 @@
 
 - [ ] 4.0 Frontend UI: Mobile-first Screens and Navigation
   - [x] 4.1 Global layout: index.html, responsive grid, accessible color tokens, typography.
-  - [ ] 4.2 Navigation: bottom nav (Dashboard, Funds, Add, Insights); desktop sidebar.
+  - [x] 4.2 Navigation: bottom nav (Dashboard, Funds, Add, Insights); desktop sidebar.
   - [ ] 4.3 Dashboard: Total Profit card and Fund vs Profit chart with loading/empty states.
   - [ ] 4.4 Funds List: cards with chit value, installment, progress (months paid/total), and navigation.
   - [ ] 4.5 Fund Form: create/edit with validation, helper tooltips, and success/error toasts.

@@ -19,6 +19,32 @@
         <p class="header__subtitle">Track your chit fund investments</p>
       </header>
 
+      <!-- Desktop sidebar navigation -->
+      <nav class="nav-sidebar" role="navigation" aria-label="Main navigation">
+        <div class="nav-sidebar__items">
+          <button class="nav-sidebar__item nav-sidebar__item--active" data-route="dashboard" aria-label="Dashboard">
+            <span class="nav-sidebar__icon" aria-hidden="true">📊</span>
+            <span class="nav-sidebar__label">Dashboard</span>
+          </button>
+          <button class="nav-sidebar__item" data-route="funds" aria-label="Funds">
+            <span class="nav-sidebar__icon" aria-hidden="true">💰</span>
+            <span class="nav-sidebar__label">Funds</span>
+          </button>
+          <button class="nav-sidebar__item" data-route="add" aria-label="Add Fund">
+            <span class="nav-sidebar__icon" aria-hidden="true">➕</span>
+            <span class="nav-sidebar__label">Add</span>
+          </button>
+          <button class="nav-sidebar__item" data-route="insights" aria-label="Insights">
+            <span class="nav-sidebar__icon" aria-hidden="true">📈</span>
+            <span class="nav-sidebar__label">Insights</span>
+          </button>
+          <button class="nav-sidebar__item" data-route="logout" style="display: none;" aria-label="Logout">
+            <span class="nav-sidebar__icon" aria-hidden="true">🚪</span>
+            <span class="nav-sidebar__label">Logout</span>
+          </button>
+        </div>
+      </nav>
+
       <main class="main">
         <div class="loading">
           <div class="loading__spinner"></div>
@@ -26,26 +52,27 @@
         </div>
       </main>
 
-      <nav class="nav" role="navigation" aria-label="Main navigation">
-        <button class="nav__item nav__item--active" data-route="dashboard" aria-label="Dashboard">
-          <span class="nav__icon" aria-hidden="true">📊</span>
-          <span class="nav__label">Dashboard</span>
+      <!-- Mobile bottom navigation -->
+      <nav class="nav-bottom" role="navigation" aria-label="Main navigation">
+        <button class="nav-bottom__item nav-bottom__item--active" data-route="dashboard" aria-label="Dashboard">
+          <span class="nav-bottom__icon" aria-hidden="true">📊</span>
+          <span class="nav-bottom__label">Dashboard</span>
         </button>
-        <button class="nav__item" data-route="funds" aria-label="Funds">
-          <span class="nav__icon" aria-hidden="true">💰</span>
-          <span class="nav__label">Funds</span>
+        <button class="nav-bottom__item" data-route="funds" aria-label="Funds">
+          <span class="nav-bottom__icon" aria-hidden="true">💰</span>
+          <span class="nav-bottom__label">Funds</span>
         </button>
-        <button class="nav__item" data-route="add" aria-label="Add Fund">
-          <span class="nav__icon" aria-hidden="true">➕</span>
-          <span class="nav__label">Add</span>
+        <button class="nav-bottom__item" data-route="add" aria-label="Add Fund">
+          <span class="nav-bottom__icon" aria-hidden="true">➕</span>
+          <span class="nav-bottom__label">Add</span>
         </button>
-        <button class="nav__item" data-route="insights" aria-label="Insights">
-          <span class="nav__icon" aria-hidden="true">📈</span>
-          <span class="nav__label">Insights</span>
+        <button class="nav-bottom__item" data-route="insights" aria-label="Insights">
+          <span class="nav-bottom__icon" aria-hidden="true">📈</span>
+          <span class="nav-bottom__label">Insights</span>
         </button>
-        <button class="nav__item" data-route="logout" style="display: none;" aria-label="Logout">
-          <span class="nav__icon" aria-hidden="true">🚪</span>
-          <span class="nav__label">Logout</span>
+        <button class="nav-bottom__item" data-route="logout" style="display: none;" aria-label="Logout">
+          <span class="nav-bottom__icon" aria-hidden="true">🚪</span>
+          <span class="nav-bottom__label">Logout</span>
         </button>
       </nav>
     </div>

@@ -2,7 +2,7 @@
  * Navigation Bar Component for ChitJar Frontend
  *
  * This component provides the main navigation interface with
- * authentication-aware links.
+ * authentication-aware links for both mobile (bottom) and desktop (sidebar) layouts.
  */
 
 import { apiClient } from '../lib/apiClient.js';
@@ -18,17 +18,19 @@ class NavBar {
   }
 
   setupEventListeners() {
-    // Navigation event listeners
-    document.querySelectorAll('.nav__item').forEach(item => {
-      item.addEventListener('click', e => {
-        const route = e.currentTarget.dataset.route;
-        if (route === 'logout') {
-          this.handleLogout();
-        } else if (route) {
-          this.handleNavigation(route);
-        }
+    // Navigation event listeners for both mobile and desktop
+    document
+      .querySelectorAll('.nav-bottom__item, .nav-sidebar__item')
+      .forEach(item => {
+        item.addEventListener('click', e => {
+          const route = e.currentTarget.dataset.route;
+          if (route === 'logout') {
+            this.handleLogout();
+          } else if (route) {
+            this.handleNavigation(route);
+          }
+        });
       });
-    });
   }
 
   handleNavigation(route) {
@@ -44,10 +46,8 @@ class NavBar {
     const url = route === 'dashboard' ? '/' : `/${route}`;
     window.history.pushState({ route }, '', url);
 
-    // Update active nav item
-    document.querySelectorAll('.nav__item').forEach(item => {
-      item.classList.toggle('nav__item--active', item.dataset.route === route);
-    });
+    // Update active nav items for both mobile and desktop
+    this.updateActiveState(route);
 
     // Dispatch custom event for app to handle route change
     window.dispatchEvent(new CustomEvent('routeChange', { detail: { route } }));
@@ -64,10 +64,31 @@ class NavBar {
     this.updateAuthState();
   }
 
+  updateActiveState(route) {
+    // Update active nav items for both mobile and desktop
+    document
+      .querySelectorAll('.nav-bottom__item, .nav-sidebar__item')
+      .forEach(item => {
+        item.classList.toggle(
+          'nav-bottom__item--active',
+          item.classList.contains('nav-bottom__item') &&
+            item.dataset.route === route
+        );
+        item.classList.toggle(
+          'nav-sidebar__item--active',
+          item.classList.contains('nav-sidebar__item') &&
+            item.dataset.route === route
+        );
+      });
+  }
+
   updateAuthState() {
     const isAuthenticated = apiClient.isAuthenticated();
-    // Update navigation items based on auth state
-    const navItems = document.querySelectorAll('.nav__item');
+
+    // Update navigation items based on auth state for both mobile and desktop
+    const navItems = document.querySelectorAll(
+      '.nav-bottom__item, .nav-sidebar__item'
+    );
     navItems.forEach(item => {
       const route = item.dataset.route;
       // Hide/show protected routes based on auth state
@@ -75,30 +96,43 @@ class NavBar {
         item.style.display = isAuthenticated ? 'flex' : 'none';
       }
     });
+
     // Show/hide auth-related items
-    const loginItem = document.querySelector('[data-route="login"]');
-    const logoutItem = document.querySelector('[data-route="logout"]');
+    const loginItems = document.querySelectorAll('[data-route="login"]');
+    const logoutItems = document.querySelectorAll('[data-route="logout"]');
 
-    if (loginItem) {
-      loginItem.style.display = isAuthenticated ? 'none' : 'flex';
-    }
+    loginItems.forEach(item => {
+      item.style.display = isAuthenticated ? 'none' : 'flex';
+    });
 
-    if (logoutItem) {
-      logoutItem.style.display = isAuthenticated ? 'flex' : 'none';
-    }
+    logoutItems.forEach(item => {
+      item.style.display = isAuthenticated ? 'flex' : 'none';
+    });
   }
 
   show() {
-    const nav = document.querySelector('.nav');
-    if (nav) {
-      nav.style.display = 'flex';
+    const bottomNav = document.querySelector('.nav-bottom');
+    const sidebarNav = document.querySelector('.nav-sidebar');
+
+    if (bottomNav) {
+      bottomNav.style.display = 'flex';
+    }
+
+    if (sidebarNav) {
+      sidebarNav.style.display = 'block';
     }
   }
 
   hide() {
-    const nav = document.querySelector('.nav');
-    if (nav) {
-      nav.style.display = 'none';
+    const bottomNav = document.querySelector('.nav-bottom');
+    const sidebarNav = document.querySelector('.nav-sidebar');
+
+    if (bottomNav) {
+      bottomNav.style.display = 'none';
+    }
+
+    if (sidebarNav) {
+      sidebarNav.style.display = 'none';
     }
   }
 }
