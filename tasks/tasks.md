@@ -112,7 +112,7 @@
 - [x] 3.9 Input validation rules for unrealistic values (negative dividends, prizeMoney > chitValue) using Zod schemas.
 
 - [ ] 4.0 Frontend UI: Mobile-first Screens and Navigation
-  - [ ] 4.1 Global layout: index.html, responsive grid, accessible color tokens, typography.
+  - [x] 4.1 Global layout: index.html, responsive grid, accessible color tokens, typography.
   - [ ] 4.2 Navigation: bottom nav (Dashboard, Funds, Add, Insights); desktop sidebar.
   - [ ] 4.3 Dashboard: Total Profit card and Fund vs Profit chart with loading/empty states.
   - [ ] 4.4 Funds List: cards with chit value, installment, progress (months paid/total), and navigation.
