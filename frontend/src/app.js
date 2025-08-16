@@ -3,6 +3,7 @@ import './styles/main.css';
 import { apiClient } from './lib/apiClient.js';
 import { navBar } from './components/NavBar.js';
 import { dashboard } from './components/Dashboard.js';
+import { fundsList } from './components/FundsList.js';
 
 class ChitJarApp {
   constructor() {
@@ -184,7 +185,24 @@ class ChitJarApp {
         }
         break;
       case 'funds':
-        main.innerHTML = this.renderFunds();
+        // Check authentication before rendering funds
+        if (!apiClient.isAuthenticated()) {
+          this.currentRoute = 'login';
+          main.innerHTML = this.renderLogin();
+        } else {
+          main.innerHTML = this.renderFunds();
+          // Initialize funds list component after rendering
+          fundsList.loadData();
+          // Add event listener for add fund button
+          setTimeout(() => {
+            const addFundButton = document.getElementById('add-first-fund');
+            if (addFundButton) {
+              addFundButton.addEventListener('click', () => {
+                this.navigate('add');
+              });
+            }
+          }, 0);
+        }
         break;
       case 'add':
         main.innerHTML = this.renderAdd();
@@ -235,11 +253,23 @@ class ChitJarApp {
   }
 
   renderFunds() {
+    // Return the initial funds list HTML structure
     return `
       <div class="funds">
-        <h2>My Funds</h2>
-        <div class="funds__list">
-          <p>No funds yet. Add your first fund!</p>
+        <div class="funds__header">
+          <h2>My Funds</h2>
+        </div>
+        
+        <div class="funds__grid">
+          <div class="fund-card">
+            <div class="loading__skeleton fund-card-skeleton"></div>
+          </div>
+          <div class="fund-card">
+            <div class="loading__skeleton fund-card-skeleton"></div>
+          </div>
+          <div class="fund-card">
+            <div class="loading__skeleton fund-card-skeleton"></div>
+          </div>
         </div>
       </div>
     `;
