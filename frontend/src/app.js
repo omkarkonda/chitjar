@@ -173,9 +173,15 @@ class ChitJarApp {
     // Render based on current route
     switch (this.currentRoute) {
       case 'dashboard':
-        main.innerHTML = this.renderDashboard();
-        // Initialize dashboard component after rendering
-        dashboard.loadData();
+        // Check authentication before rendering dashboard
+        if (!apiClient.isAuthenticated()) {
+          this.currentRoute = 'login';
+          main.innerHTML = this.renderLogin();
+        } else {
+          main.innerHTML = this.renderDashboard();
+          // Initialize dashboard component after rendering
+          dashboard.loadData();
+        }
         break;
       case 'funds':
         main.innerHTML = this.renderFunds();

@@ -21,6 +21,14 @@ class Dashboard {
    * Load dashboard data from the API
    */
   async loadData() {
+    // Check if user is authenticated before trying to load data
+    if (!apiClient.isAuthenticated()) {
+      this.error = 'You must be logged in to view the dashboard';
+      this.isLoading = false;
+      this.render();
+      return;
+    }
+
     this.isLoading = true;
     this.error = null;
 
@@ -29,7 +37,16 @@ class Dashboard {
       this.totalProfit = response.data.total_profit || 0;
       this.funds = response.data.funds || [];
     } catch (error) {
-      this.error = error.message || 'Failed to load dashboard data';
+      // Handle authentication errors specifically
+      if (error.message && error.message.includes('Invalid access token')) {
+        this.error = 'Your session has expired. Please log in again.';
+        // Clear the invalid token
+        apiClient.clearToken();
+        // Dispatch a logout event to redirect to login
+        window.dispatchEvent(new CustomEvent('logout'));
+      } else {
+        this.error = error.message || 'Failed to load dashboard data';
+      }
       console.error('Dashboard data load error:', error);
     } finally {
       this.isLoading = false;
