@@ -4,8 +4,10 @@ import { apiClient } from './lib/apiClient.js';
 import { navBar } from './components/NavBar.js';
 import { dashboard } from './components/Dashboard.js';
 import { fundsList } from './components/FundsList.js';
-import { fundForm } from './components/FundForm.js';
 import { fundDetail } from './components/FundDetail.js';
+import { fundForm } from './components/FundForm.js';
+import { monthlyEntryForm } from './components/MonthlyEntryForm.js';
+import { insights } from './components/Insights.js';
 
 class ChitJarApp {
   constructor() {
@@ -251,6 +253,17 @@ class ChitJarApp {
           }
         }
         break;
+      case 'insights':
+        // Check authentication before rendering insights
+        if (!apiClient.isAuthenticated()) {
+          this.currentRoute = 'login';
+          main.innerHTML = this.renderLogin();
+        } else {
+          main.innerHTML = this.renderInsights();
+          // Initialize insights component after rendering
+          insights.loadData();
+        }
+        break;
       case 'add':
         // Check authentication before rendering add form
         if (!apiClient.isAuthenticated()) {
@@ -465,6 +478,21 @@ class ChitJarApp {
           <button type="submit" class="btn btn--primary">Login</button>
         </form>
         <p>Don't have an account? <a href="/signup.html">Sign up</a></p>
+      </div>
+    `;
+  }
+
+  renderInsights() {
+    // Return the initial insights HTML structure
+    return `
+      <div class="insights">
+        <div class="insights__header">
+          <div class="loading__skeleton insights-header-skeleton"></div>
+        </div>
+        
+        <div class="insights__content">
+          <div class="loading__skeleton insights-content-skeleton"></div>
+        </div>
       </div>
     `;
   }

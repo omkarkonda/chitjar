@@ -62,6 +62,8 @@
 - frontend/src/styles/modal.css - Modal dialog styles for forms and other overlays.
 - frontend/components/MonthlyEntryForm.js - Add/edit monthly dividend and prize money; mark month as paid; handle zero values.
 - frontend/components/Insights.js - Strategic bidding insights UI with trends and scenario projections.
+- frontend/src/components/Insights.js - Insights component for historical bidding trends and guidance.
+- frontend/src/styles/insights.css - Styles for the insights component.
 - frontend/components/CSVImportDialog.js - CSV import flow with mapped preview, line-level errors, and confirm.
 - frontend/components/ExportDialog.js - CSV/JSON export options.
 - frontend/components/Charts.js - Chart helpers (Chart.js/ECharts) with color-blind friendly palettes.
@@ -125,7 +127,7 @@
   - [x] 4.5 Fund Form: create/edit with validation, helper tooltips, and success/error toasts.
   - [x] 4.6 Fund Detail: KPIs (Current Profit, ROI, Avg Monthly Dividend, Months to Completion, XIRR), monthly entries list.
   - [x] 4.7 Monthly Entry Form: add/edit dividend and prize money; mark month as paid; handle zero values.
-  - [ ] 4.8 Insights Page: historical bidding trends (table + chart), borrower vs investor guidance, projected payouts.
+  - [x] 4.8 Insights Page: historical bidding trends (table + chart), borrower vs investor guidance, projected payouts.
   - [ ] 4.9 Import/Export UI: CSV import dialog with preview/errors; JSON/CSV export controls.
   - [ ] 4.10 Accessibility: keyboard navigation, focus states, ARIA labels, color-blind palettes.
   - [ ] 4.11 Performance: pagination/virtualization for long lists; debounce recalculations; skeleton loaders.

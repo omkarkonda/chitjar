@@ -2,6 +2,7 @@
 @import './fund-detail.css';
 @import './monthly-entry-form.css';
 @import './modal.css';
+@import './insights.css';
 
 * {
   margin: 0;
