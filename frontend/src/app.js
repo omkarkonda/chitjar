@@ -37,8 +37,7 @@ class ChitJarApp {
     window.addEventListener('popstate', e => {
       // Extract route from URL for parameterized routes
       const path = window.location.pathname;
-      const search = window.location.search;
-      
+
       if (path === '/fund') {
         this.currentRoute = 'fund';
       } else {
@@ -46,7 +45,7 @@ class ChitJarApp {
       }
       this.render();
     });
-    
+
     // Handle logout event from NavBar
     window.addEventListener('logout', () => {
       this.logout();
@@ -145,7 +144,7 @@ class ChitJarApp {
     } else {
       url = routePart === 'dashboard' ? '/' : `/${routePart}`;
     }
-    
+
     window.history.pushState({ route: routePart }, '', url);
 
     // Update active nav item through NavBar

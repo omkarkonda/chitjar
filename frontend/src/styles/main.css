@@ -1,4 +1,8 @@
 /* Reset and base styles */
+@import './fund-detail.css';
+@import './monthly-entry-form.css';
+@import './modal.css';
+
 * {
   margin: 0;
   padding: 0;
@@ -1136,15 +1140,6 @@ p {
     border: 1px solid var(--gray-300);
   }
 }
-
-/* Fund Detail Styles */
-@import './fund-detail.css';
-
-/* Monthly Entry Form Styles */
-@import './monthly-entry-form.css';
-
-/* Modal Styles */
-@import './modal.css';
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {

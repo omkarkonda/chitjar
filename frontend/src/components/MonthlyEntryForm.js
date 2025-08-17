@@ -1,6 +1,6 @@
 /**
  * Monthly Entry Form Component for ChitJar Frontend
- * 
+ *
  * This component allows users to add or edit monthly entries for a fund,
  * including dividend amount, prize money, and payment status.
  */
@@ -19,7 +19,7 @@ class MonthlyEntryForm {
       dividend_amount: '',
       prize_money: '',
       is_paid: true,
-      notes: ''
+      notes: '',
     };
     this.fund = null;
     this.isLoading = false;
@@ -44,11 +44,11 @@ class MonthlyEntryForm {
       dividend_amount: '',
       prize_money: '',
       is_paid: true,
-      notes: ''
+      notes: '',
     };
     this.onSuccess = onSuccess;
     this.onCancel = onCancel;
-    
+
     // Load fund details for validation
     this.loadFundDetails();
   }
@@ -64,7 +64,7 @@ class MonthlyEntryForm {
     this.isEditing = true;
     this.onSuccess = onSuccess;
     this.onCancel = onCancel;
-    
+
     // Load existing entry data
     await this.loadEntryData();
   }
@@ -74,7 +74,7 @@ class MonthlyEntryForm {
    */
   async loadFundDetails() {
     if (!this.fundId) return;
-    
+
     try {
       const response = await apiClient.get(`/funds/${this.fundId}`);
       this.fund = response.data;
@@ -91,20 +91,20 @@ class MonthlyEntryForm {
    */
   async loadEntryData() {
     if (!this.entryId) return;
-    
+
     this.isLoading = true;
     this.error = null;
     this.render();
-    
+
     try {
       const response = await apiClient.get(`/entries/${this.entryId}`);
       this.entry = {
         ...response.data,
         dividend_amount: formatINR(response.data.dividend_amount),
-        prize_money: formatINR(response.data.prize_money)
+        prize_money: formatINR(response.data.prize_money),
       };
       this.fundId = response.data.fund_id;
-      
+
       // Load fund details
       await this.loadFundDetails();
     } catch (error) {
@@ -122,11 +122,11 @@ class MonthlyEntryForm {
    */
   async handleSubmit(e) {
     e.preventDefault();
-    
+
     // Parse numeric values
     const dividendAmount = parseINR(this.entry.dividend_amount);
     const prizeMoney = parseINR(this.entry.prize_money);
-    
+
     // Prepare data for submission
     const submitData = {
       fund_id: this.fundId,
@@ -134,9 +134,9 @@ class MonthlyEntryForm {
       dividend_amount: dividendAmount,
       prize_money: prizeMoney,
       is_paid: this.entry.is_paid,
-      notes: this.entry.notes
+      notes: this.entry.notes,
     };
-    
+
     // Validate data
     const validation = validateMonthlyEntry(submitData, this.fund);
     if (!validation.isValid) {
@@ -144,11 +144,11 @@ class MonthlyEntryForm {
       this.render();
       return;
     }
-    
+
     this.isLoading = true;
     this.error = null;
     this.render();
-    
+
     try {
       let response;
       if (this.isEditing) {
@@ -158,7 +158,7 @@ class MonthlyEntryForm {
         // Create new entry
         response = await apiClient.post('/entries', submitData);
       }
-      
+
       // Success callback
       if (this.onSuccess) {
         this.onSuccess(response.data);
@@ -198,7 +198,7 @@ class MonthlyEntryForm {
   render() {
     const container = document.querySelector('.modal-content') || document.body;
     container.innerHTML = this.renderForm();
-    
+
     // Add event listeners
     this.addEventListeners();
   }
@@ -220,14 +220,14 @@ class MonthlyEntryForm {
         </div>
       `;
     }
-    
-    const monthLabel = this.entry.month_key 
-      ? new Date(this.entry.month_key + '-01').toLocaleDateString('en-IN', { 
-          year: 'numeric', 
-          month: 'long' 
+
+    const monthLabel = this.entry.month_key
+      ? new Date(this.entry.month_key + '-01').toLocaleDateString('en-IN', {
+          year: 'numeric',
+          month: 'long',
         })
       : '';
-    
+
     return `
       <div class="monthly-entry-form">
         <div class="form-header">
@@ -235,11 +235,15 @@ class MonthlyEntryForm {
           <p>${monthLabel}</p>
         </div>
         
-        ${this.error ? `
+        ${
+          this.error
+            ? `
           <div class="error-message">
             <p>${this.error}</p>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
         <form id="monthly-entry-form">
           <input type="hidden" id="month-key" value="${this.entry.month_key}">
@@ -304,7 +308,7 @@ class MonthlyEntryForm {
               class="btn btn--primary"
               ${this.isLoading ? 'disabled' : ''}
             >
-              ${this.isLoading ? 'Saving...' : (this.isEditing ? 'Update Entry' : 'Add Entry')}
+              ${this.isLoading ? 'Saving...' : this.isEditing ? 'Update Entry' : 'Add Entry'}
             </button>
           </div>
         </form>
@@ -318,38 +322,38 @@ class MonthlyEntryForm {
   addEventListeners() {
     const form = document.getElementById('monthly-entry-form');
     if (form) {
-      form.addEventListener('submit', (e) => this.handleSubmit(e));
+      form.addEventListener('submit', e => this.handleSubmit(e));
     }
-    
+
     const cancelBtn = document.getElementById('cancel-btn');
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => this.handleCancel());
     }
-    
+
     const dividendInput = document.getElementById('dividend-amount');
     if (dividendInput) {
-      dividendInput.addEventListener('input', (e) => {
+      dividendInput.addEventListener('input', e => {
         this.handleInputChange('dividend_amount', e.target.value);
       });
     }
-    
+
     const prizeInput = document.getElementById('prize-money');
     if (prizeInput) {
-      prizeInput.addEventListener('input', (e) => {
+      prizeInput.addEventListener('input', e => {
         this.handleInputChange('prize_money', e.target.value);
       });
     }
-    
+
     const paidCheckbox = document.getElementById('is-paid');
     if (paidCheckbox) {
-      paidCheckbox.addEventListener('change', (e) => {
+      paidCheckbox.addEventListener('change', e => {
         this.handleInputChange('is_paid', e.target.checked);
       });
     }
-    
+
     const notesInput = document.getElementById('notes');
     if (notesInput) {
-      notesInput.addEventListener('input', (e) => {
+      notesInput.addEventListener('input', e => {
         this.handleInputChange('notes', e.target.value);
       });
     }

@@ -153,8 +153,12 @@ class FundsList {
    */
   renderFundCard(fund) {
     // Ensure progress object exists
-    const progress = fund.progress || { paid: 0, total: fund.total_months || 0, percentage: 0 };
-    
+    const progress = fund.progress || {
+      paid: 0,
+      total: fund.total_months || 0,
+      percentage: 0,
+    };
+
     return `
       <div class="fund-card" data-fund-id="${fund.id}">
         <div class="fund-card__header">

@@ -27,7 +27,7 @@ export function formatINR(amount, decimals = 2) {
   if (typeof amount === 'string') {
     numericAmount = parseFloat(amount);
   }
-  
+
   if (typeof numericAmount !== 'number' || isNaN(numericAmount)) {
     return '0.00';
   }
