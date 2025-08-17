@@ -17,18 +17,24 @@
  * formatINR(100000) => "1,00,000.00"
  * formatINR(10000000) => "1,00,00,000.00"
  *
- * @param {number} amount - The amount to format
+ * @param {number|string} amount - The amount to format
  * @param {number} decimals - Number of decimal places (default: 2)
  * @returns {string} Formatted INR string
  */
 export function formatINR(amount, decimals = 2) {
-  if (typeof amount !== 'number' || isNaN(amount)) {
+  // Convert string to number if needed
+  let numericAmount = amount;
+  if (typeof amount === 'string') {
+    numericAmount = parseFloat(amount);
+  }
+  
+  if (typeof numericAmount !== 'number' || isNaN(numericAmount)) {
     return '0.00';
   }
 
   // Round to specified decimal places
   const rounded =
-    Math.round(amount * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    Math.round(numericAmount * Math.pow(10, decimals)) / Math.pow(10, decimals);
 
   // Convert to string and split into integer and decimal parts
   const [integerPart, decimalPart = ''] = rounded.toString().split('.');

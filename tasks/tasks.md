@@ -29,23 +29,23 @@
 - backend/scripts/generate-secrets.js - Script to generate secure secrets for the application.
 - scripts/setup-dev.js - Root-level development environment setup script.
 - README.md - Comprehensive project documentation with setup instructions and API reference.
-- backend/api/auth.ts - Auth handlers for signup, login, session management; enforce per-user data isolation.
-- backend/api/funds.ts - CRUD endpoints for funds, input validation, ownership checks. Fixed authentication token access pattern.
-- backend/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers. Modified to always mark entries as paid when saved. Added functions to handle irregularities like zero/missing months, mid-year start, and early exit flags. Added validation for prize_money not exceeding chit_value.
-- backend/api/bids.ts - CRUD for bids plus CSV import endpoint with schema validation and preview. Added CSV import functionality for historical winning bids. Added validation for winning_bid and discount_amount not exceeding chit_value.
-- backend/api/analytics.ts - Server-side heavy calculations (XIRR, projections, FD comparison) to ensure consistency with Excel.
-- backend/lib/db.ts - Database client/ORM setup and schema helpers with connection pooling and transaction support.
-- backend/lib/schema.sql - PostgreSQL schema with tables for users, funds, monthly_entries, bids, settings including constraints, indexes, and triggers.
-- backend/lib/migrate.ts - TypeScript migration system for database schema versioning and updates.
+- backend/src/api/auth.ts - Auth handlers for signup, login, session management; enforce per-user data isolation.
+- backend/src/api/funds.ts - CRUD endpoints for funds, input validation, ownership checks. Fixed authentication token access pattern.
+- backend/src/api/monthly-entries.ts - CRUD endpoints for monthly dividend/prize entries with recalculation triggers. Modified to always mark entries as paid when saved. Added functions to handle irregularities like zero/missing months, mid-year start, and early exit flags. Added validation for prize_money not exceeding chit_value.
+- backend/src/api/bids.ts - CRUD for bids plus CSV import endpoint with schema validation and preview. Added CSV import functionality for historical winning bids. Added validation for winning_bid and discount_amount not exceeding chit_value.
+- backend/src/api/analytics.ts - Server-side heavy calculations (XIRR, projections, FD comparison) to ensure consistency with Excel.
+- backend/src/lib/db.ts - Database client/ORM setup and schema helpers with connection pooling and transaction support.
+- backend/src/lib/schema.sql - PostgreSQL schema with tables for users, funds, monthly_entries, bids, settings including constraints, indexes, and triggers.
+- backend/src/lib/migrate.ts - TypeScript migration system for database schema versioning and updates.
 - backend/scripts/migrate.js - JavaScript migration script for running migrations via npm scripts.
 - backend/src/test/db.test.ts - Database connection and schema validation tests.
 - backend/README.md - Backend documentation with database setup instructions and API reference.
-- backend/lib/validation.ts - Shared schemas (e.g., zod/yup) for server-side validation.
-- backend/lib/validation-utils.ts - Utility functions for validation including new functions to handle irregularities in month series.
-- backend/lib/csv.ts - CSV parsing, sanitization, template generation, and error reporting helpers. New library for handling CSV import functionality.
-- backend/lib/xirr.ts - Wrapper around a proven XIRR library; parity tests vs Excel.
-- backend/lib/forecast.ts - Average-based forecasting utilities, encapsulated for future upgrades.
-- backend/lib/format.ts - INR currency formatting, Indian digit grouping, DD/MM/YYYY utilities (server).
+- backend/src/lib/validation.ts - Shared schemas (e.g., zod/yup) for server-side validation.
+- backend/src/lib/validation-utils.ts - Utility functions for validation including new functions to handle irregularities in month series.
+- backend/src/lib/csv.ts - CSV parsing, sanitization, template generation, and error reporting helpers. New library for handling CSV import functionality.
+- backend/src/lib/xirr.ts - Wrapper around a proven XIRR library; parity tests vs Excel.
+- backend/src/lib/forecast.ts - Average-based forecasting utilities, encapsulated for future upgrades.
+- backend/src/lib/format.ts - INR currency formatting, Indian digit grouping, DD/MM/YYYY utilities (server).
 - frontend/index.html - App shell with mobile-first meta and base layout.
 - frontend/styles/main.css - Global styles; accessible color palette; responsive layout; print-friendly tables.
 - frontend/app.js - App bootstrap, simple router, and centralized state management.
@@ -57,6 +57,10 @@
 - frontend/src/components/FundDetail.js - Fund detail component with KPIs and entries list.
 - frontend/src/styles/fund-detail.css - Styles for the fund detail component.
 - frontend/components/MonthlyEntryForm.js - Add/edit monthly dividend and prize money entries.
+- frontend/src/components/MonthlyEntryForm.js - Monthly entry form component for adding/editing dividend and prize money.
+- frontend/src/styles/monthly-entry-form.css - Styles for the monthly entry form component.
+- frontend/src/styles/modal.css - Modal dialog styles for forms and other overlays.
+- frontend/components/MonthlyEntryForm.js - Add/edit monthly dividend and prize money; mark month as paid; handle zero values.
 - frontend/components/Insights.js - Strategic bidding insights UI with trends and scenario projections.
 - frontend/components/CSVImportDialog.js - CSV import flow with mapped preview, line-level errors, and confirm.
 - frontend/components/ExportDialog.js - CSV/JSON export options.
@@ -120,7 +124,7 @@
   - [x] 4.4 Funds List: cards with chit value, installment, progress (months paid/total), and navigation.
   - [x] 4.5 Fund Form: create/edit with validation, helper tooltips, and success/error toasts.
   - [x] 4.6 Fund Detail: KPIs (Current Profit, ROI, Avg Monthly Dividend, Months to Completion, XIRR), monthly entries list.
-  - [ ] 4.7 Monthly Entry Form: add/edit dividend and prize money; mark month as paid; handle zero values.
+  - [x] 4.7 Monthly Entry Form: add/edit dividend and prize money; mark month as paid; handle zero values.
   - [ ] 4.8 Insights Page: historical bidding trends (table + chart), borrower vs investor guidance, projected payouts.
   - [ ] 4.9 Import/Export UI: CSV import dialog with preview/errors; JSON/CSV export controls.
   - [ ] 4.10 Accessibility: keyboard navigation, focus states, ARIA labels, color-blind palettes.

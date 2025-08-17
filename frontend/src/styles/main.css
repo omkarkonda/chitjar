@@ -1140,6 +1140,12 @@ p {
 /* Fund Detail Styles */
 @import './fund-detail.css';
 
+/* Monthly Entry Form Styles */
+@import './monthly-entry-form.css';
+
+/* Modal Styles */
+@import './modal.css';
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,

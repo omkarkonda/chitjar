@@ -35,9 +35,18 @@ class ChitJarApp {
 
     // Handle browser back/forward
     window.addEventListener('popstate', e => {
-      this.currentRoute = e.state?.route || 'dashboard';
+      // Extract route from URL for parameterized routes
+      const path = window.location.pathname;
+      const search = window.location.search;
+      
+      if (path === '/fund') {
+        this.currentRoute = 'fund';
+      } else {
+        this.currentRoute = e.state?.route || 'dashboard';
+      }
       this.render();
     });
+    
     // Handle logout event from NavBar
     window.addEventListener('logout', () => {
       this.logout();
@@ -103,24 +112,41 @@ class ChitJarApp {
   }
 
   async loadFunds() {
-    // TODO: Implement API call to load funds
+    try {
+      const response = await apiClient.get('/funds');
+      this.funds = response.data.funds || [];
+      this.isLoading = false;
+      this.render();
+    } catch (error) {
+      console.error('Failed to load funds:', error);
+      this.setState({ error: 'Failed to load funds' });
+    }
   }
 
   navigate(route) {
     // Auth guard for protected routes
-    const protectedRoutes = ['dashboard', 'funds', 'add', 'insights'];
-    if (protectedRoutes.includes(route) && !apiClient.isAuthenticated()) {
+    const protectedRoutes = ['dashboard', 'funds', 'add', 'insights', 'fund'];
+    const baseRoute = route.split('?')[0];
+    if (protectedRoutes.includes(baseRoute) && !apiClient.isAuthenticated()) {
       // Redirect to login
       this.currentRoute = 'login';
       this.render();
       return;
     }
 
-    this.currentRoute = route;
+    // Extract base route and parameters
+    const [routePart, params] = route.split('?');
+    this.currentRoute = routePart;
 
     // Update URL
-    const url = route === 'dashboard' ? '/' : `/${route}`;
-    window.history.pushState({ route }, '', url);
+    let url;
+    if (routePart === 'fund') {
+      url = `/fund?${params}`;
+    } else {
+      url = routePart === 'dashboard' ? '/' : `/${routePart}`;
+    }
+    
+    window.history.pushState({ route: routePart }, '', url);
 
     // Update active nav item through NavBar
     navBar.updateAuthState();
@@ -244,8 +270,16 @@ class ChitJarApp {
         main.innerHTML = this.renderLogin();
         break;
       default:
-        // If not authenticated, show login, otherwise show dashboard
-        if (apiClient.isAuthenticated()) {
+        // Handle parameterized routes like fund?fundId=123
+        if (this.currentRoute === 'fund' && apiClient.isAuthenticated()) {
+          main.innerHTML = this.renderFundDetail();
+          // Initialize fund detail component after rendering
+          const fundId = this.getRouteParam('fundId');
+          if (fundId) {
+            fundDetail.loadData(fundId);
+          }
+        } else if (apiClient.isAuthenticated()) {
+          // If not authenticated, show login, otherwise show dashboard
           main.innerHTML = this.renderDashboard();
           // Initialize dashboard component after rendering
           dashboard.loadData();

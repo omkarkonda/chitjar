@@ -7,6 +7,7 @@
 
 import { apiClient } from '../lib/apiClient.js';
 import { formatINR, formatDate } from '../lib/formatters.js';
+import { monthlyEntryForm } from './MonthlyEntryForm.js';
 
 class FundDetail {
   constructor() {
@@ -290,10 +291,16 @@ class FundDetail {
    * Render a single entry
    */
   renderEntry(entry) {
-    const entryDate = entry.month_key
-      ? new Date(entry.month_key + '-01')
-      : null;
-    const formattedDate = entryDate ? formatDate(entryDate) : entry.month_key;
+    // Format the month key as a readable date
+    let formattedDate = entry.month_key;
+    if (entry.month_key) {
+      const [year, month] = entry.month_key.split('-');
+      if (year && month) {
+        // Create a date object for the first day of the month
+        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+        formattedDate = formatDate(date);
+      }
+    }
 
     return `
       <div class="entry-card" data-entry-id="${entry.id}">
@@ -342,8 +349,7 @@ class FundDetail {
     const addEntryButton = document.querySelector('#add-entry');
     if (addEntryButton) {
       addEntryButton.addEventListener('click', () => {
-        // TODO: Implement add entry functionality
-        console.log('Add entry clicked for fund:', this.fund?.id);
+        this.showAddEntryForm();
       });
     }
 
@@ -351,8 +357,7 @@ class FundDetail {
     const addFirstEntryButton = document.querySelector('#add-first-entry');
     if (addFirstEntryButton) {
       addFirstEntryButton.addEventListener('click', () => {
-        // TODO: Implement add entry functionality
-        console.log('Add first entry clicked for fund:', this.fund?.id);
+        this.showAddEntryForm();
       });
     }
 
@@ -361,10 +366,199 @@ class FundDetail {
     editEntryButtons.forEach(button => {
       button.addEventListener('click', e => {
         const entryId = e.target.closest('.edit-entry').dataset.entryId;
-        // TODO: Implement edit entry functionality
-        console.log('Edit entry clicked:', entryId);
+        this.showEditEntryForm(entryId);
       });
     });
+  }
+
+  /**
+   * Show the add entry form
+   */
+  showAddEntryForm() {
+    if (!this.fund) return;
+
+    // Find the next month that doesn't have an entry yet
+    const existingMonths = new Set(this.entries.map(entry => entry.month_key));
+    
+    // Generate all expected months for the fund
+    const expectedMonths = this.generateMonthSeries(
+      this.fund.start_month,
+      this.fund.end_month,
+      this.fund.early_exit_month
+    );
+    
+    // Find the first month without an entry
+    let nextMonth = null;
+    for (const month of expectedMonths) {
+      if (!existingMonths.has(month)) {
+        nextMonth = month;
+        break;
+      }
+    }
+    
+    // If all months have entries, use the last month
+    if (!nextMonth && expectedMonths.length > 0) {
+      nextMonth = expectedMonths[expectedMonths.length - 1];
+    }
+    
+    if (!nextMonth) {
+      // Fallback to current month
+      const now = new Date();
+      nextMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+    }
+    
+    // Show the modal with the monthly entry form
+    this.showModal(() => {
+      monthlyEntryForm.initNew(
+        this.fund.id,
+        nextMonth,
+        (newEntry) => {
+          // Success callback - reload data
+          this.loadData(this.fund.id);
+          this.hideModal();
+        },
+        () => {
+          // Cancel callback
+          this.hideModal();
+        }
+      );
+    });
+  }
+
+  /**
+   * Show the edit entry form
+   * @param {string} entryId - The ID of the entry to edit
+   */
+  showEditEntryForm(entryId) {
+    // Show the modal with the monthly entry form
+    this.showModal(() => {
+      monthlyEntryForm.initEdit(
+        entryId,
+        (updatedEntry) => {
+          // Success callback - reload data
+          this.loadData(this.fund.id);
+          this.hideModal();
+        },
+        () => {
+          // Cancel callback
+          this.hideModal();
+        }
+      );
+    });
+  }
+
+  /**
+   * Generate month series for a fund
+   * @param {string} startMonth - Start month in YYYY-MM format
+   * @param {string} endMonth - End month in YYYY-MM format
+   * @param {string|null} earlyExitMonth - Early exit month in YYYY-MM format or null
+   * @returns {Array<string>} Array of month keys
+   */
+  generateMonthSeries(startMonth, endMonth, earlyExitMonth) {
+    const months = [];
+    
+    // Parse start month
+    const [startYear, startMonthNum] = startMonth.split('-').map(Number);
+    let currentYear = startYear;
+    let currentMonth = startMonthNum;
+    
+    // Parse end month
+    const [endYear, endMonthNum] = endMonth.split('-').map(Number);
+    
+    // Parse early exit month if provided
+    let earlyExitYear = null;
+    let earlyExitMonthNum = null;
+    if (earlyExitMonth) {
+      [earlyExitYear, earlyExitMonthNum] = earlyExitMonth.split('-').map(Number);
+    }
+    
+    // Generate months
+    while (
+      currentYear < endYear || 
+      (currentYear === endYear && currentMonth <= endMonthNum)
+    ) {
+      // Check if we've reached early exit
+      if (
+        earlyExitYear !== null && 
+        earlyExitMonthNum !== null &&
+        (
+          currentYear > earlyExitYear ||
+          (currentYear === earlyExitYear && currentMonth > earlyExitMonthNum)
+        )
+      ) {
+        break;
+      }
+      
+      // Add current month
+      months.push(`${currentYear}-${currentMonth.toString().padStart(2, '0')}`);
+      
+      // Move to next month
+      currentMonth++;
+      if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear++;
+      }
+    }
+    
+    return months;
+  }
+
+  /**
+   * Show modal dialog
+   * @param {Function} contentCallback - Function to render modal content
+   */
+  showModal(contentCallback) {
+    // Create modal overlay if it doesn't exist
+    let modalOverlay = document.getElementById('modal-overlay');
+    if (!modalOverlay) {
+      modalOverlay = document.createElement('div');
+      modalOverlay.id = 'modal-overlay';
+      modalOverlay.className = 'modal-overlay';
+      document.body.appendChild(modalOverlay);
+    }
+    
+    // Create modal container if it doesn't exist
+    let modalContainer = document.getElementById('modal-container');
+    if (!modalContainer) {
+      modalContainer = document.createElement('div');
+      modalContainer.id = 'modal-container';
+      modalContainer.className = 'modal-container';
+      modalOverlay.appendChild(modalContainer);
+    }
+    
+    // Add close event for overlay click
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        this.hideModal();
+      }
+    });
+    
+    // Add escape key handler
+    const escapeHandler = (e) => {
+      if (e.key === 'Escape') {
+        this.hideModal();
+        document.removeEventListener('keydown', escapeHandler);
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    
+    // Show modal
+    modalOverlay.style.display = 'flex';
+    
+    // Render content
+    if (contentCallback) {
+      contentCallback();
+    }
+  }
+
+  /**
+   * Hide modal dialog
+   */
+  hideModal() {
+    const modalOverlay = document.getElementById('modal-overlay');
+    if (modalOverlay) {
+      modalOverlay.style.display = 'none';
+    }
   }
 }
 

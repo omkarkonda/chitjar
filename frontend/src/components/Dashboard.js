@@ -151,14 +151,14 @@ class Dashboard {
     }
 
     // Don't render chart if no funds or container doesn't exist
-    if (this.funds.length === 0) return;
+    if (!this.funds || this.funds.length === 0) return;
 
     const canvas = document.getElementById('fund-profit-chart');
     if (!canvas) return;
 
     // Prepare chart data
-    const labels = this.funds.map(fund => fund.fund_name);
-    const profits = this.funds.map(fund => fund.total_profit);
+    const labels = this.funds.map(fund => fund.fund_name || 'Unnamed Fund');
+    const profits = this.funds.map(fund => fund.total_profit || 0);
 
     const chartData = formatChartData(labels, [
       {

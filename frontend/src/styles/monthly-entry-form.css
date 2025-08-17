@@ -1,0 +1,189 @@
+/**
+ * Monthly Entry Form Styles
+ * 
+ * Styles for the monthly entry form component
+ */
+
+.monthly-entry-form {
+  padding: 1.5rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.monthly-entry-form .form-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.monthly-entry-form .form-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.monthly-entry-form .form-header p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+}
+
+.monthly-entry-form .error-message {
+  background-color: var(--color-danger-light);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--border-radius);
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.monthly-entry-form .error-message p {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.875rem;
+}
+
+.monthly-entry-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.monthly-entry-form .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.monthly-entry-form .form-group input,
+.monthly-entry-form .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.monthly-entry-form .form-group input:focus,
+.monthly-entry-form .form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.monthly-entry-form .form-group input:disabled,
+.monthly-entry-form .form-group textarea:disabled {
+  background-color: var(--color-background-muted);
+  cursor: not-allowed;
+}
+
+.monthly-entry-form .form-group .form-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.monthly-entry-form .form-group--checkbox {
+  display: flex;
+  flex-direction: column;
+}
+
+.monthly-entry-form .checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.monthly-entry-form .checkbox-label input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.monthly-entry-form .checkbox-custom {
+  position: relative;
+  height: 1.25rem;
+  width: 1.25rem;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  margin-right: 0.75rem;
+  transition: all 0.2s;
+}
+
+.monthly-entry-form .checkbox-label input:checked ~ .checkbox-custom {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.monthly-entry-form .checkbox-label input:checked ~ .checkbox-custom::after {
+  content: "";
+  position: absolute;
+  display: block;
+  left: 0.375rem;
+  top: 0.125rem;
+  width: 0.375rem;
+  height: 0.625rem;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.monthly-entry-form .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.monthly-entry-form .form-actions .btn {
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.monthly-entry-form .loading-state {
+  text-align: center;
+  padding: 2rem;
+}
+
+.monthly-entry-form .loading-state .spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-top: 3px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.monthly-entry-form .loading-state p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .monthly-entry-form {
+    padding: 1rem;
+  }
+  
+  .monthly-entry-form .form-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .monthly-entry-form .form-actions {
+    flex-direction: column;
+  }
+}

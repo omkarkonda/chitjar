@@ -290,7 +290,9 @@ class FundForm {
           if (input.value) {
             // Format the value as INR
             const numericValue = parseINR(input.value);
-            input.value = formatINR(numericValue);
+            if (!isNaN(numericValue) && numericValue > 0) {
+              input.value = formatINR(numericValue);
+            }
           }
         });
 
@@ -298,7 +300,9 @@ class FundForm {
           // Remove formatting when focusing
           if (input.value) {
             const numericValue = parseINR(input.value);
-            input.value = numericValue.toString();
+            if (!isNaN(numericValue)) {
+              input.value = numericValue.toString();
+            }
           }
         });
       }
@@ -325,7 +329,10 @@ class FundForm {
     // For monetary fields, parse the value
     let parsedValue = value;
     if (fieldName === 'chit_value' || fieldName === 'installment_amount') {
-      parsedValue = parseINR(value).toString();
+      const numericValue = parseINR(value);
+      if (!isNaN(numericValue)) {
+        parsedValue = numericValue.toString();
+      }
     }
 
     const data = { ...this.fundData, [fieldName]: parsedValue };

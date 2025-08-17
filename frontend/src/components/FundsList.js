@@ -46,7 +46,7 @@ class FundsList {
           const paidEntries = entries.filter(entry => entry.is_paid).length;
           fund.progress = {
             paid: paidEntries,
-            total: fund.total_months,
+            total: fund.total_months || 0,
             percentage:
               fund.total_months > 0
                 ? Math.round((paidEntries / fund.total_months) * 100)
@@ -152,10 +152,13 @@ class FundsList {
    * Render a fund card
    */
   renderFundCard(fund) {
+    // Ensure progress object exists
+    const progress = fund.progress || { paid: 0, total: fund.total_months || 0, percentage: 0 };
+    
     return `
       <div class="fund-card" data-fund-id="${fund.id}">
         <div class="fund-card__header">
-          <h3 class="fund-card__title">${fund.name}</h3>
+          <h3 class="fund-card__title">${fund.name || 'Unnamed Fund'}</h3>
           <span class="fund-card__status ${fund.is_active ? 'fund-card__status--active' : 'fund-card__status--inactive'}">
             ${fund.is_active ? 'Active' : 'Inactive'}
           </span>
@@ -164,23 +167,23 @@ class FundsList {
         <div class="fund-card__details">
           <div class="fund-card__metric">
             <span class="fund-card__metric-label">Chit Value</span>
-            <span class="fund-card__metric-value">${formatINR(fund.chit_value)}</span>
+            <span class="fund-card__metric-value">${formatINR(fund.chit_value || 0)}</span>
           </div>
           
           <div class="fund-card__metric">
             <span class="fund-card__metric-label">Installment</span>
-            <span class="fund-card__metric-value">${formatINR(fund.installment_amount)}</span>
+            <span class="fund-card__metric-value">${formatINR(fund.installment_amount || 0)}</span>
           </div>
           
           <div class="fund-card__progress">
             <div class="fund-card__progress-info">
               <span class="fund-card__progress-label">Progress</span>
-              <span class="fund-card__progress-text">${fund.progress.paid}/${fund.progress.total} months</span>
+              <span class="fund-card__progress-text">${progress.paid}/${progress.total} months</span>
             </div>
             <div class="fund-card__progress-bar">
-              <div class="fund-card__progress-fill" style="width: ${fund.progress.percentage}%"></div>
+              <div class="fund-card__progress-fill" style="width: ${progress.percentage}%"></div>
             </div>
-            <div class="fund-card__progress-percent">${fund.progress.percentage}%</div>
+            <div class="fund-card__progress-percent">${progress.percentage}%</div>
           </div>
         </div>
       </div>

@@ -83,6 +83,9 @@ app.use(API_PATHS.AUTH.BASE, authRoutes);
 app.use(API_PATHS.FUNDS.BASE, fundsRoutes);
 app.use(API_PATHS.ENTRIES.BASE, entriesRoutes);
 app.use(API_PATHS.BIDS.BASE, bidsRoutes);
+// Additional mounting for nested fund routes
+app.use('/api/v1', entriesRoutes);
+app.use('/api/v1', bidsRoutes);
 app.use(API_PATHS.IMPORT_EXPORT.EXPORT_FUNDS.replace('/api/v1/export/funds', '/api/v1/export'), exportRoutes);
 app.use(API_PATHS.ANALYTICS.BASE, analyticsRoutes);
 
