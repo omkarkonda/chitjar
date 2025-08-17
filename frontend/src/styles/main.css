@@ -1137,6 +1137,9 @@ p {
   }
 }
 
+/* Fund Detail Styles */
+@import './fund-detail.css';
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,

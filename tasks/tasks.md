@@ -54,6 +54,8 @@
 - frontend/components/FundsList.js - List of funds with key metrics and navigation.
 - frontend/components/FundForm.js - Create/Edit fund form with client-side validation and helpful tooltips.
 - frontend/components/FundDetail.js - Summary KPIs, entries list, cash flow chart, XIRR, FD comparison.
+- frontend/src/components/FundDetail.js - Fund detail component with KPIs and entries list.
+- frontend/src/styles/fund-detail.css - Styles for the fund detail component.
 - frontend/components/MonthlyEntryForm.js - Add/edit monthly dividend and prize money entries.
 - frontend/components/Insights.js - Strategic bidding insights UI with trends and scenario projections.
 - frontend/components/CSVImportDialog.js - CSV import flow with mapped preview, line-level errors, and confirm.
@@ -117,7 +119,7 @@
   - [x] 4.3 Dashboard: Total Profit card and Fund vs Profit chart with loading/empty states.
   - [x] 4.4 Funds List: cards with chit value, installment, progress (months paid/total), and navigation.
   - [x] 4.5 Fund Form: create/edit with validation, helper tooltips, and success/error toasts.
-  - [ ] 4.6 Fund Detail: KPIs (Current Profit, ROI, Avg Monthly Dividend, Months to Completion, XIRR), monthly entries list.
+  - [x] 4.6 Fund Detail: KPIs (Current Profit, ROI, Avg Monthly Dividend, Months to Completion, XIRR), monthly entries list.
   - [ ] 4.7 Monthly Entry Form: add/edit dividend and prize money; mark month as paid; handle zero values.
   - [ ] 4.8 Insights Page: historical bidding trends (table + chart), borrower vs investor guidance, projected payouts.
   - [ ] 4.9 Import/Export UI: CSV import dialog with preview/errors; JSON/CSV export controls.

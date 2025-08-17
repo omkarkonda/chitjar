@@ -5,6 +5,7 @@ import { navBar } from './components/NavBar.js';
 import { dashboard } from './components/Dashboard.js';
 import { fundsList } from './components/FundsList.js';
 import { fundForm } from './components/FundForm.js';
+import { fundDetail } from './components/FundDetail.js';
 
 class ChitJarApp {
   constructor() {
@@ -40,6 +41,12 @@ class ChitJarApp {
     // Handle logout event from NavBar
     window.addEventListener('logout', () => {
       this.logout();
+    });
+
+    // Handle navigation to fund detail
+    window.addEventListener('navigateToFund', e => {
+      const fundId = e.detail.fundId;
+      this.navigate(`fund?fundId=${fundId}`);
     });
   }
 
@@ -205,6 +212,20 @@ class ChitJarApp {
           }, 0);
         }
         break;
+      case 'fund':
+        // Check authentication before rendering fund detail
+        if (!apiClient.isAuthenticated()) {
+          this.currentRoute = 'login';
+          main.innerHTML = this.renderLogin();
+        } else {
+          main.innerHTML = this.renderFundDetail();
+          // Initialize fund detail component after rendering
+          const fundId = this.getRouteParam('fundId');
+          if (fundId) {
+            fundDetail.loadData(fundId);
+          }
+        }
+        break;
       case 'add':
         // Check authentication before rendering add form
         if (!apiClient.isAuthenticated()) {
@@ -344,6 +365,55 @@ class ChitJarApp {
         <p>Strategic insights will be implemented here</p>
       </div>
     `;
+  }
+
+  /**
+   * Render the fund detail page
+   */
+  renderFundDetail() {
+    return `
+      <div class="fund-detail">
+        <div class="fund-detail__header">
+          <div class="loading__skeleton fund-detail-header-skeleton"></div>
+        </div>
+        
+        <div class="fund-detail__kpis">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="loading__skeleton kpi-skeleton"></div>
+            </div>
+            <div class="kpi-card">
+              <div class="loading__skeleton kpi-skeleton"></div>
+            </div>
+            <div class="kpi-card">
+              <div class="loading__skeleton kpi-skeleton"></div>
+            </div>
+            <div class="kpi-card">
+              <div class="loading__skeleton kpi-skeleton"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="fund-detail__entries">
+          <div class="entries-header">
+            <h3>Monthly Entries</h3>
+          </div>
+          <div class="entries-list">
+            <div class="loading__skeleton entries-list-skeleton"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Get route parameter from URL
+   * @param {string} param - The parameter name to extract
+   * @returns {string|null} The parameter value or null if not found
+   */
+  getRouteParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
   }
 
   renderLogin() {

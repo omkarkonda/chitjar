@@ -106,6 +106,9 @@ class FundsList {
 
     // Render the funds list
     container.innerHTML = this.renderFundsList();
+
+    // Add event listeners for fund cards
+    this.addFundCardEventListeners();
   }
 
   /**
@@ -196,6 +199,29 @@ class FundsList {
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Add event listeners to fund cards
+   */
+  addFundCardEventListeners() {
+    const fundCards = document.querySelectorAll('.fund-card');
+    fundCards.forEach(card => {
+      card.addEventListener('click', e => {
+        // Don't navigate if clicking on a button or link within the card
+        if (e.target.closest('button, a')) {
+          return;
+        }
+
+        const fundId = card.dataset.fundId;
+        if (fundId) {
+          // Dispatch a custom event to navigate to fund detail
+          window.dispatchEvent(
+            new CustomEvent('navigateToFund', { detail: { fundId } })
+          );
+        }
+      });
+    });
   }
 }
 
