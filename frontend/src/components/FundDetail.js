@@ -9,6 +9,7 @@ import { apiClient } from '../lib/apiClient.js';
 import { formatINR, formatDate } from '../lib/formatters.js';
 import { monthlyEntryForm } from './MonthlyEntryForm.js';
 import { createFocusTrap } from '../lib/focusTrap.js';
+import { debounce } from '../lib/performance.js';
 
 class FundDetail {
   constructor() {
@@ -23,6 +24,18 @@ class FundDetail {
     this.roi = 0;
     this.avgMonthlyDividend = 0;
     this.monthsToCompletion = 0;
+
+    // Virtualization properties
+    this.visibleEntries = [];
+    this.entriesPerPage = 20;
+    this.currentPage = 1;
+
+    // Debounced calculation functions
+    this.debouncedCalculateValues = debounce(
+      () => this.calculateDerivedValues(),
+      300
+    );
+    this.debouncedLoadData = debounce(fundId => this.loadData(fundId), 300);
   }
 
   /**
@@ -257,6 +270,11 @@ class FundDetail {
    * Render the entries list
    */
   renderEntriesList() {
+    // Calculate visible entries for current page
+    const startIndex = (this.currentPage - 1) * this.entriesPerPage;
+    const endIndex = startIndex + this.entriesPerPage;
+    this.visibleEntries = this.entries.slice(startIndex, endIndex);
+
     return `
       <div class="fund-detail__entries">
         <div class="entries-header">
@@ -266,7 +284,8 @@ class FundDetail {
         <div class="entries-list">
           ${
             this.entries.length > 0
-              ? this.entries.map(entry => this.renderEntry(entry)).join('')
+              ? `${this.visibleEntries.map(entry => this.renderEntry(entry)).join('')}
+                ${this.renderPagination()}`
               : this.renderEmptyEntries()
           }
         </div>
@@ -339,6 +358,72 @@ class FundDetail {
   }
 
   /**
+   * Render pagination controls for entries
+   */
+  renderPagination() {
+    const totalPages = Math.ceil(this.entries.length / this.entriesPerPage);
+
+    if (totalPages <= 1) return '';
+
+    const pageButtons = [];
+
+    // Previous button
+    pageButtons.push(
+      `<button class="btn btn--secondary pagination-btn ${this.currentPage === 1 ? 'disabled' : ''}" 
+              data-page="prev" 
+              aria-label="Previous page" 
+              ${this.currentPage === 1 ? 'disabled' : ''}>
+        Previous
+      </button>`
+    );
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+      // Only show first, last, current, and nearby pages
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= this.currentPage - 2 && i <= this.currentPage + 2)
+      ) {
+        pageButtons.push(
+          `<button class="btn btn--secondary pagination-btn ${i === this.currentPage ? 'active' : ''}" 
+                  data-page="${i}" 
+                  aria-label="Page ${i}" 
+                  ${i === this.currentPage ? 'aria-current="page"' : ''}>
+            ${i}
+          </button>`
+        );
+      } else if (i === this.currentPage - 3 || i === this.currentPage + 3) {
+        // Show ellipsis for skipped pages
+        pageButtons.push('<span class="pagination-ellipsis">...</span>');
+      }
+    }
+
+    // Next button
+    pageButtons.push(
+      `<button class="btn btn--secondary pagination-btn ${this.currentPage === totalPages ? 'disabled' : ''}" 
+              data-page="next" 
+              aria-label="Next page" 
+              ${this.currentPage === totalPages ? 'disabled' : ''}>
+        Next
+      </button>`
+    );
+
+    return `
+      <div class="entries__pagination">
+        <div class="pagination-controls">
+          ${pageButtons.join('')}
+        </div>
+        <div class="pagination-info">
+          Showing ${Math.min((this.currentPage - 1) * this.entriesPerPage + 1, this.entries.length)} 
+          to ${Math.min(this.currentPage * this.entriesPerPage, this.entries.length)} 
+          of ${this.entries.length} entries
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Add event listeners to the component
    */
   addEventListeners() {
@@ -374,6 +459,28 @@ class FundDetail {
         this.loadData(this.fund?.id);
       });
     }
+
+    // Add event listeners for pagination buttons
+    const paginationButtons = document.querySelectorAll(
+      '.entries__pagination .pagination-btn'
+    );
+    paginationButtons.forEach(button => {
+      button.addEventListener('click', e => {
+        const page = e.target.dataset.page;
+        const totalPages = Math.ceil(this.entries.length / this.entriesPerPage);
+
+        if (page === 'prev' && this.currentPage > 1) {
+          this.currentPage--;
+          this.render();
+        } else if (page === 'next' && this.currentPage < totalPages) {
+          this.currentPage++;
+          this.render();
+        } else if (!isNaN(parseInt(page)) && page >= 1 && page <= totalPages) {
+          this.currentPage = parseInt(page);
+          this.render();
+        }
+      });
+    });
   }
 
   /**

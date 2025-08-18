@@ -17,7 +17,7 @@ This document provides comprehensive context about the ChitJar project for Qwen 
 - 💰 Fund management for multiple chit funds
 - 📈 Advanced analytics including XIRR calculations and ROI analysis
 - 🎯 Strategic bidding insights with historical trend analysis
-- 📱 Mobile-first responsive design
+- 📱 Mobile-first responsive design with full accessibility support
 - 📊 Interactive charts using Chart.js
 - 📥 CSV import/export with validation
 - 🔐 Secure JWT-based authentication
@@ -37,7 +37,7 @@ This document provides comprehensive context about the ChitJar project for Qwen 
 - **Vite** for development and building
 - **Chart.js** for data visualizations
 - **CSS Custom Properties** for theming
-- Mobile-first responsive design
+- Mobile-first responsive design with full accessibility support
 
 ## Project Structure
 
@@ -121,6 +121,8 @@ The backend API follows RESTful conventions with the following key endpoints:
 - `GET /api/v1/export/bids.csv` - Export all bids as CSV
 - `GET /api/v1/export/bids.json` - Export all bids as JSON
 - `GET /api/v1/export/backup.json` - Complete backup export in JSON format
+- `POST /api/v1/bids/import/csv` - Import bids from CSV
+- `POST /api/v1/bids/import/csv/confirm` - Confirm bids import from CSV
 
 ## Data Model
 
@@ -230,6 +232,7 @@ Based on the task tracking file, the project has made significant progress:
 - ✅ Basic frontend UI structure with routing
 - ✅ Analytics and calculations
 - ✅ Import/Export functionality
+- ✅ Accessibility improvements (keyboard navigation, focus states, ARIA labels)
 
 ### In Progress
 - 🔄 Frontend UI implementation
@@ -254,10 +257,31 @@ Based on the task tracking file, the project has made significant progress:
    - Accessible color palettes (color-blind friendly)
    - Touch-friendly navigation
 
-4. **Data Validation**:
+4. **Accessibility**:
+   - Full keyboard navigation support
+   - Screen reader compatibility with ARIA labels
+   - Focus management and visible focus states
+   - Color contrast compliance
+
+5. **Data Validation**:
    - Comprehensive Zod schemas for all data models
    - Database-level constraints for data integrity
    - Input sanitization before validation
+
+## Recent Enhancements
+
+### Import/Export Functionality
+- CSV import dialog with preview and error handling
+- Export options for funds, entries, bids in CSV/JSON formats
+- Complete backup export in JSON format
+
+### Accessibility Improvements
+- Keyboard navigation support for all interactive elements
+- Focus trapping in modal dialogs
+- ARIA labels and roles for screen reader compatibility
+- Enhanced focus states with visible indicators
+- Skip link for keyboard users
+- Color-blind friendly palette with sufficient contrast
 
 ## Future Work
 

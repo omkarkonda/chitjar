@@ -375,6 +375,7 @@ class ChitJarApp {
             <div class="loading__skeleton fund-card-skeleton"></div>
           </div>
         </div>
+        <div class="loading__skeleton pagination-skeleton"></div>
       </div>
     `;
   }
@@ -474,6 +475,7 @@ class ChitJarApp {
           </div>
           <div class="entries-list">
             <div class="loading__skeleton entries-list-skeleton"></div>
+            <div class="loading__skeleton pagination-skeleton"></div>
           </div>
         </div>
       </div>

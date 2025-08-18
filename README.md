@@ -12,7 +12,8 @@ A comprehensive web application to track and analyze personal chit fund investme
 - 📊 **Charts**: Interactive visualizations with Chart.js
 - 📥 **Import/Export**: CSV import/export with validation
 - 🔐 **Authentication**: Secure JWT-based authentication
-- 🎨 **Accessible**: Color-blind friendly design with ARIA support
+- ♿ **Accessibility**: Full keyboard navigation, screen reader support, and ARIA labels
+- 🎨 **Accessible Design**: Color-blind friendly design with proper contrast ratios
 
 ## Tech Stack
 
@@ -62,7 +63,8 @@ A comprehensive web application to track and analyze personal chit fund investme
    # Create database
    createdb chitjar_dev
    
-   # Run migrations (will be implemented in task 1.4)
+   # Run migrations
+   cd backend
    npm run db:migrate
    ```
 
@@ -190,16 +192,29 @@ npm run test:coverage    # Run tests with coverage
 The API follows RESTful conventions with the following endpoints:
 
 - `GET /api/health` - Health check
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/funds` - List user's funds
-- `POST /api/funds` - Create new fund
-- `GET /api/funds/:id` - Get fund details
-- `PUT /api/funds/:id` - Update fund
-- `DELETE /api/funds/:id` - Delete fund
-- `GET /api/funds/:id/entries` - Get fund entries
-- `POST /api/funds/:id/entries` - Add entry to fund
-- `GET /api/analytics/xirr/:fundId` - Calculate XIRR for fund
+- `POST /api/v1/auth/signup` - User registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/logout` - User logout
+- `GET /api/v1/auth/profile` - Get user profile
+- `PUT /api/v1/auth/profile` - Update user profile
+- `GET /api/v1/funds` - List user's funds
+- `POST /api/v1/funds` - Create new fund
+- `GET /api/v1/funds/:id` - Get fund details
+- `PUT /api/v1/funds/:id` - Update fund
+- `DELETE /api/v1/funds/:id` - Delete fund
+- `GET /api/v1/funds/:fundId/entries` - Get fund entries
+- `POST /api/v1/funds/:fundId/entries` - Add entry to fund
+- `GET /api/v1/analytics/dashboard` - Dashboard analytics
+- `GET /api/v1/analytics/funds/:id` - Fund-specific analytics
+- `GET /api/v1/export/funds.csv` - Export all funds as CSV
+- `GET /api/v1/export/funds.json` - Export all funds as JSON
+- `GET /api/v1/export/entries.csv` - Export all monthly entries as CSV
+- `GET /api/v1/export/entries.json` - Export all monthly entries as JSON
+- `GET /api/v1/export/bids.csv` - Export all bids as CSV
+- `GET /api/v1/export/bids.json` - Export all bids as JSON
+- `GET /api/v1/export/backup.json` - Complete backup export in JSON format
+- `POST /api/v1/bids/import/csv` - Import bids from CSV
+- `POST /api/v1/bids/import/csv/confirm` - Confirm bids import from CSV
 
 ## Security
 

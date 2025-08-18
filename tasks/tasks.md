@@ -86,6 +86,10 @@
 - frontend/src/styles/csv-import.css - Styles for the CSV import dialog component.
 - frontend/src/styles/export.css - Styles for the export dialog component.
 - frontend/src/lib/focusTrap.js - Focus trap utility for modal dialogs to ensure keyboard navigation is properly contained.
+- frontend/src/lib/performance.js - Performance utilities including debounce and throttle functions for optimizing UI updates.
+- frontend/src/components/FundsList.js - Updated funds list component with pagination support and improved performance through debounced data loading and calculations.
+- frontend/src/components/FundDetail.js - Updated fund detail component with virtualization for entries list and improved performance through debounced calculations.
+- frontend/src/styles/main.css - Updated CSS with enhanced skeleton loaders, pagination styles, and performance optimizations.
 
 ### Notes
 
@@ -135,7 +139,7 @@
   - [x] 4.8 Insights Page: historical bidding trends (table + chart), borrower vs investor guidance, projected payouts.
   - [x] 4.9 Import/Export UI: CSV import dialog with preview/errors; JSON/CSV export controls.
   - [x] 4.10 Accessibility: keyboard navigation, focus states, ARIA labels, color-blind palettes.
-  - [ ] 4.11 Performance: pagination/virtualization for long lists; debounce recalculations; skeleton loaders.
+  - [x] 4.11 Performance: pagination/virtualization for long lists; debounce recalculations; skeleton loaders.
 
 - [ ] 5.0 Analytics and Calculations
   - [ ] 5.1 Implement XIRR using financial libraries (xirr or similar) in Node.js; define cash flow sign conventions and dates.

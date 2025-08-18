@@ -426,6 +426,75 @@ li > ol {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Specific skeleton loader sizes */
+.stat-value-skeleton {
+  height: 48px;
+  width: 100%;
+  margin: var(--spacing-2) 0;
+}
+
+.chart-skeleton {
+  height: 300px;
+  width: 100%;
+}
+
+.fund-card-skeleton {
+  height: 200px;
+  width: 100%;
+}
+
+.form-skeleton {
+  height: 40px;
+  width: 100%;
+}
+
+.form-skeleton-textarea {
+  height: 100px;
+  width: 100%;
+}
+
+.form-button-skeleton {
+  height: 40px;
+  width: 120px;
+}
+
+.fund-detail-header-skeleton {
+  height: 60px;
+  width: 100%;
+}
+
+.kpi-skeleton {
+  height: 100px;
+  width: 100%;
+}
+
+.entries-list-skeleton {
+  height: 300px;
+  width: 100%;
+}
+
+.insights-header-skeleton {
+  height: 60px;
+  width: 100%;
+}
+
+.insights-content-skeleton {
+  height: 400px;
+  width: 100%;
+}
+
+.entry-card-skeleton {
+  height: 120px;
+  width: 100%;
+  margin-bottom: var(--spacing-3);
+}
+
+.pagination-skeleton {
+  height: 40px;
+  width: 100%;
+  margin-top: var(--spacing-4);
+}
+
 /* Screen reader only utility class */
 .sr-only {
   position: absolute;
@@ -464,14 +533,50 @@ li > ol {
   outline-offset: 2px;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Pagination styles */
+.funds__pagination,
+.entries__pagination {
+  margin-top: var(--spacing-6);
+  padding: var(--spacing-4);
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius);
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.pagination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: center;
+  margin-bottom: var(--spacing-3);
+}
+
+.pagination-btn {
+  min-width: 40px;
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+.pagination-btn.active {
+  background-color: var(--primary-600);
+  color: var(--text-inverse);
+  border-color: var(--primary-600);
+}
+
+.pagination-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--text-secondary);
+}
+
+.pagination-info {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 /* Error states */
@@ -871,63 +976,6 @@ li > ol {
   margin-top: var(--spacing-6);
 }
 
-/* Loading skeletons */
-.stat-value-skeleton {
-  height: 48px;
-  width: 100%;
-  margin: var(--spacing-2) 0;
-}
-
-.chart-skeleton {
-  height: 300px;
-  width: 100%;
-}
-
-.fund-card-skeleton {
-  height: 200px;
-  width: 100%;
-}
-
-.form-skeleton {
-  height: 40px;
-  width: 100%;
-}
-
-.form-skeleton-textarea {
-  height: 100px;
-  width: 100%;
-}
-
-.form-button-skeleton {
-  height: 40px;
-  width: 120px;
-}
-
-.fund-detail-header-skeleton {
-  height: 60px;
-  width: 100%;
-}
-
-.kpi-skeleton {
-  height: 100px;
-  width: 100%;
-}
-
-.entries-list-skeleton {
-  height: 300px;
-  width: 100%;
-}
-
-.insights-header-skeleton {
-  height: 60px;
-  width: 100%;
-}
-
-.insights-content-skeleton {
-  height: 400px;
-  width: 100%;
-}
-
 /* Funds Actions */
 .funds__actions {
   display: flex;
@@ -963,4 +1011,14 @@ li > ol {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
