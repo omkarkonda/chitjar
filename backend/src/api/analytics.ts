@@ -32,6 +32,7 @@ import {
 
 // Import the xirr function from our utility module
 import { calculateXirrPercentage } from '../lib/xirr';
+import { getFundCashFlowHandler, getFundNetCashFlowHandler } from './cash-flow';
 
 const router = Router();
 
@@ -595,6 +596,18 @@ router.get('/funds/:id',
   getFundAnalyticsHandler
 );
 
+// GET /api/v1/analytics/funds/:id/cash-flow
+router.get('/funds/:id/cash-flow', 
+  validateParams(uuidParamSchema),
+  getFundCashFlowHandler
+);
+
+// GET /api/v1/analytics/funds/:id/net-cash-flow
+router.get('/funds/:id/net-cash-flow', 
+  validateParams(uuidParamSchema),
+  getFundNetCashFlowHandler
+);
+
 // POST /api/v1/analytics/funds/:id/fd-comparison
 router.post('/funds/:id/fd-comparison',
   validateParams(uuidParamSchema),
@@ -606,3 +619,5 @@ router.post('/funds/:id/fd-comparison',
 router.get('/insights', getInsightsHandler);
 
 export { router };
+export { getFundCashFlowSeries };
+export { checkFundOwnership };
