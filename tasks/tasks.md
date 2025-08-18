@@ -43,7 +43,9 @@
 - backend/src/lib/validation.ts - Shared schemas (e.g., zod/yup) for server-side validation.
 - backend/src/lib/validation-utils.ts - Utility functions for validation including new functions to handle irregularities in month series.
 - backend/src/lib/csv.ts - CSV parsing, sanitization, template generation, and error reporting helpers. New library for handling CSV import functionality.
-- backend/src/lib/xirr.ts - Wrapper around a proven XIRR library; parity tests vs Excel.
+- backend/src/lib/xirr.ts - Wrapper around the xirr library with proper error handling and validation.
+- backend/src/test/xirr.test.ts - Unit tests for XIRR utility functions covering various edge cases and validation scenarios.
+- backend/src/test/xirr-parity.test.ts - Excel parity tests for XIRR calculations verifying accuracy within ±0.1% tolerance.
 - backend/src/lib/forecast.ts - Average-based forecasting utilities, encapsulated for future upgrades.
 - backend/src/lib/format.ts - INR currency formatting, Indian digit grouping, DD/MM/YYYY utilities (server).
 - frontend/index.html - App shell with mobile-first meta and base layout.
@@ -142,8 +144,8 @@
   - [x] 4.11 Performance: pagination/virtualization for long lists; debounce recalculations; skeleton loaders.
 
 - [ ] 5.0 Analytics and Calculations
-  - [ ] 5.1 Implement XIRR using financial libraries (xirr or similar) in Node.js; define cash flow sign conventions and dates.
-  - [ ] 5.2 Add Excel parity tests for XIRR calculations; accept ±0.1% absolute difference.
+  - [x] 5.1 Implement XIRR using financial libraries (xirr or similar) in Node.js; define cash flow sign conventions and dates.
+  - [x] 5.2 Add Excel parity tests for XIRR calculations; accept ±0.1% absolute difference.
   - [ ] 5.3 Compute net monthly cash flow: installment − dividend; expose historical series via PostgreSQL queries.
   - [ ] 5.4 Forecast future net cash flows using simple averages in Node.js; encapsulate for future upgrades.
   - [ ] 5.5 FD comparison: accept session FD rate, compute annualized benchmark vs fund XIRR using financial calculations.

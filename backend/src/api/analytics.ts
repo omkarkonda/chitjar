@@ -30,8 +30,8 @@ import {
   fdComparisonSchema
 } from '../lib/validation';
 
-// Import the xirr function
-const xirr = require('xirr');
+// Import the xirr function from our utility module
+import { calculateXirrPercentage } from '../lib/xirr';
 
 const router = Router();
 
@@ -176,11 +176,10 @@ async function calculateFundXirr(userId: string, fundId: string): Promise<number
       when: cf.date
     }));
     
-    // Calculate XIRR
-    const result = xirr(xirrInput);
+    // Calculate XIRR as percentage using our utility function
+    const result = calculateXirrPercentage(xirrInput);
     
-    // Return as percentage (multiply by 100)
-    return result * 100;
+    return result;
   } catch (error) {
     // If XIRR calculation fails (e.g., no solution), return null
     return null;
