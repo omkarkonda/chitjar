@@ -37,7 +37,7 @@ This document provides comprehensive context about the ChitJar project for Qwen 
 - **Vite** for development and building
 - **Chart.js** for data visualizations
 - **CSS Custom Properties** for theming
-- Mobile-first responsive design with full accessibility support
+- Mobile-first responsive design
 
 ## Project Structure
 
@@ -70,7 +70,6 @@ chitjar/
 ├── docs/                   # Documentation
 ├── tasks/                  # Task management
 └── package.json           # Root package.json
-```
 
 ## API Structure
 
@@ -121,8 +120,6 @@ The backend API follows RESTful conventions with the following key endpoints:
 - `GET /api/v1/export/bids.csv` - Export all bids as CSV
 - `GET /api/v1/export/bids.json` - Export all bids as JSON
 - `GET /api/v1/export/backup.json` - Complete backup export in JSON format
-- `POST /api/v1/bids/import/csv` - Import bids from CSV
-- `POST /api/v1/bids/import/csv/confirm` - Confirm bids import from CSV
 
 ## Data Model
 
@@ -232,7 +229,8 @@ Based on the task tracking file, the project has made significant progress:
 - ✅ Basic frontend UI structure with routing
 - ✅ Analytics and calculations
 - ✅ Import/Export functionality
-- ✅ Accessibility improvements (keyboard navigation, focus states, ARIA labels)
+- ✅ Accessibility improvements
+- ✅ Performance optimizations
 
 ### In Progress
 - 🔄 Frontend UI implementation
@@ -257,31 +255,10 @@ Based on the task tracking file, the project has made significant progress:
    - Accessible color palettes (color-blind friendly)
    - Touch-friendly navigation
 
-4. **Accessibility**:
-   - Full keyboard navigation support
-   - Screen reader compatibility with ARIA labels
-   - Focus management and visible focus states
-   - Color contrast compliance
-
-5. **Data Validation**:
+4. **Data Validation**:
    - Comprehensive Zod schemas for all data models
    - Database-level constraints for data integrity
    - Input sanitization before validation
-
-## Recent Enhancements
-
-### Import/Export Functionality
-- CSV import dialog with preview and error handling
-- Export options for funds, entries, bids in CSV/JSON formats
-- Complete backup export in JSON format
-
-### Accessibility Improvements
-- Keyboard navigation support for all interactive elements
-- Focus trapping in modal dialogs
-- ARIA labels and roles for screen reader compatibility
-- Enhanced focus states with visible indicators
-- Skip link for keyboard users
-- Color-blind friendly palette with sufficient contrast
 
 ## Future Work
 
@@ -291,5 +268,53 @@ The project is still in development with several key areas to be completed:
 2. Add charting and data visualization
 3. Complete testing coverage
 4. Finalize documentation
+
+## Lessons Learned
+
+During the development process, several important lessons were learned that have improved the quality and reliability of the implementation:
+
+### Common Mistakes and How to Avoid Them
+
+1. **File Formatting Issues**
+   - **Mistake**: Creating files with escaped characters instead of proper newlines
+   - **Solution**: Always validate file content after generation, ensuring proper newline characters and formatting
+
+2. **CSS Escaping Problems**
+   - **Mistake**: CSS files with escaped characters that break the build
+   - **Solution**: Carefully check CSS files after generation and ensure proper syntax and formatting
+
+3. **Incomplete Task Implementation**
+   - **Mistake**: Marking tasks as complete without fully implementing all requirements
+   - **Solution**: Carefully read and understand all requirements before beginning implementation, and verify completeness before marking tasks complete
+
+4. **Method Implementation Errors**
+   - **Mistake**: Attempting to replace methods that don't exist or have incorrect signatures
+   - **Solution**: Always verify exact method signatures and existence before making changes
+
+5. **File Path Confusion**
+   - **Mistake**: Using incorrect file paths or modifying files in wrong locations
+   - **Solution**: Double-check file paths and project structure before making any changes
+
+6. **Overcomplicating Solutions**
+   - **Mistake**: Adding unnecessary complexity to solutions
+   - **Solution**: Start with simple, working solutions and add complexity only when needed
+
+7. **Missing Dependencies**
+   - **Mistake**: Forgetting necessary imports when creating new components
+   - **Solution**: Always verify that new components have all required imports and dependencies
+
+8. **Inadequate Testing**
+   - **Mistake**: Not running comprehensive tests after major changes
+   - **Solution**: Run full test suites after significant modifications to ensure nothing is broken
+
+9. **Documentation Gaps**
+   - **Mistake**: Forgetting to update documentation files
+   - **Solution**: Keep documentation synchronized with code changes
+
+10. **Accessibility Oversights**
+    - **Mistake**: Implementing features without proper accessibility considerations
+    - **Solution**: Consider accessibility requirements from the beginning of implementation
+
+By learning from these mistakes, the development process has become more robust and reliable, resulting in higher quality code and fewer issues during implementation.
 
 This context should provide Qwen Code with the necessary information to understand and work with the ChitJar project effectively.
