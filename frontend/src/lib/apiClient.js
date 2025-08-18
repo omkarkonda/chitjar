@@ -86,10 +86,23 @@ class ApiClient {
    */
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+
+    // For multipart form data, we don't want to set Content-Type header
+    // as the browser will set it with the correct boundary
+    const isMultipart = options.body instanceof FormData;
+
     const config = {
-      headers: this.getAuthHeaders(),
+      headers: isMultipart ? {} : this.getAuthHeaders(),
       ...options,
     };
+
+    // Add auth header for multipart requests
+    if (isMultipart && this.authToken) {
+      config.headers['Authorization'] = `Bearer ${this.authToken}`;
+    } else if (!isMultipart) {
+      // For non-multipart requests, merge with default headers
+      config.headers = { ...this.getAuthHeaders(), ...config.headers };
+    }
 
     const response = await fetch(url, config);
 

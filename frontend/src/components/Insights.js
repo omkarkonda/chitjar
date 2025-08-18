@@ -1,13 +1,12 @@
 /**
  * Insights Component for ChitJar Frontend
- * 
+ *
  * This component displays strategic bidding insights including historical bidding trends,
  * borrower vs investor guidance, and projected payouts.
  */
 
 import { apiClient } from '../lib/apiClient.js';
-import { formatINR, formatDate } from '../lib/formatters.js';
-import { createBarChart, createLineChart, formatChartData } from './Charts.js';
+import { formatINR } from '../lib/formatters.js';
 
 class Insights {
   constructor() {
@@ -196,8 +195,9 @@ class Insights {
    * Render trends by fund
    */
   renderTrendsByFund() {
-    return this.insights.map(fundInsight => {
-      return `
+    return this.insights
+      .map(fundInsight => {
+        return `
         <div class="fund-trends" data-fund-id="${fundInsight.fund_id}">
           <div class="fund-trends__header">
             <h4>${fundInsight.fund_name}</h4>
@@ -220,7 +220,8 @@ class Insights {
           ${this.renderLatestBidsTable(fundInsight.latest_bids)}
         </div>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   /**
@@ -247,14 +248,18 @@ class Insights {
             </tr>
           </thead>
           <tbody>
-            ${bids.map(bid => `
+            ${bids
+              .map(
+                bid => `
               <tr>
                 <td>${bid.month_key}</td>
                 <td>${formatINR(bid.winning_bid)}</td>
                 <td>${formatINR(bid.discount_amount)}</td>
                 <td>${bid.bidder_name || 'N/A'}</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       </div>

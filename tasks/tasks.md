@@ -81,6 +81,10 @@
 - tests/frontend/csv-import.test.js - CSV import preview and error handling tests.
 - tests/frontend/charts.accessibility.test.js - Chart labels, legends, contrast, and keyboard focus tests.
 - backend/src/migrations/002-add-recalculation-triggers.sql - Migration script to add recalculation triggers for analytics consistency.
+- frontend/src/components/CSVImportDialog.js - CSV import dialog component with file selection, preview, and error handling.
+- frontend/src/components/ExportDialog.js - Export dialog component with options for CSV and JSON exports.
+- frontend/src/styles/csv-import.css - Styles for the CSV import dialog component.
+- frontend/src/styles/export.css - Styles for the export dialog component.
 
 ### Notes
 
@@ -128,7 +132,7 @@
   - [x] 4.6 Fund Detail: KPIs (Current Profit, ROI, Avg Monthly Dividend, Months to Completion, XIRR), monthly entries list.
   - [x] 4.7 Monthly Entry Form: add/edit dividend and prize money; mark month as paid; handle zero values.
   - [x] 4.8 Insights Page: historical bidding trends (table + chart), borrower vs investor guidance, projected payouts.
-  - [ ] 4.9 Import/Export UI: CSV import dialog with preview/errors; JSON/CSV export controls.
+  - [x] 4.9 Import/Export UI: CSV import dialog with preview/errors; JSON/CSV export controls.
   - [ ] 4.10 Accessibility: keyboard navigation, focus states, ARIA labels, color-blind palettes.
   - [ ] 4.11 Performance: pagination/virtualization for long lists; debounce recalculations; skeleton loaders.
 

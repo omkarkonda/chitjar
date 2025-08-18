@@ -6,8 +6,9 @@ import { dashboard } from './components/Dashboard.js';
 import { fundsList } from './components/FundsList.js';
 import { fundDetail } from './components/FundDetail.js';
 import { fundForm } from './components/FundForm.js';
-import { monthlyEntryForm } from './components/MonthlyEntryForm.js';
 import { insights } from './components/Insights.js';
+import { csvImportDialog } from './components/CSVImportDialog.js';
+import { exportDialog } from './components/ExportDialog.js';
 
 class ChitJarApp {
   constructor() {
@@ -57,6 +58,26 @@ class ChitJarApp {
     window.addEventListener('navigateToFund', e => {
       const fundId = e.detail.fundId;
       this.navigate(`fund?fundId=${fundId}`);
+    });
+
+    // Handle show CSV import dialog event
+    window.addEventListener('showCSVImportDialog', () => {
+      csvImportDialog.show();
+    });
+
+    // Handle show export dialog event
+    window.addEventListener('showExportDialog', () => {
+      exportDialog.show();
+    });
+
+    // Handle CSV import success event
+    window.addEventListener('csvImportSuccess', e => {
+      const { importedCount } = e.detail;
+      alert(`Successfully imported ${importedCount} bids.`);
+      // Reload funds list to reflect new data
+      if (this.currentRoute === 'funds') {
+        fundsList.loadData();
+      }
     });
   }
 
@@ -275,9 +296,6 @@ class ChitJarApp {
           fundForm.initCreate();
         }
         break;
-      case 'insights':
-        main.innerHTML = this.renderInsights();
-        break;
       case 'login':
         main.innerHTML = this.renderLogin();
         break;
@@ -478,21 +496,6 @@ class ChitJarApp {
           <button type="submit" class="btn btn--primary">Login</button>
         </form>
         <p>Don't have an account? <a href="/signup.html">Sign up</a></p>
-      </div>
-    `;
-  }
-
-  renderInsights() {
-    // Return the initial insights HTML structure
-    return `
-      <div class="insights">
-        <div class="insights__header">
-          <div class="loading__skeleton insights-header-skeleton"></div>
-        </div>
-        
-        <div class="insights__content">
-          <div class="loading__skeleton insights-content-skeleton"></div>
-        </div>
       </div>
     `;
   }

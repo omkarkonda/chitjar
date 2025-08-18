@@ -1,0 +1,31 @@
+/* Export Dialog Styles */
+
+.export-options {
+  padding: var(--spacing-4);
+}
+
+.export-section {
+  margin-bottom: var(--spacing-6);
+}
+
+.export-section h3 {
+  margin-bottom: var(--spacing-3);
+  color: var(--text-primary);
+}
+
+.export-buttons {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.export-buttons .btn {
+  min-width: 80px;
+}
+
+.export-description {
+  margin-top: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-style: italic;
+}
