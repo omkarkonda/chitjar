@@ -85,6 +85,7 @@
 - frontend/src/components/ExportDialog.js - Export dialog component with options for CSV and JSON exports.
 - frontend/src/styles/csv-import.css - Styles for the CSV import dialog component.
 - frontend/src/styles/export.css - Styles for the export dialog component.
+- frontend/src/lib/focusTrap.js - Focus trap utility for modal dialogs to ensure keyboard navigation is properly contained.
 
 ### Notes
 
@@ -133,7 +134,7 @@
   - [x] 4.7 Monthly Entry Form: add/edit dividend and prize money; mark month as paid; handle zero values.
   - [x] 4.8 Insights Page: historical bidding trends (table + chart), borrower vs investor guidance, projected payouts.
   - [x] 4.9 Import/Export UI: CSV import dialog with preview/errors; JSON/CSV export controls.
-  - [ ] 4.10 Accessibility: keyboard navigation, focus states, ARIA labels, color-blind palettes.
+  - [x] 4.10 Accessibility: keyboard navigation, focus states, ARIA labels, color-blind palettes.
   - [ ] 4.11 Performance: pagination/virtualization for long lists; debounce recalculations; skeleton loaders.
 
 - [ ] 5.0 Analytics and Calculations

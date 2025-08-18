@@ -4,6 +4,8 @@
  * This component provides a modal dialog for exporting data in CSV or JSON formats.
  */
 
+import { createFocusTrap } from '../lib/focusTrap.js';
+
 class ExportDialog {
   constructor() {
     this.isLoading = false;
@@ -19,6 +21,14 @@ class ExportDialog {
     const modalOverlay = document.getElementById('modal-overlay');
     if (modalOverlay) {
       modalOverlay.style.display = 'flex';
+      modalOverlay.setAttribute('aria-label', 'Export Data Dialog');
+
+      // Create focus trap
+      const modalContainer = document.getElementById('modal-container');
+      if (modalContainer) {
+        this.focusTrap = createFocusTrap(modalContainer);
+        this.focusTrap.activate();
+      }
     }
   }
 
@@ -29,7 +39,15 @@ class ExportDialog {
     const modalOverlay = document.getElementById('modal-overlay');
     if (modalOverlay) {
       modalOverlay.style.display = 'none';
+
+      // Deactivate focus trap
+      if (this.focusTrap) {
+        this.focusTrap.deactivate();
+      }
     }
+
+    // Dispatch event to notify that dialog was closed
+    window.dispatchEvent(new CustomEvent('exportDialogClosed'));
   }
 
   /**
@@ -117,8 +135,8 @@ class ExportDialog {
   renderContent() {
     return `
       <div class="modal-header">
-        <h2>Export Data</h2>
-        <button class="modal-close" aria-label="Close">&times;</button>
+        <h2 id="modal-title">Export Data</h2>
+        <button class="modal-close" aria-label="Close Export Dialog">&times;</button>
       </div>
       <div class="modal-body">
         ${this.renderExportOptions()}

@@ -51,9 +51,12 @@
   transition: background-color 0.2s ease;
 }
 
-.modal-close:hover {
+.modal-close:hover,
+.modal-close:focus {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }
 
 .modal-body {

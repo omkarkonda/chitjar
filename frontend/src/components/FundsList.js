@@ -137,8 +137,8 @@ class FundsList {
       <div class="funds__header">
         <h2>My Funds</h2>
         <div class="funds__actions">
-          <button id="import-csv-button" class="btn btn--secondary">Import CSV</button>
-          <button id="export-data-button" class="btn btn--secondary">Export Data</button>
+          <button id="import-csv-button" class="btn btn--secondary" aria-label="Import funds data from CSV file">Import CSV</button>
+          <button id="export-data-button" class="btn btn--secondary" aria-label="Export funds data to CSV or JSON file">Export Data</button>
         </div>
       </div>
       

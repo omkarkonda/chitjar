@@ -1,13 +1,14 @@
 /**
  * Fund Detail Component for ChitJar Frontend
  *
- * This component displays detailed information about a specific fund including
- * KPIs and a list of monthly entries.
+ * This component displays detailed information about a specific fund
+ * including KPIs, entries list, and analytics charts.
  */
 
 import { apiClient } from '../lib/apiClient.js';
 import { formatINR, formatDate } from '../lib/formatters.js';
 import { monthlyEntryForm } from './MonthlyEntryForm.js';
+import { createFocusTrap } from '../lib/focusTrap.js';
 
 class FundDetail {
   constructor() {
@@ -16,10 +17,16 @@ class FundDetail {
     this.analytics = null;
     this.isLoading = false;
     this.error = null;
+
+    // Calculated values
+    this.currentProfit = 0;
+    this.roi = 0;
+    this.avgMonthlyDividend = 0;
+    this.monthsToCompletion = 0;
   }
 
   /**
-   * Load fund data from the API
+   * Load fund detail data from the API
    * @param {string} fundId - The ID of the fund to load
    */
   async loadData(fundId) {
@@ -35,22 +42,22 @@ class FundDetail {
     this.error = null;
 
     try {
-      // Fetch fund details
+      // Fetch fund data
       const fundResponse = await apiClient.get(`/funds/${fundId}`);
       this.fund = fundResponse.data;
 
-      // Fetch fund analytics
+      // Fetch entries
+      const entriesResponse = await apiClient.get(`/funds/${fundId}/entries`);
+      this.entries = entriesResponse.data.entries || [];
+
+      // Fetch analytics
       const analyticsResponse = await apiClient.get(
         `/analytics/funds/${fundId}`
       );
       this.analytics = analyticsResponse.data;
 
-      // Fetch entries for this fund
-      const entriesResponse = await apiClient.get(`/funds/${fundId}/entries`);
-      this.entries = entriesResponse.data.entries || [];
-
-      // Calculate additional metrics
-      this.calculateMetrics();
+      // Calculate derived values
+      this.calculateDerivedValues();
     } catch (error) {
       // Handle authentication errors specifically
       if (error.message && error.message.includes('Invalid access token')) {
@@ -62,7 +69,7 @@ class FundDetail {
       } else {
         this.error = error.message || 'Failed to load fund data';
       }
-      console.error('Fund detail load error:', error);
+      console.error('Fund detail data load error:', error);
     } finally {
       this.isLoading = false;
       this.render();
@@ -70,33 +77,28 @@ class FundDetail {
   }
 
   /**
-   * Calculate additional metrics for the fund
+   * Calculate derived values from fund data
    */
-  calculateMetrics() {
+  calculateDerivedValues() {
     if (!this.fund || !this.entries) return;
 
-    // Calculate current profit (sum of all cash flows)
-    let currentProfit = 0;
-    let totalDividends = 0;
-    let paidMonths = 0;
-
-    this.entries.forEach(entry => {
+    // Calculate current profit (sum of dividend_amount - installment_amount for paid entries)
+    this.currentProfit = this.entries.reduce((total, entry) => {
       if (entry.is_paid) {
-        paidMonths++;
         const dividend = parseFloat(entry.dividend_amount) || 0;
-        const prize = parseFloat(entry.prize_money) || 0;
         const installment = parseFloat(this.fund.installment_amount) || 0;
-
-        // Net cash flow: dividend + prize - installment
-        currentProfit += dividend + prize - installment;
-        totalDividends += dividend;
+        return total + (dividend - installment);
       }
-    });
-
-    this.currentProfit = currentProfit;
-    this.paidMonths = paidMonths;
+      return total;
+    }, 0);
 
     // Calculate average monthly dividend
+    const paidEntries = this.entries.filter(entry => entry.is_paid);
+    const paidMonths = paidEntries.length;
+    const totalDividends = paidEntries.reduce(
+      (total, entry) => total + (parseFloat(entry.dividend_amount) || 0),
+      0
+    );
     this.avgMonthlyDividend = paidMonths > 0 ? totalDividends / paidMonths : 0;
 
     // Calculate months to completion
@@ -106,7 +108,9 @@ class FundDetail {
     const totalInstallments =
       paidMonths * (parseFloat(this.fund.installment_amount) || 0);
     this.roi =
-      totalInstallments > 0 ? (currentProfit / totalInstallments) * 100 : 0;
+      totalInstallments > 0
+        ? (this.currentProfit / totalInstallments) * 100
+        : 0;
   }
 
   /**
@@ -150,29 +154,12 @@ class FundDetail {
       </div>
       
       <div class="fund-detail__kpis">
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="loading__skeleton kpi-skeleton"></div>
-          </div>
-          <div class="kpi-card">
-            <div class="loading__skeleton kpi-skeleton"></div>
-          </div>
-          <div class="kpi-card">
-            <div class="loading__skeleton kpi-skeleton"></div>
-          </div>
-          <div class="kpi-card">
-            <div class="loading__skeleton kpi-skeleton"></div>
-          </div>
-        </div>
+        <div class="loading__skeleton kpi-grid-skeleton"></div>
       </div>
       
       <div class="fund-detail__entries">
-        <div class="entries-header">
-          <h3>Monthly Entries</h3>
-        </div>
-        <div class="entries-list">
-          <div class="loading__skeleton entries-list-skeleton"></div>
-        </div>
+        <div class="loading__skeleton entries-header-skeleton"></div>
+        <div class="loading__skeleton entries-list-skeleton"></div>
       </div>
     `;
   }
@@ -274,7 +261,7 @@ class FundDetail {
       <div class="fund-detail__entries">
         <div class="entries-header">
           <h3>Monthly Entries</h3>
-          <button class="btn btn--secondary" id="add-entry">Add Entry</button>
+          <button class="btn btn--secondary" id="add-entry" aria-label="Add new monthly entry">Add Entry</button>
         </div>
         <div class="entries-list">
           ${
@@ -305,11 +292,18 @@ class FundDetail {
     return `
       <div class="entry-card" data-entry-id="${entry.id}">
         <div class="entry-card__header">
-          <div class="entry-card__date">${formattedDate}</div>
-          <div class="entry-card__status ${entry.is_paid ? 'entry-card__status--paid' : 'entry-card__status--unpaid'}">
-            ${entry.is_paid ? 'Paid' : 'Unpaid'}
+          <div class="entry-card__month">
+            <span class="entry-card__month-label">Month</span>
+            <span class="entry-card__month-value">${formattedDate}</span>
+          </div>
+          <div class="entry-card__status">
+            <span class="entry-card__status-label">Status</span>
+            <span class="entry-card__status-value ${entry.is_paid ? 'entry-card__status-value--paid' : 'entry-card__status-value--unpaid'}">
+              ${entry.is_paid ? 'Paid' : 'Unpaid'}
+            </span>
           </div>
         </div>
+        
         <div class="entry-card__details">
           <div class="entry-card__metric">
             <span class="entry-card__metric-label">Dividend</span>
@@ -320,8 +314,9 @@ class FundDetail {
             <span class="entry-card__metric-value">${formatINR(entry.prize_money || 0)}</span>
           </div>
         </div>
+        
         <div class="entry-card__actions">
-          <button class="btn btn--icon edit-entry" data-entry-id="${entry.id}">
+          <button class="btn btn--icon edit-entry" data-entry-id="${entry.id}" aria-label="Edit entry for ${formattedDate}">
             <i class="icon-edit"></i>
           </button>
         </div>
@@ -335,18 +330,20 @@ class FundDetail {
   renderEmptyEntries() {
     return `
       <div class="entries-empty">
-        <p>No entries yet. Add your first monthly entry to get started!</p>
-        <button class="btn btn--primary" id="add-first-entry">Add Entry</button>
+        <div class="empty-state">
+          <p>No entries yet. Add your first entry to get started!</p>
+          <button class="btn btn--primary" id="add-first-entry" aria-label="Add first monthly entry">Add Entry</button>
+        </div>
       </div>
     `;
   }
 
   /**
-   * Add event listeners to buttons
+   * Add event listeners to the component
    */
   addEventListeners() {
     // Add entry button
-    const addEntryButton = document.querySelector('#add-entry');
+    const addEntryButton = document.getElementById('add-entry');
     if (addEntryButton) {
       addEntryButton.addEventListener('click', () => {
         this.showAddEntryForm();
@@ -354,7 +351,7 @@ class FundDetail {
     }
 
     // Add first entry button
-    const addFirstEntryButton = document.querySelector('#add-first-entry');
+    const addFirstEntryButton = document.getElementById('add-first-entry');
     if (addFirstEntryButton) {
       addFirstEntryButton.addEventListener('click', () => {
         this.showAddEntryForm();
@@ -369,6 +366,14 @@ class FundDetail {
         this.showEditEntryForm(entryId);
       });
     });
+
+    // Retry button
+    const retryButton = document.getElementById('retry-fund-detail');
+    if (retryButton) {
+      retryButton.addEventListener('click', () => {
+        this.loadData(this.fund?.id);
+      });
+    }
   }
 
   /**
@@ -377,51 +382,41 @@ class FundDetail {
   showAddEntryForm() {
     if (!this.fund) return;
 
-    // Find the next month that doesn't have an entry yet
-    const existingMonths = new Set(this.entries.map(entry => entry.month_key));
-
-    // Generate all expected months for the fund
-    const expectedMonths = this.generateMonthSeries(
-      this.fund.start_month,
-      this.fund.end_month,
-      this.fund.early_exit_month
-    );
-
-    // Find the first month without an entry
-    let nextMonth = null;
-    for (const month of expectedMonths) {
-      if (!existingMonths.has(month)) {
-        nextMonth = month;
-        break;
-      }
-    }
-
-    // If all months have entries, use the last month
-    if (!nextMonth && expectedMonths.length > 0) {
-      nextMonth = expectedMonths[expectedMonths.length - 1];
-    }
-
-    if (!nextMonth) {
-      // Fallback to current month
-      const now = new Date();
-      nextMonth = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
-    }
-
     // Show the modal with the monthly entry form
     this.showModal(() => {
-      monthlyEntryForm.initNew(
-        this.fund.id,
-        nextMonth,
-        _newEntry => {
-          // Success callback - reload data
-          this.loadData(this.fund.id);
-          this.hideModal();
-        },
-        () => {
-          // Cancel callback
-          this.hideModal();
+      const modalContainer = document.getElementById('modal-container');
+      if (modalContainer) {
+        modalContainer.innerHTML = `
+          <div class="modal-header">
+            <h2 id="modal-title">Add Monthly Entry</h2>
+            <button class="modal-close" aria-label="Close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="modal-content"></div>
+          </div>
+        `;
+
+        // Initialize the monthly entry form for creation
+        monthlyEntryForm.initCreate(this.fund.id);
+
+        // Add event listener for close button
+        const closeButton = modalContainer.querySelector('.modal-close');
+        if (closeButton) {
+          closeButton.addEventListener('click', () => {
+            this.hideModal();
+          });
         }
-      );
+
+        // Add event listener for overlay click to close
+        const modalOverlay = document.getElementById('modal-overlay');
+        if (modalOverlay) {
+          modalOverlay.addEventListener('click', e => {
+            if (e.target === modalOverlay) {
+              this.hideModal();
+            }
+          });
+        }
+      }
     });
   }
 
@@ -430,77 +425,44 @@ class FundDetail {
    * @param {string} entryId - The ID of the entry to edit
    */
   showEditEntryForm(entryId) {
+    if (!this.fund) return;
+
     // Show the modal with the monthly entry form
     this.showModal(() => {
-      monthlyEntryForm.initEdit(
-        entryId,
-        _updatedEntry => {
-          // Success callback - reload data
-          this.loadData(this.fund.id);
-          this.hideModal();
-        },
-        () => {
-          // Cancel callback
-          this.hideModal();
+      const modalContainer = document.getElementById('modal-container');
+      if (modalContainer) {
+        modalContainer.innerHTML = `
+          <div class="modal-header">
+            <h2 id="modal-title">Edit Monthly Entry</h2>
+            <button class="modal-close" aria-label="Close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="modal-content"></div>
+          </div>
+        `;
+
+        // Initialize the monthly entry form for editing
+        monthlyEntryForm.initEdit(entryId);
+
+        // Add event listener for close button
+        const closeButton = modalContainer.querySelector('.modal-close');
+        if (closeButton) {
+          closeButton.addEventListener('click', () => {
+            this.hideModal();
+          });
         }
-      );
+
+        // Add event listener for overlay click to close
+        const modalOverlay = document.getElementById('modal-overlay');
+        if (modalOverlay) {
+          modalOverlay.addEventListener('click', e => {
+            if (e.target === modalOverlay) {
+              this.hideModal();
+            }
+          });
+        }
+      }
     });
-  }
-
-  /**
-   * Generate month series for a fund
-   * @param {string} startMonth - Start month in YYYY-MM format
-   * @param {string} endMonth - End month in YYYY-MM format
-   * @param {string|null} earlyExitMonth - Early exit month in YYYY-MM format or null
-   * @returns {Array<string>} Array of month keys
-   */
-  generateMonthSeries(startMonth, endMonth, earlyExitMonth) {
-    const months = [];
-
-    // Parse start month
-    const [startYear, startMonthNum] = startMonth.split('-').map(Number);
-    let currentYear = startYear;
-    let currentMonth = startMonthNum;
-
-    // Parse end month
-    const [endYear, endMonthNum] = endMonth.split('-').map(Number);
-
-    // Parse early exit month if provided
-    let earlyExitYear = null;
-    let earlyExitMonthNum = null;
-    if (earlyExitMonth) {
-      [earlyExitYear, earlyExitMonthNum] = earlyExitMonth
-        .split('-')
-        .map(Number);
-    }
-
-    // Generate months
-    while (
-      currentYear < endYear ||
-      (currentYear === endYear && currentMonth <= endMonthNum)
-    ) {
-      // Check if we've reached early exit
-      if (
-        earlyExitYear !== null &&
-        earlyExitMonthNum !== null &&
-        (currentYear > earlyExitYear ||
-          (currentYear === earlyExitYear && currentMonth > earlyExitMonthNum))
-      ) {
-        break;
-      }
-
-      // Add current month
-      months.push(`${currentYear}-${currentMonth.toString().padStart(2, '0')}`);
-
-      // Move to next month
-      currentMonth++;
-      if (currentMonth > 12) {
-        currentMonth = 1;
-        currentYear++;
-      }
-    }
-
-    return months;
   }
 
   /**
@@ -514,6 +476,9 @@ class FundDetail {
       modalOverlay = document.createElement('div');
       modalOverlay.id = 'modal-overlay';
       modalOverlay.className = 'modal-overlay';
+      modalOverlay.setAttribute('role', 'dialog');
+      modalOverlay.setAttribute('aria-modal', 'true');
+      modalOverlay.setAttribute('aria-labelledby', 'modal-title');
       document.body.appendChild(modalOverlay);
     }
 
@@ -525,6 +490,9 @@ class FundDetail {
       modalContainer.className = 'modal-container';
       modalOverlay.appendChild(modalContainer);
     }
+
+    // Create focus trap
+    this.focusTrap = createFocusTrap(modalContainer);
 
     // Add close event for overlay click
     modalOverlay.addEventListener('click', e => {
@@ -542,8 +510,14 @@ class FundDetail {
     };
     document.addEventListener('keydown', escapeHandler);
 
+    // Store the element that opened the modal for focus return
+    this.lastFocusedElement = document.activeElement;
+
     // Show modal
     modalOverlay.style.display = 'flex';
+
+    // Activate focus trap
+    this.focusTrap.activate();
 
     // Render content
     if (contentCallback) {
@@ -558,6 +532,16 @@ class FundDetail {
     const modalOverlay = document.getElementById('modal-overlay');
     if (modalOverlay) {
       modalOverlay.style.display = 'none';
+
+      // Deactivate focus trap
+      if (this.focusTrap) {
+        this.focusTrap.deactivate();
+      }
+
+      // Return focus to the element that opened the modal
+      if (this.lastFocusedElement) {
+        this.lastFocusedElement.focus();
+      }
     }
   }
 }

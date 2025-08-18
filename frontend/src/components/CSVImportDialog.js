@@ -6,6 +6,7 @@
 
 import { apiClient } from '../lib/apiClient.js';
 import { formatINR } from '../lib/formatters.js';
+import { createFocusTrap } from '../lib/focusTrap.js';
 
 class CSVImportDialog {
   constructor() {
@@ -32,6 +33,14 @@ class CSVImportDialog {
     const modalOverlay = document.getElementById('modal-overlay');
     if (modalOverlay) {
       modalOverlay.style.display = 'flex';
+      modalOverlay.setAttribute('aria-label', 'CSV Import Dialog');
+
+      // Create focus trap
+      const modalContainer = document.getElementById('modal-container');
+      if (modalContainer) {
+        this.focusTrap = createFocusTrap(modalContainer);
+        this.focusTrap.activate();
+      }
     }
   }
 
@@ -42,7 +51,15 @@ class CSVImportDialog {
     const modalOverlay = document.getElementById('modal-overlay');
     if (modalOverlay) {
       modalOverlay.style.display = 'none';
+
+      // Deactivate focus trap
+      if (this.focusTrap) {
+        this.focusTrap.deactivate();
+      }
     }
+
+    // Dispatch event to notify that dialog was closed
+    window.dispatchEvent(new CustomEvent('csvImportDialogClosed'));
   }
 
   /**
@@ -205,8 +222,8 @@ class CSVImportDialog {
   renderContent() {
     return `
       <div class="modal-header">
-        <h2>Import Bids from CSV</h2>
-        <button class="modal-close" aria-label="Close">&times;</button>
+        <h2 id="modal-title">Import Bids from CSV</h2>
+        <button class="modal-close" aria-label="Close CSV Import Dialog">&times;</button>
       </div>
       <div class="modal-body">
         ${this.isLoading ? this.renderLoadingState() : this.renderImportForm()}
@@ -238,8 +255,9 @@ class CSVImportDialog {
       <div class="csv-import-form">
         <div class="form-group">
           <label for="csv-file-input">Select CSV File</label>
-          <input type="file" id="csv-file-input" accept=".csv" class="file-input">
-          ${this.file ? `<p class="file-name">${this.file.name}</p>` : ''}
+          <input type="file" id="csv-file-input" accept=".csv" class="file-input" aria-describedby="csv-file-help">
+          <div id="csv-file-help" class="form-help">Choose a CSV file containing bid data to import</div>
+          ${this.file ? `<p class="file-name">Selected file: ${this.file.name}</p>` : ''}
         </div>
         
         <div class="form-actions">
@@ -266,43 +284,41 @@ class CSVImportDialog {
         ${
           this.previewData && this.previewData.length > 0
             ? `
-          <div class="preview-table-container">
-            <table class="preview-table">
-              <thead>
-                <tr>
-                  <th>Fund ID</th>
-                  <th>Month</th>
-                  <th>Winning Bid</th>
-                  <th>Discount Amount</th>
-                  <th>Bidder Name</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${this.previewData
-                  .slice(0, 10)
-                  .map(
-                    row => `
-                  <tr>
-                    <td>${row.fund_id || ''}</td>
-                    <td>${row.month_key || ''}</td>
-                    <td>${formatINR(row.winning_bid || 0)}</td>
-                    <td>${formatINR(row.discount_amount || 0)}</td>
-                    <td>${row.bidder_name || ''}</td>
-                  </tr>
-                `
-                  )
-                  .join('')}
-                ${
-                  this.previewData.length > 10
-                    ? `
-                  <tr>
-                    <td colspan="5" class="preview-more">... and ${this.previewData.length - 10} more rows</td>
-                  </tr>
-                `
-                    : ''
-                }
-              </tbody>
-            </table>
+          <div class="preview-table-container" role="table" aria-label="CSV Data Preview">
+            <div role="rowgroup">
+              <div role="row">
+                <span role="columnheader">Fund ID</span>
+                <span role="columnheader">Month</span>
+                <span role="columnheader">Winning Bid</span>
+                <span role="columnheader">Discount Amount</span>
+                <span role="columnheader">Bidder Name</span>
+              </div>
+            </div>
+            <div role="rowgroup">
+              ${this.previewData
+                .slice(0, 10)
+                .map(
+                  row => `
+                <div role="row">
+                  <span role="cell">${row.fund_id || ''}</span>
+                  <span role="cell">${row.month_key || ''}</span>
+                  <span role="cell">${formatINR(row.winning_bid || 0)}</span>
+                  <span role="cell">${formatINR(row.discount_amount || 0)}</span>
+                  <span role="cell">${row.bidder_name || ''}</span>
+                </div>
+              `
+                )
+                .join('')}
+              ${
+                this.previewData.length > 10
+                  ? `
+                <div role="row">
+                  <span role="cell" colspan="5" class="preview-more">... and ${this.previewData.length - 10} more rows</span>
+                </div>
+              `
+                  : ''
+              }
+            </div>
           </div>
         `
             : ''

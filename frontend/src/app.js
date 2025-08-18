@@ -79,6 +79,16 @@ class ChitJarApp {
         fundsList.loadData();
       }
     });
+
+    // Handle CSV import dialog closed event
+    window.addEventListener('csvImportDialogClosed', () => {
+      // Any cleanup needed when CSV import dialog is closed
+    });
+
+    // Handle export dialog closed event
+    window.addEventListener('exportDialogClosed', () => {
+      // Any cleanup needed when export dialog is closed
+    });
   }
 
   async loadInitialData() {

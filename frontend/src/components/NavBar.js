@@ -30,6 +30,19 @@ class NavBar {
             this.handleNavigation(route);
           }
         });
+
+        // Add keyboard support
+        item.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const route = e.currentTarget.dataset.route;
+            if (route === 'logout') {
+              this.handleLogout();
+            } else if (route) {
+              this.handleNavigation(route);
+            }
+          }
+        });
       });
   }
 
