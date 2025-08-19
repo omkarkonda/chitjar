@@ -16,6 +16,7 @@ import {
   formatEarlyExitWarning,
   formatMidYearStartWarning
 } from '../lib/edgeCaseHandler.js';
+import { generateFundWarnings } from '../lib/warningValidator.js';
 
 class FundForm {
   constructor() {
@@ -120,6 +121,10 @@ class FundForm {
         }));
       }
     }
+    
+    // Generate validation warnings
+    const validationWarnings = generateFundWarnings(this.fundData);
+    const allWarnings = [...warnings, ...validationWarnings];
 
     return `
       <div class="fund-form-container">
@@ -130,10 +135,10 @@ class FundForm {
           </p>
         </div>
         
-        ${warnings.length > 0 ? `
+        ${allWarnings.length > 0 ? `
           <div class="alert alert--warning">
             <ul class="alert__list">
-              ${warnings.map(warning => `<li>${warning}</li>`).join('')}
+              ${allWarnings.map(warning => `<li>${warning}</li>`).join('')}
             </ul>
           </div>
         ` : ''}

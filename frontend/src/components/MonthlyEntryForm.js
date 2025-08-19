@@ -15,6 +15,7 @@ import {
   formatPastEntryWarning,
   formatZeroDividendWarning
 } from '../lib/edgeCaseHandler.js';
+import { generateMonthlyEntryWarnings } from '../lib/warningValidator.js';
 
 class MonthlyEntryForm {
   constructor() {
@@ -270,17 +271,17 @@ class MonthlyEntryForm {
     }
 
     // Check for edge cases
-    const isPast = isPastMonth(this.entry.month_key);
-    const isZeroDividend = isZeroDividendMonth(this.entry);
+    const edgeCaseWarnings = [];
+    if (isPastMonth(this.entry.month_key)) {
+      edgeCaseWarnings.push(formatPastEntryWarning(this.entry.month_key));
+    }
+    if (isZeroDividendMonth(this.entry)) {
+      edgeCaseWarnings.push(formatZeroDividendWarning());
+    }
     
-    // Generate warnings
-    const warnings = [];
-    if (isPast) {
-      warnings.push(formatPastEntryWarning(this.entry.month_key));
-    }
-    if (isZeroDividend) {
-      warnings.push(formatZeroDividendWarning());
-    }
+    // Generate validation warnings
+    const validationWarnings = generateMonthlyEntryWarnings(this.entry, this.fund);
+    const allWarnings = [...edgeCaseWarnings, ...validationWarnings];
 
     const monthLabel = this.entry.month_key
       ? new Date(this.entry.month_key + '-01').toLocaleDateString('en-IN', {
@@ -302,10 +303,10 @@ class MonthlyEntryForm {
           </div>
         ` : ''}
         
-        ${warnings.length > 0 ? `
+        ${allWarnings.length > 0 ? `
           <div class="warning-message">
             <ul>
-              ${warnings.map(warning => `<li>${warning}</li>`).join('')}
+              ${allWarnings.map(warning => `<li>${warning}</li>`).join('')}
             </ul>
           </div>
         ` : ''}
