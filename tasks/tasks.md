@@ -65,8 +65,8 @@
 - frontend/src/styles/modal.css - Modal dialog styles for forms and other overlays.
 - frontend/components/MonthlyEntryForm.js - Add/edit monthly dividend and prize money; mark month as paid; handle zero values.
 - frontend/components/Insights.js - Strategic bidding insights UI with trends and scenario projections.
-- frontend/src/components/Insights.js - Insights component for historical bidding trends and guidance with charts.
-- frontend/src/styles/insights.css - Styles for the insights component including chart layouts.
+- frontend/src/components/Insights.js - Insights component for historical bidding trends and guidance with charts and data tables.
+- frontend/src/styles/insights.css - Styles for the insights component including chart layouts and data tables.
 - frontend/components/CSVImportDialog.js - CSV import flow with mapped preview, line-level errors, and confirm.
 - frontend/components/ExportDialog.js - CSV/JSON export options.
 - frontend/src/components/Charts.js - Chart helpers (Chart.js/ECharts) with color-blind friendly palettes.
@@ -170,7 +170,7 @@
   - [x] 7.2 Dashboard chart: Fund vs Profit bar chart using Chart.js; responsive on small screens; print-friendly.
   - [x] 7.3 Fund Detail charts: cash flow over time, cumulative profit using Chart.js; accessible labels.
   - [x] 7.4 Insights charts: historical winning bid/discount trend using Chart.js.
-  - [ ] 7.5 Add data table alternatives for all Chart.js charts; ensure export to CSV/print.
+  - [x] 7.5 Add data table alternatives for all Chart.js charts; ensure export to CSV/print.
 
 - [ ] 8.0 Error Handling, Validation, and Edge Cases
   - [ ] 8.1 Centralized error boundary and toasts for API failures.

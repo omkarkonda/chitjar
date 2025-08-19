@@ -502,18 +502,98 @@ class Insights {
     return `
       <div class="fund-trends__charts">
         <div class="chart-container">
-          <h5>Winning Bid Trend</h5>
+          <div class="chart-header">
+            <h5>Winning Bid Trend</h5>
+            <div class="chart-data-table" role="region" aria-labelledby="winning-bid-data-label-${fundInsight.fund_id}" tabindex="0">
+              <h6 id="winning-bid-data-label-${fundInsight.fund_id}" class="sr-only">Winning Bid Trend Data Table</h6>
+              ${this.renderWinningBidDataTable(fundInsight)}
+            </div>
+          </div>
           <div class="chart-wrapper">
             <canvas id="winning-bid-chart-${fundInsight.fund_id}" class="chart-canvas" role="img" aria-label="Line chart showing winning bid trend over time"></canvas>
           </div>
         </div>
         <div class="chart-container">
-          <h5>Discount Amount Trend</h5>
+          <div class="chart-header">
+            <h5>Discount Amount Trend</h5>
+            <div class="chart-data-table" role="region" aria-labelledby="discount-data-label-${fundInsight.fund_id}" tabindex="0">
+              <h6 id="discount-data-label-${fundInsight.fund_id}" class="sr-only">Discount Amount Trend Data Table</h6>
+              ${this.renderDiscountDataTable(fundInsight)}
+            </div>
+          </div>
           <div class="chart-wrapper">
             <canvas id="discount-chart-${fundInsight.fund_id}" class="chart-canvas" role="img" aria-label="Line chart showing discount amount trend over time"></canvas>
           </div>
         </div>
       </div>
+    `;
+  }
+
+  /**
+   * Render winning bid data table for accessibility
+   */
+  renderWinningBidDataTable(fundInsight) {
+    if (!fundInsight.latest_bids || fundInsight.latest_bids.length === 0)
+      return '';
+
+    // Reverse to show oldest first (same as chart)
+    const bids = [...fundInsight.latest_bids].reverse();
+
+    return `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Month</th>
+            <th scope="col">Winning Bid (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${bids
+            .map(
+              bid => `
+            <tr>
+              <td>${bid.month_key}</td>
+              <td>${formatINR(bid.winning_bid)}</td>
+            </tr>
+          `
+            )
+            .join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  /**
+   * Render discount data table for accessibility
+   */
+  renderDiscountDataTable(fundInsight) {
+    if (!fundInsight.latest_bids || fundInsight.latest_bids.length === 0)
+      return '';
+
+    // Reverse to show oldest first (same as chart)
+    const bids = [...fundInsight.latest_bids].reverse();
+
+    return `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Month</th>
+            <th scope="col">Discount Amount (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${bids
+            .map(
+              bid => `
+            <tr>
+              <td>${bid.month_key}</td>
+              <td>${formatINR(bid.discount_amount)}</td>
+            </tr>
+          `
+            )
+            .join('')}
+        </tbody>
+      </table>
     `;
   }
 

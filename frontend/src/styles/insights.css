@@ -154,6 +154,17 @@
   color: var(--color-text-primary);
 }
 
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.chart-data-table {
+  display: none;
+}
+
 .chart-wrapper {
   position: relative;
   height: 200px;
