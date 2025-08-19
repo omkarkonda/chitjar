@@ -177,10 +177,12 @@ class FundsList {
     return `
       <div class="funds__header">
         <h2>My Funds</h2>
+        <!--
         <div class="funds__actions">
           <button id="import-csv-button" class="btn btn--secondary" aria-label="Import funds data from CSV file">Import CSV</button>
           <button id="export-data-button" class="btn btn--secondary" aria-label="Export funds data to CSV or JSON file">Export Data</button>
         </div>
+        -->
       </div>
       
       ${
@@ -341,15 +343,20 @@ class FundsList {
     });
 
     // Add event listener for import CSV button
+    /*
     const importButton = document.getElementById('import-csv-button');
     if (importButton) {
       importButton.addEventListener('click', () => {
-        // Dispatch event to show CSV import dialog
-        window.dispatchEvent(new CustomEvent('showCSVImportDialog'));
+        // Dispatch event to show CSV import dialog for funds
+        window.dispatchEvent(new CustomEvent('showCSVImportDialog', {
+          detail: { type: 'funds' }
+        }));
       });
     }
+    */
 
     // Add event listener for export data button
+    /*
     const exportButton = document.getElementById('export-data-button');
     if (exportButton) {
       exportButton.addEventListener('click', () => {
@@ -357,6 +364,7 @@ class FundsList {
         window.dispatchEvent(new CustomEvent('showExportDialog'));
       });
     }
+    */
 
     // Add event listeners for pagination buttons
     const paginationButtons = document.querySelectorAll('.pagination-btn');

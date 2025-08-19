@@ -43,6 +43,7 @@
 - backend/src/lib/validation.ts - Shared schemas (e.g., zod/yup) for server-side validation.
 - backend/src/lib/validation-utils.ts - Utility functions for validation including new functions to handle irregularities in month series.
 - backend/src/lib/csv.ts - CSV parsing, sanitization, template generation, and error reporting helpers. New library for handling CSV import functionality.
+- docs/csv-templates.md - Comprehensive documentation for CSV templates including headers, data types, and examples for funds, monthly entries, and bids.
 - backend/src/lib/xirr.ts - Wrapper around the xirr library with proper error handling and validation.
 - backend/src/test/xirr.test.ts - Unit tests for XIRR utility functions covering various edge cases and validation scenarios.
 - backend/src/test/xirr-parity.test.ts - Excel parity tests for XIRR calculations verifying accuracy within ±0.1% tolerance.
@@ -83,7 +84,9 @@
 - tests/frontend/csv-import.test.js - CSV import preview and error handling tests.
 - tests/frontend/charts.accessibility.test.js - Chart labels, legends, contrast, and keyboard focus tests.
 - backend/src/migrations/002-add-recalculation-triggers.sql - Migration script to add recalculation triggers for analytics consistency.
-- frontend/src/components/CSVImportDialog.js - CSV import dialog component with file selection, preview, and error handling.
+- frontend/src/lib/csvParser.js - Client-side CSV parsing utilities for file selection, parsing, and data validation.
+- frontend/src/components/CSVImportDialog.js - Updated CSV import dialog with client-side parsing and multi-type support (funds, entries, bids).
+- frontend/src/components/FundsList.js - Updated funds list component with type-specific CSV import button.
 - frontend/src/components/ExportDialog.js - Export dialog component with options for CSV and JSON exports.
 - frontend/src/styles/csv-import.css - Styles for the CSV import dialog component.
 - frontend/src/styles/export.css - Styles for the export dialog component.
@@ -154,8 +157,8 @@
   - [x] 5.6 Document and surface assumptions in UI (tooltips/notes) for projections.
 
 - [ ] 6.0 Import/Export with Validation and Preview
-  - [ ] 6.1 Define CSV templates (funds, monthly entries, bids) with headers and data types for Node.js processing.
-  - [ ] 6.2 Implement client-side file selection, parsing, and mapping preview.
+  - [x] 6.1 Define CSV templates (funds, monthly entries, bids) with headers and data types for Node.js processing.
+  - [x] 6.2 Implement client-side file selection, parsing, and mapping preview.
   - [ ] 6.3 Server-side validation with Zod: line numbers, field errors, duplicate detection in Node.js.
   - [ ] 6.4 Display preview with error badges and only-validated rows ready to import.
   - [ ] 6.5 JSON export for full backup/restore from PostgreSQL; CSV export per-entity using Node.js streams.

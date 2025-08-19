@@ -61,8 +61,10 @@ class ChitJarApp {
     });
 
     // Handle show CSV import dialog event
-    window.addEventListener('showCSVImportDialog', () => {
-      csvImportDialog.show();
+    window.addEventListener('showCSVImportDialog', (e) => {
+      const detail = e.detail || {};
+      const type = detail.type || 'bids';
+      csvImportDialog.show(type);
     });
 
     // Handle show export dialog event
