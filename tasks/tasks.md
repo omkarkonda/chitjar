@@ -73,7 +73,7 @@
 - docs/chart-helpers.md - Comprehensive documentation for Chart.js helpers including color palettes, configurations, and usage examples.
 - frontend/lib/apiClient.js - Wrapper for calling backend APIs with auth and error handling.
 - frontend/lib/formatters.js - INR currency, Indian digit grouping, date formatting for UI.
-- frontend/lib/validators.js - Client-side validation mirroring server rules.
+- frontend/lib/validators.js - Enhanced client-side validation utilities with field-level error reporting that mirrors server-side Zod validation rules.
 - tests/backend/xirr.test.ts - Excel parity tests for XIRR.
 - tests/backend/validation.test.ts - Server-side validation and edge case tests.
 - tests/backend/api-funds.test.ts - Funds API contract tests.
@@ -110,21 +110,21 @@
 - [ ] 1.0 Project Setup and Architecture
   - [x] 1.1 Choose backend stack (Firebase/Supabase vs custom Node+SQL); document choice and rationale.
   - [x] 1.2 Initialize repo with Node.js backend and frontend folders, ESLint, Prettier, and basic CI.
-- [x] 1.3 Set up environment configs (.env), secret handling, and local dev scripts for Node.js + PostgreSQL.
-- [x] 1.4 Define PostgreSQL schema (users, funds, monthly_entries, bids, settings) and migrations using pg library.
-- [x] 1.5 Establish Express.js API conventions (REST paths, error shape, JWT auth headers).
-- [x] 1.6 Add Zod validation library for server and client parity.
-- [x] 1.7 Add utility modules for formatting (INR, DD/MM/YYYY) and date handling.
-- [x] 1.8 Pick charting library (Chart.js) and set up a themed wrapper with accessible palettes.
-- [x] 1.9 Create sample seed data scripts for dev/demo with PostgreSQL.
+  - [x] 1.3 Set up environment configs (.env), secret handling, and local dev scripts for Node.js + PostgreSQL.
+  - [x] 1.4 Define PostgreSQL schema (users, funds, monthly_entries, bids, settings) and migrations using pg library.
+  - [x] 1.5 Establish Express.js API conventions (REST paths, error shape, JWT auth headers).
+  - [x] 1.6 Add Zod validation library for server and client parity.
+  - [x] 1.7 Add utility modules for formatting (INR, DD/MM/YYYY) and date handling.
+  - [x] 1.8 Pick charting library (Chart.js) and set up a themed wrapper with accessible palettes.
+  - [x] 1.9 Create sample seed data scripts for dev/demo with PostgreSQL.
 
 - [ ] 2.0 Authentication, Authorization, and Data Security
   - [x] 2.1 Implement signup/login/logout with email/password using JWT tokens and bcrypt password hashing.
-- [x] 2.2 Protect all Express.js APIs with per-user authorization; enforce row-level ownership in PostgreSQL.
-- [x] 2.3 Store credentials securely in PostgreSQL; enable encryption at rest and HTTPS in deployment.
-- [x] 2.4 Implement rate limiting and input sanitization for all Express.js endpoints.
-- [x] 2.5 Add auth guards in frontend router and persistent JWT session restore.
-- [x] 2.6 Write auth and security tests (happy paths and unauthorized access).
+  - [x] 2.2 Protect all Express.js APIs with per-user authorization; enforce row-level ownership in PostgreSQL.
+  - [x] 2.3 Store credentials securely in PostgreSQL; enable encryption at rest and HTTPS in deployment.
+  - [x] 2.4 Implement rate limiting and input sanitization for all Express.js endpoints.
+  - [x] 2.5 Add auth guards in frontend router and persistent JWT session restore.
+  - [x] 2.6 Write auth and security tests (happy paths and unauthorized access).
 
 - [ ] 3.0 Data Model and Backend APIs
   - [x] 3.1 Express.js Funds API: create, read (list/detail), update, delete; validate inputs and uniqueness per user with Zod.
@@ -132,10 +132,10 @@
   - [x] 3.3 Handle irregularities: zero/missing months, mid-year start, early exit flag in PostgreSQL queries.
   - [x] 3.4 Express.js Bids API: manual entry of historical winning bids and notes with PostgreSQL.
   - [x] 3.5 CSV Import for bids: upload, schema validation with Zod, preview response with per-line errors using Node.js file processing.
-- [x] 3.6 Export endpoints: CSV for funds/entries using Node.js streams; JSON for full backup/restore from PostgreSQL.
-- [x] 3.7 Express.js Analytics API: XIRR using financial libraries, cash flow series, projections, FD comparison; cache results per fund/version.
-- [x] 3.8 Recalculation triggers on data edits (entries, bids) to keep analytics consistent using PostgreSQL triggers or application logic.
-- [x] 3.9 Input validation rules for unrealistic values (negative dividends, prizeMoney > chitValue) using Zod schemas.
+  - [x] 3.6 Export endpoints: CSV for funds/entries using Node.js streams; JSON for full backup/restore from PostgreSQL.
+  - [x] 3.7 Express.js Analytics API: XIRR using financial libraries, cash flow series, projections, FD comparison; cache results per fund/version.
+  - [x] 3.8 Recalculation triggers on data edits (entries, bids) to keep analytics consistent using PostgreSQL triggers or application logic.
+  - [x] 3.9 Input validation rules for unrealistic values (negative dividends, prizeMoney > chitValue) using Zod schemas.
 
 - [ ] 4.0 Frontend UI: Mobile-first Screens and Navigation
   - [x] 4.1 Global layout: index.html, responsive grid, accessible color tokens, typography.
@@ -175,7 +175,7 @@
 
 - [ ] 8.0 Error Handling, Validation, and Edge Cases
   - [x] 8.1 Centralized error boundary and toasts for API failures.
-  - [ ] 8.2 Client-side validators mirroring server rules; inline field errors.
+  - [x] 8.2 Client-side validators mirroring server rules; inline field errors.
   - [ ] 8.3 Edge cases: mid-year start, early exit, editing past entries, multiple active funds, zero dividend months.
   - [ ] 8.4 Data validation for unrealistic inputs with warnings (not always blocking).
   - [ ] 8.5 Logging/monitoring hooks for unexpected conditions (non-PII).

@@ -342,21 +342,9 @@ class FundForm {
       : validateFundCreation;
     const result = validator(data);
 
-    // Since our validator doesn't have hasError method, we need to check errors manually
-    // For single field validation, we need to run validation on the entire object
-    // and then check if there are errors for this specific field
-    const fieldErrors = result.errors.filter(error => 
-      error.includes(fieldName.replace(/_/g, ' ')) || 
-      (fieldName === 'chit_value' && error.includes('Chit value')) ||
-      (fieldName === 'installment_amount' && error.includes('Installment amount')) ||
-      (fieldName === 'total_months' && error.includes('Total months')) ||
-      (fieldName === 'start_month' && error.includes('Start month')) ||
-      (fieldName === 'end_month' && error.includes('End month')) ||
-      (fieldName === 'notes' && error.includes('Notes'))
-    );
-
-    if (fieldErrors.length > 0) {
-      this.errors[fieldName] = fieldErrors[0];
+    // Update the specific field error
+    if (result.errors[fieldName]) {
+      this.errors[fieldName] = result.errors[fieldName];
     } else {
       delete this.errors[fieldName];
     }
@@ -383,31 +371,8 @@ class FundForm {
       : validateFundCreation;
     const result = validator(data);
 
-    // Convert errors array to object format expected by the form
-    this.errors = {};
-    if (result.errors && result.errors.length > 0) {
-      // We'll just show the first error for each field type
-      result.errors.forEach(error => {
-        if (error.includes('Fund name')) {
-          this.errors.name = error;
-        } else if (error.includes('Chit value')) {
-          this.errors.chit_value = error;
-        } else if (error.includes('Installment amount')) {
-          this.errors.installment_amount = error;
-        } else if (error.includes('Total months')) {
-          this.errors.total_months = error;
-        } else if (error.includes('Start month')) {
-          this.errors.start_month = error;
-        } else if (error.includes('End month')) {
-          this.errors.end_month = error;
-        } else if (error.includes('Notes')) {
-          this.errors.notes = error;
-        } else {
-          // Generic error
-          this.errors.form = error;
-        }
-      });
-    }
+    // Convert errors object to component's expected format
+    this.errors = { ...result.errors };
     
     return result.isValid;
   }

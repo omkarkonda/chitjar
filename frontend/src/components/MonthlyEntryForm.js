@@ -141,7 +141,8 @@ class MonthlyEntryForm {
     // Validate data
     const validation = validateMonthlyEntry(submitData, this.fund);
     if (!validation.isValid) {
-      this.error = validation.errors.join(', ');
+      // Convert field-specific errors to component's expected format
+      this.errors = { ...validation.errors };
       this.render();
       return;
     }
@@ -191,6 +192,45 @@ class MonthlyEntryForm {
   handleInputChange(field, value) {
     this.entry[field] = value;
     this.error = null; // Clear error when user makes changes
+    
+    // Clear specific field error
+    if (this.errors && this.errors[field]) {
+      delete this.errors[field];
+    }
+    
+    this.render();
+  }
+
+  /**
+   * Validate a single field
+   * @param {string} fieldName - Name of the field to validate
+   * @param {any} value - Value to validate
+   */
+  validateField(fieldName, value) {
+    // Parse numeric values
+    let parsedValue = value;
+    if (fieldName === 'dividend_amount' || fieldName === 'prize_money') {
+      const numericValue = parseINR(value);
+      if (!isNaN(numericValue)) {
+        parsedValue = numericValue;
+      }
+    }
+
+    const data = { ...this.entry, [fieldName]: parsedValue };
+    const result = validateMonthlyEntry(data, this.fund);
+
+    // Update the specific field error
+    if (!this.errors) {
+      this.errors = {};
+    }
+    
+    if (result.errors[fieldName]) {
+      this.errors[fieldName] = result.errors[fieldName];
+    } else {
+      delete this.errors[fieldName];
+    }
+
+    // Re-render to show validation errors
     this.render();
   }
 
@@ -255,10 +295,12 @@ class MonthlyEntryForm {
             <input 
               type="text" 
               id="dividend-amount" 
+              class="form-input ${this.errors && this.errors.dividend_amount ? 'form-input--error' : ''}"
               value="${this.entry.dividend_amount}"
               placeholder="0.00"
               inputmode="decimal"
             >
+            ${this.errors && this.errors.dividend_amount ? `<div class="form-error">${this.errors.dividend_amount}</div>` : ''}
             <small class="form-text">Enter dividend received for this month</small>
           </div>
           
@@ -267,10 +309,12 @@ class MonthlyEntryForm {
             <input 
               type="text" 
               id="prize-money" 
+              class="form-input ${this.errors && this.errors.prize_money ? 'form-input--error' : ''}"
               value="${this.entry.prize_money}"
               placeholder="0.00"
               inputmode="decimal"
             >
+            ${this.errors && this.errors.prize_money ? `<div class="form-error">${this.errors.prize_money}</div>` : ''}
             <small class="form-text">Enter prize money received for this month</small>
           </div>
           
@@ -287,13 +331,15 @@ class MonthlyEntryForm {
             <small class="form-text">Check if the installment for this month has been paid</small>
           </div>
           
-          <div class="form-group">
-            <label for="notes">Notes</label>
+          <div class=\"form-group\">
+            <label for=\"notes\">Notes</label>
             <textarea 
-              id="notes" 
-              rows="3"
-              placeholder="Add any additional notes..."
+              id=\"notes\" 
+              class=\"form-input ${this.errors && this.errors.notes ? 'form-input--error' : ''}\"
+              rows=\"3\"
+              placeholder=\"Add any additional notes...\"
             >${this.entry.notes}</textarea>
+            ${this.errors && this.errors.notes ? `<div class=\"form-error\">${this.errors.notes}</div>` : ''}
           </div>
           
           <div class="form-actions">
@@ -337,6 +383,9 @@ class MonthlyEntryForm {
       dividendInput.addEventListener('input', e => {
         this.handleInputChange('dividend_amount', e.target.value);
       });
+      dividendInput.addEventListener('blur', e => {
+        this.validateField('dividend_amount', e.target.value);
+      });
     }
 
     const prizeInput = document.getElementById('prize-money');
@@ -344,10 +393,28 @@ class MonthlyEntryForm {
       prizeInput.addEventListener('input', e => {
         this.handleInputChange('prize_money', e.target.value);
       });
+      prizeInput.addEventListener('blur', e => {
+        this.validateField('prize_money', e.target.value);
+      });
     }
 
     const paidCheckbox = document.getElementById('is-paid');
     if (paidCheckbox) {
+      paidCheckbox.addEventListener('change', e => {
+        this.handleInputChange('is_paid', e.target.checked);
+      });
+    }
+
+    const notesTextarea = document.getElementById('notes');
+    if (notesTextarea) {
+      notesTextarea.addEventListener('input', e => {
+        this.handleInputChange('notes', e.target.value);
+      });
+      notesTextarea.addEventListener('blur', e => {
+        this.validateField('notes', e.target.value);
+      });
+    }
+  }
       paidCheckbox.addEventListener('change', e => {
         this.handleInputChange('is_paid', e.target.checked);
       });
