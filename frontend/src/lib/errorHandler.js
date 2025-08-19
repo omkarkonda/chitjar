@@ -6,6 +6,7 @@
  */
 
 import { toast } from './toast.js';
+import { logError, monitorUnexpectedCondition } from './logging.js';
 
 /**
  * Handle API errors and display appropriate toast notifications
@@ -19,6 +20,9 @@ import { toast } from './toast.js';
 export function handleApiError(error, operation = 'Operation', options = {}) {
   // Default options
   const { silent = false, fallbackMessage = null } = options;
+  
+  // Log the error
+  logError(`${operation} failed`, error);
   
   // Extract error message
   let message = error.message || 'An unknown error occurred';
@@ -75,7 +79,19 @@ export function handleGlobalError(event) {
     return;
   }
   
-  console.error('Global error:', event.error || event);
+  // Log the error
+  logError('Global error occurred', event.error || event, {
+    url: window.location.href,
+    userAgent: navigator ? navigator.userAgent : undefined
+  });
+  
+  // Monitor unexpected conditions
+  monitorUnexpectedCondition('Global error', {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno
+  });
   
   // Show a generic error message for uncaught errors
   toast.error('An unexpected error occurred. Please try again.');

@@ -17,6 +17,7 @@ import {
   ERROR_CODES,
   ApiError
 } from '../lib/api-conventions';
+import { monitorAuthEvent } from '../lib/logging';
 
 const router = Router();
 
@@ -133,9 +134,14 @@ router.post('/signup',
         refreshToken
       }, HTTP_STATUS.CREATED);
       
+      // Monitor successful signup
+      monitorAuthEvent('signup_success', result.id, req.ip);
+      
     } catch (error) {
       if (error instanceof ApiError) {
         sendError(res, error.statusCode, error.code, error.message, error.details);
+        // Monitor failed signup
+        monitorAuthEvent('signup_failed', undefined, req.ip);
       } else {
         console.error('Signup error:', error);
         sendError(
@@ -144,6 +150,8 @@ router.post('/signup',
           ERROR_CODES.INTERNAL_ERROR,
           'An error occurred during signup'
         );
+        // Monitor failed signup
+        monitorAuthEvent('signup_error', undefined, req.ip);
       }
     }
   }
@@ -223,9 +231,14 @@ router.post('/login',
         refreshToken
       });
       
+      // Monitor successful login
+      monitorAuthEvent('login_success', user.id, req.ip);
+      
     } catch (error) {
       if (error instanceof ApiError) {
         sendError(res, error.statusCode, error.code, error.message, error.details);
+        // Monitor failed login
+        monitorAuthEvent('login_failed', undefined, req.ip);
       } else {
         console.error('Login error:', error);
         sendError(
@@ -234,6 +247,8 @@ router.post('/login',
           ERROR_CODES.INTERNAL_ERROR,
           'An error occurred during login'
         );
+        // Monitor failed login
+        monitorAuthEvent('login_error', undefined, req.ip);
       }
     }
   }

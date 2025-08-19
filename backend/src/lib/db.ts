@@ -1,5 +1,6 @@
 import { Pool, PoolClient, QueryResult } from 'pg';
 import { databaseConfig } from './config';
+import { monitorDbQuery } from './logging';
 
 // Database connection pool
 let pool: Pool | null = null;
@@ -56,10 +57,26 @@ export async function query(
   text: string,
   params?: any[]
 ): Promise<QueryResult> {
+  const startTime = Date.now();
   const client = await getPool().connect();
+  
   try {
     const result = await client.query(text, params);
+    const duration = Date.now() - startTime;
+    
+    // Monitor database query performance
+    monitorDbQuery(text, duration, result.rowCount ?? undefined);
+    
     return result;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    
+    // Log slow failed queries
+    if (duration > 100) {
+      monitorDbQuery(text, duration, undefined);
+    }
+    
+    throw error;
   } finally {
     client.release();
   }

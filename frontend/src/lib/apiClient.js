@@ -5,6 +5,9 @@
  * and error handling.
  */
 
+import { handleApiError } from './errorHandler.js';
+import { monitorApiUsage } from './logging.js';
+
 class ApiClient {
   constructor() {
     // Base URL for API requests
@@ -104,8 +107,14 @@ class ApiClient {
       config.headers = { ...this.getAuthHeaders(), ...config.headers };
     }
 
+    const startTime = Date.now();
+    
     try {
       const response = await fetch(url, config);
+      const duration = Date.now() - startTime;
+
+      // Monitor API usage
+      monitorApiUsage(endpoint, options.method || 'GET', response.status, duration);
 
       // Handle successful responses
       if (response.ok) {
@@ -137,11 +146,16 @@ class ApiClient {
         errorData.message || `HTTP ${response.status}: ${response.statusText}`
       );
     } catch (error) {
+      const duration = Date.now() - startTime;
+      
+      // Monitor API usage for failed requests
+      monitorApiUsage(endpoint, options.method || 'GET', error.status || 0, duration);
+      
       // Let 401 errors be handled by the calling code for special handling
       if (error.message.includes('Session expired')) {
         throw error;
       }
-
+      
       // Re-throw the error after processing
       throw error;
     }

@@ -11,6 +11,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import { logError, monitorUnexpectedCondition } from './logging';
 
 // ============================================================================
 // REST API Path Conventions
@@ -319,13 +320,21 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  // Log error for debugging
-  console.error('API Error:', {
-    message: err.message,
-    stack: err.stack,
+  // Log error for debugging and monitoring
+  logError('API Error occurred', err, {
     url: req.url,
     method: req.method,
+    userAgent: req.get('User-Agent'),
+    ip: req.ip,
     timestamp: new Date().toISOString(),
+  });
+
+  // Monitor unexpected conditions
+  monitorUnexpectedCondition('API Error', {
+    errorType: err.name,
+    errorMessage: err.message,
+    url: req.url,
+    method: req.method
   });
 
   // Handle known API errors

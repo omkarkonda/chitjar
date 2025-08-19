@@ -11,6 +11,7 @@ import {
   sendSuccess,
   API_PATHS
 } from './lib/api-conventions';
+import { monitorApiUsage } from './lib/logging';
 
 const app = express();
 const PORT = config.port;
@@ -37,7 +38,28 @@ app.use(cors({
   credentials: true,
 }));
 app.use(compression());
-app.use(morgan(isDevelopment() ? 'dev' : 'combined'));
+
+// Request logging with performance monitoring
+app.use(morgan(isDevelopment() ? 'dev' : 'combined', {
+  stream: {
+    write: (message) => {
+      // Parse the morgan message to extract endpoint info
+      const parts = message.trim().split(' ');
+      if (parts.length >= 4) {
+        const method = parts[0];
+        const endpoint = parts[1];
+        const statusCode = parseInt(parts[2] || '0');
+        const duration = parseInt(parts[3] || '0');
+        
+        // Monitor API usage
+        if (endpoint && method) {
+          monitorApiUsage(endpoint, method, statusCode || 0, duration || 0);
+        }
+      }
+    }
+  }
+}));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
