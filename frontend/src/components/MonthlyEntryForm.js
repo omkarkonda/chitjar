@@ -8,6 +8,7 @@
 import { apiClient } from '../lib/apiClient.js';
 import { formatINR, parseINR } from '../lib/formatters.js';
 import { validateMonthlyEntry } from '../lib/validators.js';
+import { handleApiError } from '../lib/errorHandler.js';
 
 class MonthlyEntryForm {
   constructor() {
@@ -165,6 +166,7 @@ class MonthlyEntryForm {
       }
     } catch (error) {
       console.error('Failed to save entry:', error);
+      handleApiError(error, 'Saving entry');
       this.error = error.message || 'Failed to save entry';
     } finally {
       this.isLoading = false;

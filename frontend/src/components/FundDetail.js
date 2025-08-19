@@ -11,6 +11,7 @@ import { monthlyEntryForm } from './MonthlyEntryForm.js';
 import { createFocusTrap } from '../lib/focusTrap.js';
 import { debounce } from '../lib/performance.js';
 import { createLineChart, formatChartData } from './Charts.js';
+import { handleApiError } from '../lib/errorHandler.js';
 
 class FundDetail {
   constructor() {
@@ -85,6 +86,7 @@ class FundDetail {
         // Dispatch a logout event to redirect to login
         window.dispatchEvent(new CustomEvent('logout'));
       } else {
+        handleApiError(error, 'Loading fund data', { silent: true });
         this.error = error.message || 'Failed to load fund data';
       }
       console.error('Fund detail data load error:', error);

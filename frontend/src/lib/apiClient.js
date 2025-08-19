@@ -104,37 +104,49 @@ class ApiClient {
       config.headers = { ...this.getAuthHeaders(), ...config.headers };
     }
 
-    const response = await fetch(url, config);
+    try {
+      const response = await fetch(url, config);
 
-    // Handle successful responses
-    if (response.ok) {
+      // Handle successful responses
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return await response.json();
+        }
+        return await response.text();
+      }
+
+      // Handle error responses
+      let errorData;
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
-        return await response.json();
+        errorData = await response.json();
+      } else {
+        errorData = { message: response.statusText };
       }
-      return await response.text();
-    }
 
-    // Handle error responses
-    let errorData;
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      errorData = await response.json();
-    } else {
-      errorData = { message: response.statusText };
-    }
+      // Handle token expiration
+      if (response.status === 401) {
+        this.clearToken();
+        // Redirect to login page
+        window.location.href = '/login.html';
+        throw new Error('Session expired. Please log in again.');
+      }
 
-    // Handle token expiration
-    if (response.status === 401) {
-      this.clearToken();
-      // Redirect to login page
-      window.location.href = '/login.html';
-    }
+      throw new Error(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`
+      );
+    } catch (error) {
+      // Let 401 errors be handled by the calling code for special handling
+      if (error.message.includes('Session expired')) {
+        throw error;
+      }
 
-    throw new Error(
-      errorData.message || `HTTP ${response.status}: ${response.statusText}`
-    );
+      // Re-throw the error after processing
+      throw error;
+    }
   }
+
   /**
    * GET request
    */

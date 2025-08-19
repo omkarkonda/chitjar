@@ -9,6 +9,7 @@ import { apiClient } from '../lib/apiClient.js';
 import { validateFundCreation, validateFundUpdate } from '../lib/validators.js';
 import { formatINR, parseINR } from '../lib/formatters.js';
 import { toast } from '../lib/toast.js';
+import { handleApiError } from '../lib/errorHandler.js';
 
 class FundForm {
   constructor() {
@@ -77,7 +78,7 @@ class FundForm {
       this.render();
     } catch (error) {
       // console.error('Error loading fund data:', error);
-      toast.error('Failed to load fund data. Please try again.');
+      handleApiError(error, 'Loading fund data');
     }
   }
 
@@ -463,7 +464,7 @@ class FundForm {
         apiClient.clearToken();
         window.dispatchEvent(new CustomEvent('logout'));
       } else {
-        toast.error(error.message || 'Failed to save fund. Please try again.');
+        handleApiError(error, 'Saving fund');
         this.render();
       }
     }

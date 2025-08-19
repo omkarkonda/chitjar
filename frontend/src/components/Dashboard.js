@@ -8,6 +8,7 @@
 import { apiClient } from '../lib/apiClient.js';
 import { formatINR } from '../lib/formatters.js';
 import { createBarChart, formatChartData } from './Charts.js';
+import { handleApiError } from '../lib/errorHandler.js';
 
 class Dashboard {
   constructor() {
@@ -46,6 +47,7 @@ class Dashboard {
         // Dispatch a logout event to redirect to login
         window.dispatchEvent(new CustomEvent('logout'));
       } else {
+        handleApiError(error, 'Loading dashboard data', { silent: true });
         this.error = error.message || 'Failed to load dashboard data';
       }
       console.error('Dashboard data load error:', error);

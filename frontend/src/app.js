@@ -1,6 +1,7 @@
 // Main application entry point
 import './styles/main.css';
 import { apiClient } from './lib/apiClient.js';
+import { initGlobalErrorHandlers } from './lib/errorHandler.js';
 import { navBar } from './components/NavBar.js';
 import { dashboard } from './components/Dashboard.js';
 import { fundsList } from './components/FundsList.js';
@@ -9,6 +10,9 @@ import { fundForm } from './components/FundForm.js';
 import { insights } from './components/Insights.js';
 import { csvImportDialog } from './components/CSVImportDialog.js';
 import { exportDialog } from './components/ExportDialog.js';
+
+// Initialize global error handlers
+initGlobalErrorHandlers();
 
 class ChitJarApp {
   constructor() {

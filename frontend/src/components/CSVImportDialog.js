@@ -8,6 +8,7 @@ import { apiClient } from '../lib/apiClient.js';
 import { formatINR } from '../lib/formatters.js';
 import { createFocusTrap } from '../lib/focusTrap.js';
 import { readCsvFile, parseCsvString, mapHeaders, validateCsvData } from '../lib/csvParser.js';
+import { handleApiError } from '../lib/errorHandler.js';
 
 class CSVImportDialog {
   constructor() {
@@ -168,6 +169,7 @@ class CSVImportDialog {
       this.hide();
     } catch (error) {
       console.error('CSV import error:', error);
+      handleApiError(error, 'Importing CSV file');
       this.errors = [{ message: error.message || 'Failed to import CSV file' }];
       this.canImport = false;
     } finally {

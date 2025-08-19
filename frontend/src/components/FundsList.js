@@ -7,6 +7,7 @@
 import { apiClient } from '../lib/apiClient.js';
 import { formatINR } from '../lib/formatters.js';
 import { debounce } from '../lib/performance.js';
+import { handleApiError } from '../lib/errorHandler.js';
 
 class FundsList {
   constructor() {
@@ -107,6 +108,7 @@ class FundsList {
         // Dispatch a logout event to redirect to login
         window.dispatchEvent(new CustomEvent('logout'));
       } else {
+        handleApiError(error, 'Loading funds data', { silent: true });
         this.error = error.message || 'Failed to load funds data';
       }
       console.error('Funds data load error:', error);

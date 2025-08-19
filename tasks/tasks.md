@@ -98,6 +98,7 @@
 - frontend/src/styles/fund-detail.css - Added styles for the FD comparison component and tooltips.
 - frontend/src/styles/main.css - Updated CSS with enhanced skeleton loaders, pagination styles, and performance optimizations.
 - backend/src/api/cash-flow.ts - Dedicated API module for retrieving cash flow data with endpoints for both comprehensive cash flow series and simplified net cash flow (installment - dividend) calculations.
+- frontend/src/lib/errorHandler.js - Centralized error handling system with toast notifications for API failures.
 
 ### Notes
 
@@ -173,7 +174,7 @@
   - [x] 7.5 Add data table alternatives for all Chart.js charts; ensure export to CSV/print.
 
 - [ ] 8.0 Error Handling, Validation, and Edge Cases
-  - [ ] 8.1 Centralized error boundary and toasts for API failures.
+  - [x] 8.1 Centralized error boundary and toasts for API failures.
   - [ ] 8.2 Client-side validators mirroring server rules; inline field errors.
   - [ ] 8.3 Edge cases: mid-year start, early exit, editing past entries, multiple active funds, zero dividend months.
   - [ ] 8.4 Data validation for unrealistic inputs with warnings (not always blocking).

@@ -8,6 +8,7 @@
 import { apiClient } from '../lib/apiClient.js';
 import { formatINR } from '../lib/formatters.js';
 import { createLineChart, formatChartData } from './Charts.js';
+import { handleApiError } from '../lib/errorHandler.js';
 
 class Insights {
   constructor() {
@@ -44,6 +45,7 @@ class Insights {
         // Dispatch a logout event to redirect to login
         window.dispatchEvent(new CustomEvent('logout'));
       } else {
+        handleApiError(error, 'Loading insights data', { silent: true });
         this.error = error.message || 'Failed to load insights data';
       }
       console.error('Insights data load error:', error);
