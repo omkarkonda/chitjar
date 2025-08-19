@@ -7,13 +7,14 @@
 
 import { apiClient } from '../lib/apiClient.js';
 import { formatINR } from '../lib/formatters.js';
+import { createLineChart, formatChartData } from './Charts.js';
 
 class Insights {
   constructor() {
     this.insights = [];
     this.isLoading = false;
     this.error = null;
-    this.chart = null;
+    this.charts = new Map(); // Store chart instances by fund ID
   }
 
   /**
@@ -79,8 +80,271 @@ class Insights {
     // Render the insights
     container.innerHTML = this.renderInsights();
 
+    // Render charts after DOM is updated
+    this.renderChartsAfterDOM();
+
     // Add event listeners
     this.addEventListeners();
+  }
+
+  /**
+   * Render charts after DOM is updated
+   */
+  renderChartsAfterDOM() {
+    // Clean up existing charts
+    this.charts.forEach(chart => {
+      if (chart) {
+        chart.destroy();
+      }
+    });
+    this.charts.clear();
+
+    // Only render charts if we have insights data
+    if (!this.insights || this.insights.length === 0) {
+      return;
+    }
+
+    // Use a slight delay to ensure DOM is fully ready before rendering charts
+    setTimeout(() => {
+      this.insights.forEach(fundInsight => {
+        this.renderWinningBidChart(fundInsight);
+        this.renderDiscountChart(fundInsight);
+      });
+    }, 0);
+  }
+
+  /**
+   * Render winning bid trend chart for a fund
+   */
+  renderWinningBidChart(fundInsight) {
+    // Don't render chart if not enough data or container doesn't exist
+    if (!fundInsight.latest_bids || fundInsight.latest_bids.length < 2) {
+      return;
+    }
+
+    const canvasId = `winning-bid-chart-${fundInsight.fund_id}`;
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+      return;
+    }
+
+    // Ensure canvas has dimensions
+    if (canvas.width === 0 || canvas.height === 0) {
+      canvas.width = canvas.parentElement.clientWidth || 400;
+      canvas.height = 200;
+    }
+
+    // Prepare chart data (reverse to show oldest first)
+    const bids = [...fundInsight.latest_bids].reverse();
+    const labels = bids.map(bid => bid.month_key);
+    const winningBids = bids.map(bid => bid.winning_bid);
+
+    const chartData = formatChartData(labels, [
+      {
+        label: 'Winning Bid (₹)',
+        data: winningBids,
+        borderColor: '#3b82f6', // blue-500
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.3,
+      },
+    ]);
+
+    // Create responsive chart configuration
+    const chartConfig = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          ticks: {
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 0,
+            font: {
+              size: window.innerWidth < 768 ? 10 : 12,
+            },
+          },
+          grid: {
+            display: false,
+          },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function (value) {
+              // Format Y-axis values as INR
+              return '₹' + formatINR(value, 0);
+            },
+            font: {
+              size: window.innerWidth < 768 ? 10 : 12,
+            },
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.1)',
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          titleColor: '#1f2937',
+          bodyColor: '#1f2937',
+          borderColor: '#d1d5db',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: function (context) {
+              // Format tooltip values as INR
+              return (
+                context.dataset.label + ': ₹' + formatINR(context.parsed.y)
+              );
+            },
+            title: function (context) {
+              return context[0].label;
+            },
+          },
+        },
+      },
+      // Animation configuration for smoother transitions
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart',
+      },
+      // Interaction configuration
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+    };
+
+    // Create the chart
+    const chart = createLineChart(canvasId, chartData, chartConfig);
+    if (chart) {
+      this.charts.set(`${fundInsight.fund_id}-winning-bid`, chart);
+    }
+  }
+
+  /**
+   * Render discount trend chart for a fund
+   */
+  renderDiscountChart(fundInsight) {
+    // Don't render chart if not enough data or container doesn't exist
+    if (!fundInsight.latest_bids || fundInsight.latest_bids.length < 2) {
+      return;
+    }
+
+    const canvasId = `discount-chart-${fundInsight.fund_id}`;
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+      return;
+    }
+
+    // Ensure canvas has dimensions
+    if (canvas.width === 0 || canvas.height === 0) {
+      canvas.width = canvas.parentElement.clientWidth || 400;
+      canvas.height = 200;
+    }
+
+    // Prepare chart data (reverse to show oldest first)
+    const bids = [...fundInsight.latest_bids].reverse();
+    const labels = bids.map(bid => bid.month_key);
+    const discounts = bids.map(bid => bid.discount_amount);
+
+    const chartData = formatChartData(labels, [
+      {
+        label: 'Discount Amount (₹)',
+        data: discounts,
+        borderColor: '#10b981', // green-500
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.3,
+      },
+    ]);
+
+    // Create responsive chart configuration
+    const chartConfig = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          ticks: {
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 0,
+            font: {
+              size: window.innerWidth < 768 ? 10 : 12,
+            },
+          },
+          grid: {
+            display: false,
+          },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function (value) {
+              // Format Y-axis values as INR
+              return '₹' + formatINR(value, 0);
+            },
+            font: {
+              size: window.innerWidth < 768 ? 10 : 12,
+            },
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.1)',
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          titleColor: '#1f2937',
+          bodyColor: '#1f2937',
+          borderColor: '#d1d5db',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: function (context) {
+              // Format tooltip values as INR
+              return (
+                context.dataset.label + ': ₹' + formatINR(context.parsed.y)
+              );
+            },
+            title: function (context) {
+              return context[0].label;
+            },
+          },
+        },
+      },
+      // Animation configuration for smoother transitions
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart',
+      },
+      // Interaction configuration
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+    };
+
+    // Create the chart
+    const chart = createLineChart(canvasId, chartData, chartConfig);
+    if (chart) {
+      this.charts.set(`${fundInsight.fund_id}-discount`, chart);
+    }
   }
 
   /**
@@ -217,11 +481,40 @@ class Insights {
             </div>
           </div>
           
+          ${this.renderTrendCharts(fundInsight)}
+          
           ${this.renderLatestBidsTable(fundInsight.latest_bids)}
         </div>
       `;
       })
       .join('');
+  }
+
+  /**
+   * Render trend charts for a fund
+   */
+  renderTrendCharts(fundInsight) {
+    // Only render charts if we have enough data
+    if (!fundInsight.latest_bids || fundInsight.latest_bids.length < 2) {
+      return '';
+    }
+
+    return `
+      <div class="fund-trends__charts">
+        <div class="chart-container">
+          <h5>Winning Bid Trend</h5>
+          <div class="chart-wrapper">
+            <canvas id="winning-bid-chart-${fundInsight.fund_id}" class="chart-canvas" role="img" aria-label="Line chart showing winning bid trend over time"></canvas>
+          </div>
+        </div>
+        <div class="chart-container">
+          <h5>Discount Amount Trend</h5>
+          <div class="chart-wrapper">
+            <canvas id="discount-chart-${fundInsight.fund_id}" class="chart-canvas" role="img" aria-label="Line chart showing discount amount trend over time"></canvas>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   /**
