@@ -262,6 +262,56 @@ class FundDetail {
             <div class="kpi-card__value">${xirrDisplay}</div>
           </div>
         </div>
+        
+        ${this.renderFdComparison()}
+      </div>
+    `;
+  }
+
+  /**
+   * Render the FD comparison section
+   */
+  renderFdComparison() {
+    return `
+      <div class="fd-comparison">
+        <div class="fd-comparison__header">
+          <h4>FD Comparison</h4>
+          <span class="form-label__tooltip" data-tooltip="Compare your fund's XIRR with a fixed deposit rate to evaluate performance. Enter the current FD interest rate offered by banks.">
+            ⓘ
+          </span>
+        </div>
+        <div class="fd-comparison__form">
+          <div class="form-group">
+            <label for="fd-rate">
+              Fixed Deposit Rate (%)
+              <span class="form-label__tooltip" data-tooltip="Enter the annual interest rate for fixed deposits currently offered by major banks. This is used as a benchmark to compare with your fund's XIRR.">
+                ⓘ
+              </span>
+            </label>
+            <input 
+              type="number" 
+              id="fd-rate" 
+              class="form-input" 
+              placeholder="Enter FD rate (e.g., 7.5)" 
+              min="0" 
+              max="50" 
+              step="0.1"
+            >
+            <button class="btn btn--primary" id="compare-fd">Compare</button>
+          </div>
+        </div>
+        <div id="fd-comparison-result"></div>
+        
+        <div class="assumptions-note">
+          <h5>Assumptions for Calculations</h5>
+          <ul>
+            <li>XIRR calculation includes all cash flows (installments as outflows, dividends and prize money as inflows)</li>
+            <li>FD comparison uses simple interest calculation for benchmarking</li>
+            <li>All calculations are based on actual data entered, not projections</li>
+            <li>Forecast projections use simple averages of historical dividend and prize money</li>
+            <li>Forecasts assume consistent installment amounts as per fund terms</li>
+          </ul>
+        </div>
       </div>
     `;
   }
@@ -481,6 +531,72 @@ class FundDetail {
         }
       });
     });
+
+    // FD comparison button
+    const compareFdButton = document.getElementById('compare-fd');
+    if (compareFdButton) {
+      compareFdButton.addEventListener('click', () => {
+        this.compareWithFd();
+      });
+    }
+
+    // FD rate input - allow Enter key to trigger comparison
+    const fdRateInput = document.getElementById('fd-rate');
+    if (fdRateInput) {
+      fdRateInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') {
+          this.compareWithFd();
+        }
+      });
+    }
+
+    // Tooltip functionality
+    const tooltips = document.querySelectorAll('.form-label__tooltip');
+    tooltips.forEach(tooltip => {
+      tooltip.addEventListener('mouseenter', e => {
+        const tooltipText = e.target.getAttribute('data-tooltip');
+        this.showTooltip(e.target, tooltipText);
+      });
+
+      tooltip.addEventListener('mouseleave', () => {
+        this.hideTooltip();
+      });
+    });
+  }
+
+  /**
+   * Show tooltip
+   */
+  showTooltip(element, text) {
+    // Remove any existing tooltips
+    this.hideTooltip();
+
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'form-tooltip';
+    tooltip.textContent = text;
+
+    // Position tooltip near the element
+    const rect = element.getBoundingClientRect();
+    tooltip.style.position = 'fixed';
+    tooltip.style.top = `${rect.bottom + 5}px`;
+    tooltip.style.left = `${rect.left}px`;
+    tooltip.style.zIndex = '1000';
+
+    document.body.appendChild(tooltip);
+    this.currentTooltip = tooltip;
+  }
+
+  /**
+   * Hide tooltip
+   */
+  hideTooltip() {
+    if (this.currentTooltip) {
+      if (this.currentTooltip.parentNode) {
+        this.currentTooltip.parentNode.removeChild(this.currentTooltip);
+      }
+      this.currentTooltip = null;
+    }
   }
 
   /**

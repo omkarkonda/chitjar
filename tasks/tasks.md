@@ -90,7 +90,8 @@
 - frontend/src/lib/focusTrap.js - Focus trap utility for modal dialogs to ensure keyboard navigation is properly contained.
 - frontend/src/lib/performance.js - Performance utilities including debounce and throttle functions for optimizing UI updates.
 - frontend/src/components/FundsList.js - Updated funds list component with pagination support and improved performance through debounced data loading and calculations.
-- frontend/src/components/FundDetail.js - Updated fund detail component with virtualization for entries list and improved performance through debounced calculations.
+- frontend/src/components/FundDetail.js - Added FD comparison functionality to allow users to compare their fund's XIRR with a fixed deposit rate. Added tooltips and assumptions documentation.
+- frontend/src/styles/fund-detail.css - Added styles for the FD comparison component and tooltips.
 - frontend/src/styles/main.css - Updated CSS with enhanced skeleton loaders, pagination styles, and performance optimizations.
 - backend/src/api/cash-flow.ts - Dedicated API module for retrieving cash flow data with endpoints for both comprehensive cash flow series and simplified net cash flow (installment - dividend) calculations.
 
@@ -144,13 +145,13 @@
   - [x] 4.10 Accessibility: keyboard navigation, focus states, ARIA labels, color-blind palettes.
   - [x] 4.11 Performance: pagination/virtualization for long lists; debounce recalculations; skeleton loaders.
 
-- [ ] 5.0 Analytics and Calculations
+- [x] 5.0 Analytics and Calculations
   - [x] 5.1 Implement XIRR using financial libraries (xirr or similar) in Node.js; define cash flow sign conventions and dates.
   - [x] 5.2 Add Excel parity tests for XIRR calculations; accept ±0.1% absolute difference.
   - [x] 5.3 Compute net monthly cash flow: installment − dividend; expose historical series via PostgreSQL queries.
   - [x] 5.4 Forecast future net cash flows using simple averages in Node.js; encapsulate for future upgrades.
-  - [ ] 5.5 FD comparison: accept session FD rate, compute annualized benchmark vs fund XIRR using financial calculations.
-  - [ ] 5.6 Document and surface assumptions in UI (tooltips/notes) for projections.
+  - [x] 5.5 FD comparison: accept session FD rate, compute annualized benchmark vs fund XIRR using financial calculations.
+  - [x] 5.6 Document and surface assumptions in UI (tooltips/notes) for projections.
 
 - [ ] 6.0 Import/Export with Validation and Preview
   - [ ] 6.1 Define CSV templates (funds, monthly entries, bids) with headers and data types for Node.js processing.
