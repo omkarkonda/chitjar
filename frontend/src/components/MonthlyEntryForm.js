@@ -439,18 +439,6 @@ class MonthlyEntryForm {
       });
     }
   }
-      paidCheckbox.addEventListener('change', e => {
-        this.handleInputChange('is_paid', e.target.checked);
-      });
-    }
-
-    const notesInput = document.getElementById('notes');
-    if (notesInput) {
-      notesInput.addEventListener('input', e => {
-        this.handleInputChange('notes', e.target.value);
-      });
-    }
-  }
 }
 
 // Export singleton instance

@@ -12,18 +12,7 @@ import { createFocusTrap } from '../lib/focusTrap.js';
 import { debounce } from '../lib/performance.js';
 import { createLineChart, formatChartData } from './Charts.js';
 import { handleApiError } from '../lib/errorHandler.js';
-import { 
-  isMidYearStart, 
-  hasEarlyExit, 
-  isMonthInFundRange, 
-  findMissingMonths, 
-  isZeroDividendMonth, 
-  isPastMonth,
-  formatPastEntryWarning,
-  formatZeroDividendWarning,
-  formatEarlyExitWarning,
-  formatMidYearStartWarning
-} from '../lib/edgeCaseHandler.js';
+import { isZeroDividendMonth, isPastMonth } from '../lib/edgeCaseHandler.js';
 
 class FundDetail {
   constructor() {
@@ -78,9 +67,7 @@ class FundDetail {
       this.fund = fundResponse.data;
 
       // Fetch entries - using the fund's entries endpoint which includes missing months
-      const entriesResponse = await apiClient.get(
-        `/funds/${fundId}/entries`
-      );
+      const entriesResponse = await apiClient.get(`/funds/${fundId}/entries`);
       this.entries = entriesResponse.data.entries || [];
 
       // Fetch analytics
@@ -789,7 +776,7 @@ class FundDetail {
         <div class="entries-list">
           ${
             this.entries.length > 0
-              ? `${this.visibleEntries.map(entry => this.renderEntry(entry)).join('')}
+              ? `${this.visibleEntries.map(entry => this.renderEntryCard(entry)).join('')}
                 ${this.renderPagination()}`
               : this.renderEmptyEntries()
           }
@@ -1033,6 +1020,119 @@ class FundDetail {
         this.hideTooltip();
       });
     });
+  }
+
+  /**
+   * Compare fund performance with a fixed deposit rate
+   */
+  async compareWithFd() {
+    if (!this.fund || !this.fund.id) return;
+
+    const fdRateInput = document.getElementById('fd-rate');
+    const resultContainer = document.getElementById('fd-comparison-result');
+
+    if (!fdRateInput || !resultContainer) return;
+
+    const fdRate = parseFloat(fdRateInput.value);
+
+    // Validate input
+    if (isNaN(fdRate) || fdRate <= 0 || fdRate > 50) {
+      resultContainer.innerHTML = `
+        <div class="error-message">
+          <p>Please enter a valid FD rate between 0.1 and 50.</p>
+        </div>
+      `;
+      return;
+    }
+
+    try {
+      // First, get the cash flow data for debugging
+      const cashFlowResponse = await apiClient.get(
+        `/analytics/funds/${this.fund.id}/cash-flow`
+      );
+
+      const cashFlowData = cashFlowResponse.data;
+
+      // Display cash flow data for debugging
+      console.log('Cash flow data for XIRR calculation:', cashFlowData);
+
+      // Check if we have sufficient data
+      const hasPositive = cashFlowData.cash_flow_series.some(
+        cf => cf.amount > 0
+      );
+      const hasNegative = cashFlowData.cash_flow_series.some(
+        cf => cf.amount < 0
+      );
+
+      if (!hasPositive || !hasNegative) {
+        resultContainer.innerHTML = `
+          <div class="info-message">
+            <p>Unable to calculate XIRR due to insufficient data:</p>
+            <ul>
+              <li>Has positive cash flows: ${hasPositive ? 'Yes' : 'No'}</li>
+              <li>Has negative cash flows: ${hasNegative ? 'Yes' : 'No'}</li>
+              <li>Total cash flow entries: ${cashFlowData.cash_flow_series.length}</li>
+            </ul>
+            <p>XIRR requires at least one positive and one negative cash flow.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Make API call to compare with FD
+      const response = await apiClient.post(
+        `/analytics/funds/${this.fund.id}/fd-comparison`,
+        {
+          fund_id: this.fund.id,
+          fd_rate: fdRate,
+        }
+      );
+
+      const data = response.data;
+
+      // Display result
+      if (data.is_fund_better === true) {
+        resultContainer.innerHTML = `
+          <div class="success-message">
+            <p>Your fund's XIRR (${data.fund_xirr?.toFixed(2)}%) is <strong>higher</strong> than the FD rate (${data.fd_rate.toFixed(2)}%).</p>
+            <p>This means your fund is performing better than a fixed deposit with the same rate.</p>
+          </div>
+        `;
+      } else if (data.is_fund_better === false) {
+        resultContainer.innerHTML = `
+          <div class="warning-message">
+            <p>Your fund's XIRR (${data.fund_xirr?.toFixed(2)}%) is <strong>lower</strong> than the FD rate (${data.fd_rate.toFixed(2)}%).</p>
+            <p>This means a fixed deposit with this rate would be more profitable than your fund.</p>
+          </div>
+        `;
+      } else if (data.fund_xirr === null) {
+        resultContainer.innerHTML = `
+          <div class="info-message">
+            <p>Unable to calculate your fund's XIRR. This could be because:</p>
+            <ul>
+              <li>The fund doesn't have enough data (entries) yet</li>
+              <li>All entries have the same cash flow values</li>
+              <li>The cash flow pattern doesn't allow for XIRR calculation</li>
+            </ul>
+            <p>Please add more entries or check your existing entries to ensure they have varying values.</p>
+          </div>
+        `;
+      } else {
+        resultContainer.innerHTML = `
+          <div class="info-message">
+            <p>Unable to compare your fund's performance with the FD rate due to insufficient data.</p>
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error('FD comparison error:', error);
+      handleApiError(error, 'Comparing with FD rate');
+      resultContainer.innerHTML = `
+        <div class="error-message">
+          <p>Failed to compare with FD rate. Please try again later.</p>
+        </div>
+      `;
+    }
   }
 
   /**

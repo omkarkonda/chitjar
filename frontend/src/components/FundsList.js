@@ -157,7 +157,7 @@ class FundsList {
       ${this.funds.length === 0 ? this.renderEmptyState() : this.renderFundsList()}
     `;
 
-    this.attachEventListeners();
+    this.addFundCardEventListeners();
   }
 
   /**
@@ -334,7 +334,7 @@ class FundsList {
   }
 
   /**
-   * Add event listeners to fund cards
+   * Add event listeners to fund cards and other elements
    */
   addFundCardEventListeners() {
     const fundCards = document.querySelectorAll('.fund-card');
@@ -354,6 +354,32 @@ class FundsList {
         }
       });
     });
+
+    // Add event listener for "Add Fund" button
+    const addFundButton = document.getElementById('add-fund');
+    if (addFundButton) {
+      addFundButton.addEventListener('click', () => {
+        // Dispatch event to show add fund dialog
+        window.dispatchEvent(new CustomEvent('showAddFundDialog'));
+      });
+    }
+
+    // Add event listener for "Add First Fund" button in empty state
+    const addFirstFundButton = document.getElementById('add-first-fund');
+    if (addFirstFundButton) {
+      addFirstFundButton.addEventListener('click', () => {
+        // Dispatch event to show add fund dialog
+        window.dispatchEvent(new CustomEvent('showAddFundDialog'));
+      });
+    }
+
+    // Add event listener for "Retry" button in error state
+    const retryButton = document.getElementById('retry-funds');
+    if (retryButton) {
+      retryButton.addEventListener('click', () => {
+        this.loadData();
+      });
+    }
 
     // Add event listener for import CSV button
     /*
