@@ -8,6 +8,7 @@ import { apiClient } from '../lib/apiClient.js';
 import { formatINR } from '../lib/formatters.js';
 import { debounce } from '../lib/performance.js';
 import { handleApiError } from '../lib/errorHandler.js';
+import { hasMultipleActiveFunds } from '../lib/edgeCaseHandler.js';
 
 class FundsList {
   constructor() {
@@ -126,27 +127,37 @@ class FundsList {
     if (!container) return;
 
     if (this.isLoading) {
-      // Already showing loading state from app.js, no need to re-render
+      container.innerHTML = this.renderLoadingState();
       return;
     }
 
     if (this.error) {
       container.innerHTML = this.renderErrorState();
-      // Add event listener for retry button
-      const retryButton = container.querySelector('#retry-funds');
-      if (retryButton) {
-        retryButton.addEventListener('click', () => {
-          this.loadData();
-        });
-      }
       return;
     }
 
-    // Render the funds list
-    container.innerHTML = this.renderFundsList();
+    // Check for edge cases
+    const hasMultipleActive = hasMultipleActiveFunds(this.funds);
+    
+    container.innerHTML = `
+      <div class="funds__header">
+        <h2>My Chit Funds</h2>
+        <button class="btn btn--primary" id="add-fund">
+          <i class="icon-plus"></i>
+          Add Fund
+        </button>
+      </div>
+      
+      ${hasMultipleActive ? `
+        <div class="alert alert--info">
+          <p>You have multiple active funds. You can manage each fund individually.</p>
+        </div>
+      ` : ''}
+      
+      ${this.funds.length === 0 ? this.renderEmptyState() : this.renderFundsList()}
+    `;
 
-    // Add event listeners for fund cards
-    this.addFundCardEventListeners();
+    this.attachEventListeners();
   }
 
   /**

@@ -9,6 +9,12 @@ import { apiClient } from '../lib/apiClient.js';
 import { formatINR, parseINR } from '../lib/formatters.js';
 import { validateMonthlyEntry } from '../lib/validators.js';
 import { handleApiError } from '../lib/errorHandler.js';
+import { 
+  isPastMonth, 
+  isZeroDividendMonth,
+  formatPastEntryWarning,
+  formatZeroDividendWarning
+} from '../lib/edgeCaseHandler.js';
 
 class MonthlyEntryForm {
   constructor() {
@@ -263,6 +269,19 @@ class MonthlyEntryForm {
       `;
     }
 
+    // Check for edge cases
+    const isPast = isPastMonth(this.entry.month_key);
+    const isZeroDividend = isZeroDividendMonth(this.entry);
+    
+    // Generate warnings
+    const warnings = [];
+    if (isPast) {
+      warnings.push(formatPastEntryWarning(this.entry.month_key));
+    }
+    if (isZeroDividend) {
+      warnings.push(formatZeroDividendWarning());
+    }
+
     const monthLabel = this.entry.month_key
       ? new Date(this.entry.month_key + '-01').toLocaleDateString('en-IN', {
           year: 'numeric',
@@ -277,15 +296,19 @@ class MonthlyEntryForm {
           <p>${monthLabel}</p>
         </div>
         
-        ${
-          this.error
-            ? `
+        ${this.error ? `
           <div class="error-message">
             <p>${this.error}</p>
           </div>
-        `
-            : ''
-        }
+        ` : ''}
+        
+        ${warnings.length > 0 ? `
+          <div class="warning-message">
+            <ul>
+              ${warnings.map(warning => `<li>${warning}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
         
         <form id="monthly-entry-form">
           <input type="hidden" id="month-key" value="${this.entry.month_key}">
@@ -331,15 +354,15 @@ class MonthlyEntryForm {
             <small class="form-text">Check if the installment for this month has been paid</small>
           </div>
           
-          <div class=\"form-group\">
-            <label for=\"notes\">Notes</label>
+          <div class="form-group">
+            <label for="notes">Notes</label>
             <textarea 
-              id=\"notes\" 
-              class=\"form-input ${this.errors && this.errors.notes ? 'form-input--error' : ''}\"
-              rows=\"3\"
-              placeholder=\"Add any additional notes...\"
+              id="notes" 
+              class="form-input ${this.errors && this.errors.notes ? 'form-input--error' : ''}"
+              rows="3"
+              placeholder="Add any additional notes..."
             >${this.entry.notes}</textarea>
-            ${this.errors && this.errors.notes ? `<div class=\"form-error\">${this.errors.notes}</div>` : ''}
+            ${this.errors && this.errors.notes ? `<div class="form-error">${this.errors.notes}</div>` : ''}
           </div>
           
           <div class="form-actions">

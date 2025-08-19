@@ -74,6 +74,8 @@
 - frontend/lib/apiClient.js - Wrapper for calling backend APIs with auth and error handling.
 - frontend/lib/formatters.js - INR currency, Indian digit grouping, date formatting for UI.
 - frontend/lib/validators.js - Enhanced client-side validation utilities with field-level error reporting that mirrors server-side Zod validation rules.
+- frontend/src/lib/edgeCaseHandler.js - Utility module for handling various edge cases including mid-year starts, early exits, editing past entries, multiple active funds, and zero dividend months.
+- frontend/src/styles/edge-cases.css - CSS styles for edge case warnings and visual indicators in the UI.
 - tests/backend/xirr.test.ts - Excel parity tests for XIRR.
 - tests/backend/validation.test.ts - Server-side validation and edge case tests.
 - tests/backend/api-funds.test.ts - Funds API contract tests.
@@ -176,7 +178,7 @@
 - [ ] 8.0 Error Handling, Validation, and Edge Cases
   - [x] 8.1 Centralized error boundary and toasts for API failures.
   - [x] 8.2 Client-side validators mirroring server rules; inline field errors.
-  - [ ] 8.3 Edge cases: mid-year start, early exit, editing past entries, multiple active funds, zero dividend months.
+  - [x] 8.3 Edge cases: mid-year start, early exit, editing past entries, multiple active funds, zero dividend months.
   - [ ] 8.4 Data validation for unrealistic inputs with warnings (not always blocking).
   - [ ] 8.5 Logging/monitoring hooks for unexpected conditions (non-PII).
 

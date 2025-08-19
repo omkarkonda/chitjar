@@ -12,6 +12,18 @@ import { createFocusTrap } from '../lib/focusTrap.js';
 import { debounce } from '../lib/performance.js';
 import { createLineChart, formatChartData } from './Charts.js';
 import { handleApiError } from '../lib/errorHandler.js';
+import { 
+  isMidYearStart, 
+  hasEarlyExit, 
+  isMonthInFundRange, 
+  findMissingMonths, 
+  isZeroDividendMonth, 
+  isPastMonth,
+  formatPastEntryWarning,
+  formatZeroDividendWarning,
+  formatEarlyExitWarning,
+  formatMidYearStartWarning
+} from '../lib/edgeCaseHandler.js';
 
 class FundDetail {
   constructor() {
@@ -61,12 +73,14 @@ class FundDetail {
     this.error = null;
 
     try {
-      // Fetch fund data
+      // Fetch fund details
       const fundResponse = await apiClient.get(`/funds/${fundId}`);
       this.fund = fundResponse.data;
 
-      // Fetch entries
-      const entriesResponse = await apiClient.get(`/funds/${fundId}/entries`);
+      // Fetch entries - using the fund's entries endpoint which includes missing months
+      const entriesResponse = await apiClient.get(
+        `/funds/${fundId}/entries`
+      );
       this.entries = entriesResponse.data.entries || [];
 
       // Fetch analytics
@@ -785,26 +799,38 @@ class FundDetail {
   }
 
   /**
-   * Render a single entry
+   * Render a single entry card with edge case handling
+   * @param {Object} entry - The entry object to render
+   * @returns {string} HTML string for the entry card
    */
-  renderEntry(entry) {
-    // Format the month key as a readable date
-    let formattedDate = entry.month_key;
-    if (entry.month_key) {
-      const [year, month] = entry.month_key.split('-');
-      if (year && month) {
-        // Create a date object for the first day of the month
-        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-        formattedDate = formatDate(date);
-      }
-    }
+  renderEntryCard(entry) {
+    if (!entry || !this.fund) return '';
+
+    // Format the date for display
+    const date = new Date(entry.month_key + '-01');
+    const formattedDate = date.toLocaleDateString('en-IN', {
+      month: 'short',
+      year: 'numeric',
+    });
+
+    // Check for edge cases
+    const isPast = isPastMonth(entry.month_key);
+    const isZeroDividend = isZeroDividendMonth(entry);
+    const isMissing = entry.is_missing;
+
+    // Add warning classes for edge cases
+    let cardClasses = 'entry-card';
+    if (isPast) cardClasses += ' entry-card--past';
+    if (isZeroDividend) cardClasses += ' entry-card--zero-dividend';
+    if (isMissing) cardClasses += ' entry-card--missing';
 
     return `
-      <div class="entry-card" data-entry-id="${entry.id}">
+      <div class="${cardClasses}" data-entry-id="${entry.id}">
         <div class="entry-card__header">
           <div class="entry-card__month">
             <span class="entry-card__month-label">Month</span>
             <span class="entry-card__month-value">${formattedDate}</span>
+            ${isMissing ? '<span class="entry-card__missing-badge">Missing</span>' : ''}
           </div>
           <div class="entry-card__status">
             <span class="entry-card__status-label">Status</span>
@@ -830,6 +856,10 @@ class FundDetail {
             <i class="icon-edit"></i>
           </button>
         </div>
+        
+        ${isPast ? `<div class="entry-card__warning">Past entry - edits affect historical data</div>` : ''}
+        ${isZeroDividend ? `<div class="entry-card__warning">Zero dividend month</div>` : ''}
+        ${isMissing ? `<div class="entry-card__warning">No entry recorded for this month</div>` : ''}
       </div>
     `;
   }

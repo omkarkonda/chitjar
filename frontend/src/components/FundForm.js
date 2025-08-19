@@ -10,6 +10,12 @@ import { validateFundCreation, validateFundUpdate } from '../lib/validators.js';
 import { formatINR, parseINR } from '../lib/formatters.js';
 import { toast } from '../lib/toast.js';
 import { handleApiError } from '../lib/errorHandler.js';
+import { 
+  isMidYearStart, 
+  hasEarlyExit,
+  formatEarlyExitWarning,
+  formatMidYearStartWarning
+} from '../lib/edgeCaseHandler.js';
 
 class FundForm {
   constructor() {
@@ -97,6 +103,24 @@ class FundForm {
    * Render the fund form HTML
    */
   renderForm() {
+    // Check for edge cases when editing
+    const warnings = [];
+    if (this.isEditing && this.fundData) {
+      // Check for early exit
+      if (this.fundData.early_exit_month) {
+        warnings.push(formatEarlyExitWarning({
+          early_exit_month: this.fundData.early_exit_month
+        }));
+      }
+      
+      // Check for mid-year start
+      if (this.fundData.start_month && isMidYearStart(this.fundData.start_month)) {
+        warnings.push(formatMidYearStartWarning({
+          start_month: this.fundData.start_month
+        }));
+      }
+    }
+
     return `
       <div class="fund-form-container">
         <div class="fund-form__header">
@@ -105,6 +129,14 @@ class FundForm {
             ${this.isEditing ? 'Update your fund details' : 'Create a new chit fund to track'}
           </p>
         </div>
+        
+        ${warnings.length > 0 ? `
+          <div class="alert alert--warning">
+            <ul class="alert__list">
+              ${warnings.map(warning => `<li>${warning}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
         
         <form class="fund-form" id="fundForm">
           <div class="form-group">

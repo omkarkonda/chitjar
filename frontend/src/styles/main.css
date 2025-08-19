@@ -5,6 +5,7 @@
 @import './insights.css';
 @import './csv-import.css';
 @import './export.css';
+@import './edge-cases.css';
 
 * {
   margin: 0;

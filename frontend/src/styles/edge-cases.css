@@ -1,0 +1,83 @@
+/* Edge Case Handling Styles */
+
+/* Entry card edge case styles */
+.entry-card--past {
+  border-left: 4px solid var(--warning-500);
+}
+
+.entry-card--zero-dividend {
+  border-left: 4px solid var(--gray-500);
+}
+
+.entry-card--missing {
+  border-left: 4px solid var(--error-500);
+  background-color: var(--error-50);
+}
+
+.entry-card__missing-badge {
+  background-color: var(--error-500);
+  color: var(--text-inverse);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-full);
+  margin-left: var(--spacing-2);
+}
+
+.entry-card__warning {
+  font-size: var(--font-size-xs);
+  color: var(--warning-700);
+  background-color: var(--warning-50);
+  padding: var(--spacing-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--warning-200);
+  margin-top: var(--spacing-2);
+}
+
+/* Alert styles for forms */
+.alert {
+  padding: var(--spacing-4);
+  border-radius: var(--radius);
+  margin-bottom: var(--spacing-4);
+  font-size: var(--font-size-sm);
+}
+
+.alert--warning {
+  background-color: var(--warning-50);
+  border: 1px solid var(--warning-200);
+  color: var(--warning-800);
+}
+
+.alert--info {
+  background-color: var(--info-50);
+  border: 1px solid var(--info-200);
+  color: var(--info-800);
+}
+
+.alert__list {
+  margin: 0;
+  padding-left: var(--spacing-4);
+}
+
+.alert__list li {
+  margin-bottom: var(--spacing-1);
+}
+
+.warning-message {
+  background-color: var(--warning-50);
+  border: 1px solid var(--warning-200);
+  color: var(--warning-800);
+  padding: var(--spacing-3);
+  border-radius: var(--radius);
+  margin-bottom: var(--spacing-4);
+}
+
+.warning-message ul {
+  margin: 0;
+  padding-left: var(--spacing-4);
+  font-size: var(--font-size-sm);
+}
+
+.warning-message li {
+  margin-bottom: var(--spacing-1);
+}
