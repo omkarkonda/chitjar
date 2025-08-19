@@ -80,7 +80,11 @@ class Dashboard {
 
     // Render the dashboard content
     container.innerHTML = this.renderDashboard();
-    this.renderChart();
+    
+    // Use a slight delay to ensure DOM is fully ready before rendering chart
+    setTimeout(() => {
+      this.renderChart();
+    }, 0);
   }
 
   /**
@@ -122,7 +126,7 @@ class Dashboard {
         </div>
         ${
           this.funds.length > 0
-            ? '<canvas id="fund-profit-chart" class="chart-canvas"></canvas>'
+            ? '<canvas id="fund-profit-chart" class="chart-canvas" width="400" height="200"></canvas>'
             : this.renderEmptyChartState()
         }
       </div>
@@ -151,14 +155,34 @@ class Dashboard {
     }
 
     // Don't render chart if no funds or container doesn't exist
-    if (!this.funds || this.funds.length === 0) return;
+    if (!this.funds || this.funds.length === 0) {
+      console.log('No funds to display in chart');
+      return;
+    }
 
     const canvas = document.getElementById('fund-profit-chart');
-    if (!canvas) return;
+    if (!canvas) {
+      console.log('Canvas element not found');
+      return;
+    }
+
+    // Ensure canvas has dimensions
+    if (canvas.width === 0 || canvas.height === 0) {
+      canvas.width = canvas.parentElement.clientWidth || 400;
+      canvas.height = 300;
+    }
 
     // Prepare chart data
     const labels = this.funds.map(fund => fund.fund_name || 'Unnamed Fund');
     const profits = this.funds.map(fund => fund.total_profit || 0);
+
+    console.log('Chart data:', { labels, profits });
+
+    // Check if we have any non-zero profits to display
+    const hasData = profits.some(profit => profit !== 0);
+    if (!hasData && profits.length > 0) {
+      console.log('All profits are zero, but still showing chart with funds');
+    }
 
     const chartData = formatChartData(labels, [
       {

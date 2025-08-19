@@ -32,6 +32,7 @@ import {
 
 // Import the xirr function from our utility module
 import { calculateXirrPercentage } from '../lib/xirr';
+import { forecastFutureCashFlows } from '../lib/forecast';
 import { getFundCashFlowHandler, getFundNetCashFlowHandler } from './cash-flow';
 
 const router = Router();
@@ -106,34 +107,26 @@ async function getFundCashFlowSeries(userId: string, fundId: string): Promise<Ar
   
   const entries = entriesResult.rows;
   
-  // Create a map of entries by month key for quick lookup
-  const entryMap = new Map(entries.map(entry => [entry.month_key, entry]));
+  // If no entries, return empty array
+  if (entries.length === 0) {
+    return [];
+  }
   
-  // Generate expected month series
-  const { generateFundMonthSeries } = await import('../lib/validation-utils');
-  const expectedMonths = generateFundMonthSeries(
-    fund.start_month,
-    fund.end_month,
-    fund.early_exit_month
-  );
-  
-  // Build cash flow series
+  // Build cash flow series only for months that have entries
   const cashFlow: Array<{ date: Date, amount: number }> = [];
   
-  for (const monthKey of expectedMonths) {
-    const entry = entryMap.get(monthKey);
-    
-    // For each month, we have:
+  for (const entry of entries) {
+    // For each entry, we have:
     // 1. Outflow: installment_amount (negative)
     // 2. Inflow: dividend_amount + prize_money (positive)
     
     const installment = -fund.installment_amount; // Negative because it's an outflow
-    const dividend = entry ? entry.dividend_amount : 0;
-    const prize = entry ? entry.prize_money : 0;
+    const dividend = entry.dividend_amount || 0;
+    const prize = entry.prize_money || 0;
     const netCashFlow = installment + dividend + prize;
     
     // Convert month key to date (first day of the month)
-    const parts = monthKey.split('-');
+    const parts = entry.month_key.split('-');
     const yearStr = parts[0];
     const monthStr = parts[1];
     
@@ -479,6 +472,56 @@ async function compareFundWithFdHandler(req: Request, res: Response, next: NextF
 }
 
 /**
+ * Get fund forecast
+ * GET /api/v1/analytics/funds/:id/forecast
+ * Returns forecasted cash flows for a specific fund.
+ * @param req - Express request object containing fund ID in params
+ * @param res - Express response object
+ * @param next - Express next function for error handling
+ * @returns Promise that resolves when response is sent
+ */
+async function getFundForecastHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    const authenticatedReq = req as any;
+    const userId = authenticatedReq.user.id;
+    
+    // Check if id exists
+    if (!id) {
+      sendError(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.INVALID_INPUT,
+        'Fund ID is required'
+      );
+      return;
+    }
+    
+    // Check fund ownership
+    const ownsFund = await checkFundOwnership(userId, id);
+    if (!ownsFund) {
+      sendError(
+        res,
+        HTTP_STATUS.FORBIDDEN,
+        ERROR_CODES.FORBIDDEN,
+        'Access denied: fund not found or insufficient permissions'
+      );
+      return;
+    }
+    
+    // Get forecasted cash flows
+    const forecastedCashFlows = await forecastFutureCashFlows(userId, id, 12);
+    
+    sendSuccess(res, {
+      fund_id: id,
+      forecasted_cash_flows: forecastedCashFlows
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * Get strategic bidding insights
  * GET /api/v1/analytics/insights
  * Returns historical bidding trends and strategic insights for all funds.
@@ -608,6 +651,12 @@ router.get('/funds/:id/net-cash-flow',
   getFundNetCashFlowHandler
 );
 
+// GET /api/v1/analytics/funds/:id/forecast
+router.get('/funds/:id/forecast', 
+  validateParams(uuidParamSchema),
+  getFundForecastHandler
+);
+
 // POST /api/v1/analytics/funds/:id/fd-comparison
 router.post('/funds/:id/fd-comparison',
   validateParams(uuidParamSchema),
@@ -621,3 +670,4 @@ router.get('/insights', getInsightsHandler);
 export { router };
 export { getFundCashFlowSeries };
 export { checkFundOwnership };
+export { forecastFutureCashFlows };

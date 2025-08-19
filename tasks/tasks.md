@@ -46,7 +46,7 @@
 - backend/src/lib/xirr.ts - Wrapper around the xirr library with proper error handling and validation.
 - backend/src/test/xirr.test.ts - Unit tests for XIRR utility functions covering various edge cases and validation scenarios.
 - backend/src/test/xirr-parity.test.ts - Excel parity tests for XIRR calculations verifying accuracy within ±0.1% tolerance.
-- backend/src/lib/forecast.ts - Average-based forecasting utilities, encapsulated for future upgrades.
+- backend/src/lib/forecast.ts - Forecast utility module with functions for predicting future net cash flows using simple averages in Node.js; encapsulated for future upgrades with moving average and exponential moving average functions.
 - backend/src/lib/format.ts - INR currency formatting, Indian digit grouping, DD/MM/YYYY utilities (server).
 - frontend/index.html - App shell with mobile-first meta and base layout.
 - frontend/styles/main.css - Global styles; accessible color palette; responsive layout; print-friendly tables.
@@ -148,7 +148,7 @@
   - [x] 5.1 Implement XIRR using financial libraries (xirr or similar) in Node.js; define cash flow sign conventions and dates.
   - [x] 5.2 Add Excel parity tests for XIRR calculations; accept ±0.1% absolute difference.
   - [x] 5.3 Compute net monthly cash flow: installment − dividend; expose historical series via PostgreSQL queries.
-  - [ ] 5.4 Forecast future net cash flows using simple averages in Node.js; encapsulate for future upgrades.
+  - [x] 5.4 Forecast future net cash flows using simple averages in Node.js; encapsulate for future upgrades.
   - [ ] 5.5 FD comparison: accept session FD rate, compute annualized benchmark vs fund XIRR using financial calculations.
   - [ ] 5.6 Document and surface assumptions in UI (tooltips/notes) for projections.
 

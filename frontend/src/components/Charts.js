@@ -170,6 +170,12 @@ export const baseChartConfig = {
  * @returns {Chart} Chart instance
  */
 export function createBarChart(canvasId, data, options = {}) {
+  // Check if Chart.js is available
+  if (typeof Chart === 'undefined' || !Chart) {
+    console.error('Chart.js is not available');
+    return null;
+  }
+
   const canvas = document.getElementById(canvasId);
   if (!canvas) {
     console.error(`Canvas element with ID '${canvasId}' not found`);
@@ -177,6 +183,10 @@ export function createBarChart(canvasId, data, options = {}) {
   }
 
   const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    console.error(`Could not get 2D context for canvas '${canvasId}'`);
+    return null;
+  }
 
   // Merge base config with provided options
   const config = {
@@ -188,7 +198,14 @@ export function createBarChart(canvasId, data, options = {}) {
     },
   };
 
-  return new Chart(ctx, config);
+  try {
+    const chart = new Chart(ctx, config);
+    console.log('Chart created successfully:', canvasId);
+    return chart;
+  } catch (error) {
+    console.error('Error creating chart:', error);
+    return null;
+  }
 }
 
 /**
@@ -233,7 +250,9 @@ export function createLineChart(canvasId, data, options = {}) {
  * @returns {Object} Formatted chart data object
  */
 export function formatChartData(labels, datasets) {
-  return {
+  console.log('Formatting chart data:', { labels, datasets });
+  
+  const formattedData = {
     labels: labels,
     datasets: datasets.map((dataset, index) => ({
       ...dataset,
@@ -249,6 +268,9 @@ export function formatChartData(labels, datasets) {
       fill: dataset.fill || false,
     })),
   };
+  
+  console.log('Formatted chart data:', formattedData);
+  return formattedData;
 }
 
 /**

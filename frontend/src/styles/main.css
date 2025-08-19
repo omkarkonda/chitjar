@@ -785,6 +785,12 @@ li > ol {
   box-shadow: var(--shadow);
 }
 
+.chart-canvas {
+  width: 100% !important;
+  height: 300px !important;
+  display: block;
+}
+
 .chart-header {
   margin-bottom: var(--spacing-4);
 }
