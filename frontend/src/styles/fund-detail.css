@@ -113,6 +113,70 @@
   color: var(--text-primary);
 }
 
+/* Fund Detail Charts */
+.fund-detail__charts {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-primary);
+  margin-bottom: var(--spacing-6);
+}
+
+.fund-detail__charts h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-4);
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+  .chart-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.chart-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-3);
+}
+
+.chart-header h4 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+.chart-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.chart-data-table {
+  display: none;
+}
+
 /* FD Comparison Styles */
 .fd-comparison {
   margin-top: var(--spacing-6);
@@ -378,42 +442,42 @@
   .fund-detail__header {
     padding: var(--spacing-8);
   }
-  
+
   .fund-detail__kpis {
     padding: var(--spacing-8);
   }
-  
+
   .fund-detail__entries {
     padding: var(--spacing-8);
   }
-  
+
   .kpi-grid {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
-  
+
   .entry-card {
     flex-direction: row;
     align-items: center;
     gap: var(--spacing-4);
   }
-  
+
   .entry-card__header {
     flex: 1;
   }
-  
+
   .entry-card__details {
     flex: 2;
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .entry-card__actions {
     flex: 0 0 auto;
   }
-  
+
   .fd-comparison__form {
     flex-wrap: nowrap;
   }
-  
+
   .fd-comparison__form .form-group {
     min-width: auto;
   }

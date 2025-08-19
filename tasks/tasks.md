@@ -57,8 +57,8 @@
 - frontend/components/FundsList.js - List of funds with key metrics and navigation.
 - frontend/components/FundForm.js - Create/Edit fund form with client-side validation and helpful tooltips.
 - frontend/components/FundDetail.js - Summary KPIs, entries list, cash flow chart, XIRR, FD comparison.
-- frontend/src/components/FundDetail.js - Fund detail component with KPIs and entries list.
-- frontend/src/styles/fund-detail.css - Styles for the fund detail component.
+- frontend/src/components/FundDetail.js - Fund detail component with KPIs, entries list, and analytics charts.
+- frontend/src/styles/fund-detail.css - Styles for the fund detail component including chart layouts.
 - frontend/components/MonthlyEntryForm.js - Add/edit monthly dividend and prize money entries.
 - frontend/src/components/MonthlyEntryForm.js - Monthly entry form component for adding/editing dividend and prize money.
 - frontend/src/styles/monthly-entry-form.css - Styles for the monthly entry form component.
@@ -168,7 +168,7 @@
 - [ ] 7.0 Charts and Visualizations
   - [x] 7.1 Create Chart.js helper to standardize colors, legends, axis formats (INR, Indian grouping).
   - [x] 7.2 Dashboard chart: Fund vs Profit bar chart using Chart.js; responsive on small screens; print-friendly.
-  - [ ] 7.3 Fund Detail charts: cash flow over time, cumulative profit using Chart.js; accessible labels.
+  - [x] 7.3 Fund Detail charts: cash flow over time, cumulative profit using Chart.js; accessible labels.
   - [ ] 7.4 Insights charts: historical winning bid/discount trend using Chart.js.
   - [ ] 7.5 Add data table alternatives for all Chart.js charts; ensure export to CSV/print.
 

@@ -10,6 +10,7 @@ import { formatINR, formatDate } from '../lib/formatters.js';
 import { monthlyEntryForm } from './MonthlyEntryForm.js';
 import { createFocusTrap } from '../lib/focusTrap.js';
 import { debounce } from '../lib/performance.js';
+import { createLineChart, formatChartData } from './Charts.js';
 
 class FundDetail {
   constructor() {
@@ -18,6 +19,10 @@ class FundDetail {
     this.analytics = null;
     this.isLoading = false;
     this.error = null;
+
+    // Chart instances
+    this.cashFlowChart = null;
+    this.cumulativeProfitChart = null;
 
     // Calculated values
     this.currentProfit = 0;
@@ -153,8 +158,324 @@ class FundDetail {
     // Render the fund detail
     container.innerHTML = this.renderFundDetail();
 
+    // Render charts after DOM is updated
+    this.renderChartsAfterDOM();
+
     // Add event listeners
     this.addEventListeners();
+  }
+
+  /**
+   * Render charts after DOM is updated
+   */
+  renderChartsAfterDOM() {
+    // Clean up existing charts if they exist
+    if (this.cashFlowChart) {
+      this.cashFlowChart.destroy();
+      this.cashFlowChart = null;
+    }
+
+    if (this.cumulativeProfitChart) {
+      this.cumulativeProfitChart.destroy();
+      this.cumulativeProfitChart = null;
+    }
+
+    // Only render charts if we have analytics data
+    if (
+      !this.analytics ||
+      !this.analytics.cash_flow_series ||
+      this.analytics.cash_flow_series.length === 0
+    ) {
+      return;
+    }
+
+    // Use a slight delay to ensure DOM is fully ready before rendering charts
+    setTimeout(() => {
+      this.renderCashFlowChart();
+      this.renderCumulativeProfitChart();
+    }, 0);
+  }
+
+  /**
+   * Render the cash flow chart
+   */
+  renderCashFlowChart() {
+    // Don't render chart if no data or container doesn't exist
+    if (
+      !this.analytics ||
+      !this.analytics.cash_flow_series ||
+      this.analytics.cash_flow_series.length === 0
+    ) {
+      console.log('No cash flow data to display in chart');
+      return;
+    }
+
+    const canvas = document.getElementById('cash-flow-chart');
+    if (!canvas) {
+      console.log('Cash flow canvas element not found');
+      return;
+    }
+
+    // Ensure canvas has dimensions
+    if (canvas.width === 0 || canvas.height === 0) {
+      canvas.width = canvas.parentElement.clientWidth || 400;
+      canvas.height = 300;
+    }
+
+    // Prepare chart data
+    const labels = this.analytics.cash_flow_series.map(cf => {
+      const date = new Date(cf.date);
+      return date.toLocaleDateString('en-IN', {
+        month: 'short',
+        year: '2-digit',
+      });
+    });
+
+    const cashFlows = this.analytics.cash_flow_series.map(cf => cf.amount);
+
+    console.log('Cash flow chart data:', { labels, cashFlows });
+
+    // Create color array based on cash flow values (green for positive, red for negative)
+    const backgroundColors = cashFlows.map(
+      amount => (amount >= 0 ? '#10b981' : '#ef4444') // green-500 for positive, red-500 for negative
+    );
+
+    const chartData = formatChartData(labels, [
+      {
+        label: 'Cash Flow (₹)',
+        data: cashFlows,
+        borderColor: '#3b82f6', // blue-500
+        backgroundColor: backgroundColors,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: false,
+        tension: 0.3,
+      },
+    ]);
+
+    // Create responsive chart configuration
+    const chartConfig = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          ticks: {
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 0,
+            font: {
+              size: window.innerWidth < 768 ? 10 : 12,
+            },
+          },
+          grid: {
+            display: false,
+          },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function (value) {
+              // Format Y-axis values as INR
+              return '₹' + formatINR(value, 0);
+            },
+            font: {
+              size: window.innerWidth < 768 ? 10 : 12,
+            },
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.1)',
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          titleColor: '#1f2937',
+          bodyColor: '#1f2937',
+          borderColor: '#d1d5db',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: function (context) {
+              // Format tooltip values as INR
+              return (
+                context.dataset.label + ': ₹' + formatINR(context.parsed.y)
+              );
+            },
+            title: function (context) {
+              return context[0].label;
+            },
+          },
+        },
+      },
+      // Animation configuration for smoother transitions
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart',
+      },
+      // Interaction configuration
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+    };
+
+    // Create the chart
+    this.cashFlowChart = createLineChart(
+      'cash-flow-chart',
+      chartData,
+      chartConfig
+    );
+  }
+
+  /**
+   * Render the cumulative profit chart
+   */
+  renderCumulativeProfitChart() {
+    // Don't render chart if no data or container doesn't exist
+    if (
+      !this.analytics ||
+      !this.analytics.cash_flow_series ||
+      this.analytics.cash_flow_series.length === 0
+    ) {
+      console.log('No cash flow data to calculate cumulative profit');
+      return;
+    }
+
+    const canvas = document.getElementById('cumulative-profit-chart');
+    if (!canvas) {
+      console.log('Cumulative profit canvas element not found');
+      return;
+    }
+
+    // Ensure canvas has dimensions
+    if (canvas.width === 0 || canvas.height === 0) {
+      canvas.width = canvas.parentElement.clientWidth || 400;
+      canvas.height = 300;
+    }
+
+    // Calculate cumulative profit series
+    let cumulative = 0;
+    const cumulativeSeries = this.analytics.cash_flow_series.map(cf => {
+      cumulative += cf.amount;
+      return {
+        date: cf.date,
+        amount: cumulative,
+      };
+    });
+
+    // Prepare chart data
+    const labels = cumulativeSeries.map(cf => {
+      const date = new Date(cf.date);
+      return date.toLocaleDateString('en-IN', {
+        month: 'short',
+        year: '2-digit',
+      });
+    });
+
+    const cumulativeProfits = cumulativeSeries.map(cf => cf.amount);
+
+    console.log('Cumulative profit chart data:', { labels, cumulativeProfits });
+
+    // Create color array based on cumulative profit values (green for positive, red for negative)
+    const backgroundColors = cumulativeProfits.map(
+      amount => (amount >= 0 ? '#10b981' : '#ef4444') // green-500 for positive, red-500 for negative
+    );
+
+    const chartData = formatChartData(labels, [
+      {
+        label: 'Cumulative Profit (₹)',
+        data: cumulativeProfits,
+        borderColor: '#10b981', // green-500
+        backgroundColor: backgroundColors,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: false,
+        tension: 0.3,
+      },
+    ]);
+
+    // Create responsive chart configuration
+    const chartConfig = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          ticks: {
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 0,
+            font: {
+              size: window.innerWidth < 768 ? 10 : 12,
+            },
+          },
+          grid: {
+            display: false,
+          },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function (value) {
+              // Format Y-axis values as INR
+              return '₹' + formatINR(value, 0);
+            },
+            font: {
+              size: window.innerWidth < 768 ? 10 : 12,
+            },
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.1)',
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          titleColor: '#1f2937',
+          bodyColor: '#1f2937',
+          borderColor: '#d1d5db',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: {
+            label: function (context) {
+              // Format tooltip values as INR
+              return (
+                context.dataset.label + ': ₹' + formatINR(context.parsed.y)
+              );
+            },
+            title: function (context) {
+              return context[0].label;
+            },
+          },
+        },
+      },
+      // Animation configuration for smoother transitions
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart',
+      },
+      // Interaction configuration
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+    };
+
+    // Create the chart
+    this.cumulativeProfitChart = createLineChart(
+      'cumulative-profit-chart',
+      chartData,
+      chartConfig
+    );
   }
 
   /**
@@ -223,7 +544,125 @@ class FundDetail {
       
       ${this.renderKPIs()}
       
+      ${this.renderCharts()}
+      
       ${this.renderEntriesList()}
+    `;
+  }
+
+  /**
+   * Render the charts section
+   */
+  renderCharts() {
+    // Only render charts if we have analytics data
+    if (
+      !this.analytics ||
+      !this.analytics.cash_flow_series ||
+      this.analytics.cash_flow_series.length === 0
+    ) {
+      return '';
+    }
+
+    return `
+      <div class="fund-detail__charts">
+        <h3>Fund Performance Charts</h3>
+        <div class="chart-grid">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h4>Cash Flow Over Time</h4>
+              <div class="chart-data-table" role="region" aria-labelledby="cash-flow-data-label" tabindex="0">
+                <h5 id="cash-flow-data-label" class="sr-only">Cash Flow Over Time Data Table</h5>
+                ${this.renderCashFlowDataTable()}
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="cash-flow-chart" class="chart-canvas" role="img" aria-label="Line chart showing cash flow over time"></canvas>
+            </div>
+          </div>
+          <div class="chart-container">
+            <div class="chart-header">
+              <h4>Cumulative Profit</h4>
+              <div class="chart-data-table" role="region" aria-labelledby="cumulative-profit-data-label" tabindex="0">
+                <h5 id="cumulative-profit-data-label" class="sr-only">Cumulative Profit Data Table</h5>
+                ${this.renderCumulativeProfitDataTable()}
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="cumulative-profit-chart" class="chart-canvas" role="img" aria-label="Line chart showing cumulative profit over time"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render cash flow data table for accessibility
+   */
+  renderCashFlowDataTable() {
+    if (!this.analytics || !this.analytics.cash_flow_series) return '';
+
+    return `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Cash Flow (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${this.analytics.cash_flow_series
+            .map(
+              cf => `
+            <tr>
+              <td>${formatDate(cf.date)}</td>
+              <td>${formatINR(cf.amount)}</td>
+            </tr>
+          `
+            )
+            .join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  /**
+   * Render cumulative profit data table for accessibility
+   */
+  renderCumulativeProfitDataTable() {
+    if (!this.analytics || !this.analytics.cash_flow_series) return '';
+
+    // Calculate cumulative profit series
+    let cumulative = 0;
+    const cumulativeSeries = this.analytics.cash_flow_series.map(cf => {
+      cumulative += cf.amount;
+      return {
+        date: cf.date,
+        amount: cumulative,
+      };
+    });
+
+    return `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Cumulative Profit (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${cumulativeSeries
+            .map(
+              cf => `
+            <tr>
+              <td>${formatDate(cf.date)}</td>
+              <td>${formatINR(cf.amount)}</td>
+            </tr>
+          `
+            )
+            .join('')}
+        </tbody>
+      </table>
     `;
   }
 
