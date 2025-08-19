@@ -69,7 +69,8 @@
 - frontend/src/styles/insights.css - Styles for the insights component.
 - frontend/components/CSVImportDialog.js - CSV import flow with mapped preview, line-level errors, and confirm.
 - frontend/components/ExportDialog.js - CSV/JSON export options.
-- frontend/components/Charts.js - Chart helpers (Chart.js/ECharts) with color-blind friendly palettes.
+- frontend/src/components/Charts.js - Chart helpers (Chart.js/ECharts) with color-blind friendly palettes.
+- docs/chart-helpers.md - Comprehensive documentation for Chart.js helpers including color palettes, configurations, and usage examples.
 - frontend/lib/apiClient.js - Wrapper for calling backend APIs with auth and error handling.
 - frontend/lib/formatters.js - INR currency, Indian digit grouping, date formatting for UI.
 - frontend/lib/validators.js - Client-side validation mirroring server rules.
@@ -165,8 +166,8 @@
   - [ ] 6.6 Add guardrails: size limits, safe error messages, and timeout handling for file uploads.
 
 - [ ] 7.0 Charts and Visualizations
-  - [ ] 7.1 Create Chart.js helper to standardize colors, legends, axis formats (INR, Indian grouping).
-  - [ ] 7.2 Dashboard chart: Fund vs Profit bar chart using Chart.js; responsive on small screens; print-friendly.
+  - [x] 7.1 Create Chart.js helper to standardize colors, legends, axis formats (INR, Indian grouping).
+  - [x] 7.2 Dashboard chart: Fund vs Profit bar chart using Chart.js; responsive on small screens; print-friendly.
   - [ ] 7.3 Fund Detail charts: cash flow over time, cumulative profit using Chart.js; accessible labels.
   - [ ] 7.4 Insights charts: historical winning bid/discount trend using Chart.js.
   - [ ] 7.5 Add data table alternatives for all Chart.js charts; ensure export to CSV/print.
