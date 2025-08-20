@@ -427,7 +427,6 @@ export const xirrCalculationSchema = z.object({
  * FD comparison request schema
  */
 export const fdComparisonSchema = z.object({
-  fund_id: uuidSchema,
   fd_rate: z.number().positive().max(50, 'FD rate cannot exceed 50%'),
 });
 

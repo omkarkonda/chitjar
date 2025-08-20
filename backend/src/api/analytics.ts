@@ -120,9 +120,9 @@ async function getFundCashFlowSeries(userId: string, fundId: string): Promise<Ar
     // 1. Outflow: installment_amount (negative)
     // 2. Inflow: dividend_amount + prize_money (positive)
     
-    const installment = -fund.installment_amount; // Negative because it's an outflow
-    const dividend = entry.dividend_amount || 0;
-    const prize = entry.prize_money || 0;
+    const installment = -parseFloat(fund.installment_amount.toString()); // Negative because it's an outflow
+    const dividend = parseFloat((entry.dividend_amount || 0).toString());
+    const prize = parseFloat((entry.prize_money || 0).toString());
     const netCashFlow = installment + dividend + prize;
     
     // Convert month key to date (first day of the month)
@@ -266,7 +266,7 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
   const fundsResult = await query(`
     SELECT 
       f.id, f.name, f.chit_value, f.installment_amount, f.total_months,
-      f.start_month, f.end_month, f.early_exit_month, f.needs_recalculation
+      f.start_month, f.end_month, f.early_exit_month
     FROM funds f
     WHERE f.user_id = $1 AND f.is_active = true
     ORDER BY f.created_at DESC
@@ -279,7 +279,7 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
   let totalProfit = 0;
   
   // Track which funds need recalculation
-  const fundsNeedingRecalculation = [];
+  // const fundsNeedingRecalculation = [];
   
   for (const fund of funds) {
     const cashFlow = await getFundCashFlowSeries(userId, fund.id);
@@ -301,19 +301,19 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
       });
       
       // Track if this fund needs recalculation
-      if (fund.needs_recalculation) {
-        fundsNeedingRecalculation.push(fund.id);
-      }
+      // if (fund.needs_recalculation) {
+      //   fundsNeedingRecalculation.push(fund.id);
+      // }
     }
   }
   
   // Mark all funds that needed recalculation as recalculated
-  if (fundsNeedingRecalculation.length > 0) {
-    await query(
-      `UPDATE funds SET needs_recalculation = false WHERE id = ANY($1)`,
-      [fundsNeedingRecalculation]
-    );
-  }
+  // if (fundsNeedingRecalculation.length > 0) {
+  //   await query(
+  //     `UPDATE funds SET needs_recalculation = false WHERE id = ANY($1)`,
+  //     [fundsNeedingRecalculation]
+  //   );
+  // }
   
   return {
     total_profit: totalProfit,
@@ -375,25 +375,30 @@ async function getFundAnalyticsHandler(req: Request, res: Response, next: NextFu
     }
     
     // Check fund ownership
-    const ownsFund = await checkFundOwnership(userId, id);
-    if (!ownsFund) {
+    const fundExists = await query(
+      'SELECT user_id FROM funds WHERE id = $1',
+      [id]
+    );
+    
+    if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
+      // Fund doesn't exist or belongs to another user
       sendError(
         res,
-        HTTP_STATUS.FORBIDDEN,
-        ERROR_CODES.FORBIDDEN,
-        'Access denied: fund not found or insufficient permissions'
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
       );
       return;
     }
     
     // Get fund details to check if recalculation is needed
-    const fundResult = await query(
-      'SELECT needs_recalculation FROM funds WHERE id = $1 AND user_id = $2',
-      [id, userId]
-    );
-    
-    const fund = fundResult.rows[0];
-    const needsRecalculation = fund ? fund.needs_recalculation : true;
+    // const fundResult = await query(
+    //   'SELECT needs_recalculation FROM funds WHERE id = $1 AND user_id = $2',
+    //   [id, userId]
+    // );
+    // 
+    // const fund = fundResult.rows[0];
+    // const needsRecalculation = fund ? fund.needs_recalculation : true;
     
     // Get cash flow series
     const cashFlow = await getFundCashFlowSeries(userId, id);
@@ -405,16 +410,20 @@ async function getFundAnalyticsHandler(req: Request, res: Response, next: NextFu
     const projections = await calculateProjections(userId, id);
     
     // If we determined that recalculation was needed, mark the fund as recalculated
-    if (needsRecalculation) {
-      await query(
-        'UPDATE funds SET needs_recalculation = false WHERE id = $1',
-        [id]
-      );
-    }
+    // if (needsRecalculation) {
+    //   await query(
+    //     'UPDATE funds SET needs_recalculation = false WHERE id = $1',
+    //     [id]
+    //   );
+    // }
+    
+    // Get net cash flow series
+    const netCashFlow = await getFundNetCashFlowSeries(userId, id);
     
     sendSuccess(res, {
       fund_id: id,
       cash_flow_series: cashFlow,
+      net_cash_flow_series: netCashFlow,
       xirr,
       projections
     });
@@ -451,13 +460,18 @@ async function compareFundWithFdHandler(req: Request, res: Response, next: NextF
     }
     
     // Check fund ownership
-    const ownsFund = await checkFundOwnership(userId, id);
-    if (!ownsFund) {
+    const fundExists = await query(
+      'SELECT user_id FROM funds WHERE id = $1',
+      [id]
+    );
+    
+    if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
+      // Fund doesn't exist or belongs to another user
       sendError(
         res,
-        HTTP_STATUS.FORBIDDEN,
-        ERROR_CODES.FORBIDDEN,
-        'Access denied: fund not found or insufficient permissions'
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
       );
       return;
     }
@@ -498,13 +512,18 @@ async function getFundForecastHandler(req: Request, res: Response, next: NextFun
     }
     
     // Check fund ownership
-    const ownsFund = await checkFundOwnership(userId, id);
-    if (!ownsFund) {
+    const fundExists = await query(
+      'SELECT user_id FROM funds WHERE id = $1',
+      [id]
+    );
+    
+    if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
+      // Fund doesn't exist or belongs to another user
       sendError(
         res,
-        HTTP_STATUS.FORBIDDEN,
-        ERROR_CODES.FORBIDDEN,
-        'Access denied: fund not found or insufficient permissions'
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
       );
       return;
     }
@@ -618,6 +637,85 @@ async function getInsightsHandler(req: Request, res: Response, next: NextFunctio
   } catch (error) {
     next(error);
   }
+}
+
+/**
+ * Get net cash flow series for a fund
+ * Computes net monthly cash flow as installment - dividend for each month
+ * 
+ * @param userId - The ID of the user who owns the fund
+ * @param fundId - The ID of the fund to get cash flow series for
+ * @returns Promise that resolves to an array of net cash flow objects with date and amount
+ */
+async function getFundNetCashFlowSeries(userId: string, fundId: string): Promise<Array<{ date: Date, amount: number }>> {
+  // First get the fund details
+  const fundResult = await query(`
+    SELECT 
+      f.start_month, f.end_month, f.early_exit_month,
+      f.installment_amount, f.chit_value
+    FROM funds f
+    WHERE f.id = $1 AND f.user_id = $2
+  `, [fundId, userId]);
+  
+  if (fundResult.rowCount === 0) {
+    return [];
+  }
+  
+  // Check if fund exists
+  if (!fundResult || fundResult.rows.length === 0) {
+    return [];
+  }
+  
+  const fund = fundResult.rows[0];
+  
+  // Get all entries for this fund
+  const entriesResult = await query(`
+    SELECT 
+      me.month_key, me.dividend_amount, me.prize_money
+    FROM monthly_entries me
+    WHERE me.fund_id = $1
+    ORDER BY me.month_key
+  `, [fundId]);
+  
+  const entries = entriesResult.rows;
+  
+  // If no entries, return empty array
+  if (entries.length === 0) {
+    return [];
+  }
+  
+  // Build net cash flow series only for months that have entries
+  const netCashFlow: Array<{ date: Date, amount: number }> = [];
+  
+  for (const entry of entries) {
+    // For each entry, we have:
+    // Net cash flow: installment - dividend (as per task 5.3 requirement)
+    
+    const installment = parseFloat(fund.installment_amount.toString());
+    const dividend = parseFloat((entry.dividend_amount || 0).toString());
+    const netCashFlowAmount = installment - dividend; // As per task 5.3 requirement
+    
+    // Convert month key to date (first day of the month)
+    const parts = entry.month_key.split('-');
+    const yearStr = parts[0];
+    const monthStr = parts[1];
+    
+    // Check if we have valid parts
+    if (!yearStr || !monthStr) {
+      continue; // Skip invalid month keys
+    }
+    
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+    const date = new Date(year, month - 1, 1); // month is 0-indexed in JS Date
+    
+    netCashFlow.push({
+      date,
+      amount: netCashFlowAmount
+    });
+  }
+  
+  return netCashFlow;
 }
 
 // ============================================================================ 

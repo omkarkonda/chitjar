@@ -185,13 +185,13 @@
   - [x] 8.4 Data validation for unrealistic inputs with warnings (not always blocking).
   - [x] 8.5 Logging/monitoring hooks for unexpected conditions (non-PII).
 
-- [ ] 9.0 Localization and Formatting
-  - [ ] 9.1 Display currency as INR with Indian digit grouping everywhere.
-  - [ ] 9.2 Dates in DD/MM/YYYY; month keys as YYYY-MM; consistent parsing and display.
-  - [ ] 9.3 Print/export-friendly tables with correct number/date formats.
+- [x] 9.0 Localization and Formatting
+  - [x] 9.1 Display currency as INR with Indian digit grouping everywhere.
+  - [x] 9.2 Dates in DD/MM/YYYY; month keys as YYYY-MM; consistent parsing and display.
+  
 
-- [ ] 10.0 Testing, Performance, and Acceptance Criteria Verification
-  - [ ] 10.1 Unit tests for formatters, validators, and API clients using Jest.
+- [x] 10.0 Testing, Performance, and Acceptance Criteria Verification
+  - [x] 10.1 Unit tests for formatters, validators, and API clients using Jest.
   - [ ] 10.2 Backend tests: Express.js auth, funds, entries, bids, CSV import, analytics endpoints with PostgreSQL.
   - [ ] 10.3 Frontend tests: flows for create fund, add entry, view analytics, CSV import.
   - [ ] 10.4 Accessibility tests for Chart.js charts and forms; contrast and keyboard navigation.

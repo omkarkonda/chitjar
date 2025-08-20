@@ -70,32 +70,31 @@ const fundIdParamSchema = z.object({
 // Helper Functions
 // ============================================================================
 
-/**
- * Check if user owns the fund
- * @param userId - The ID of the user
- * @param fundId - The ID of the fund to check ownership for
- * @returns Promise that resolves to true if user owns the fund, false otherwise
- */
-async function checkFundOwnership(userId: string, fundId: string): Promise<boolean> {
-  const result = await query(
-    'SELECT 1 FROM funds WHERE id = $1 AND user_id = $2',
-    [fundId, userId]
-  );
-  return (result.rowCount || 0) > 0;
-}
+
 
 /**
- * Check if user owns the fund and get fund details
+ * Get fund details with ownership check
  * @param userId - The ID of the user
  * @param fundId - The ID of the fund to get details for
- * @returns Promise that resolves to fund details object or null if not found
+ * @returns Promise that resolves to fund details object or null if not found or not owned
  */
 async function getFundDetails(userId: string, fundId: string): Promise<any> {
   const result = await query(
-    'SELECT chit_value, start_month, end_month, early_exit_month FROM funds WHERE id = $1 AND user_id = $2',
-    [fundId, userId]
+    'SELECT chit_value, start_month, end_month, early_exit_month, user_id FROM funds WHERE id = $1',
+    [fundId]
   );
-  return result.rows[0] || null;
+  
+  if (result.rowCount === 0) {
+    // Fund doesn't exist
+    return null;
+  }
+  
+  if (result.rows[0].user_id !== userId) {
+    // Fund belongs to another user
+    return null;
+  }
+  
+  return result.rows[0];
 }
 
 /**
@@ -213,13 +212,22 @@ async function createBidHandler(req: Request, res: Response, next: NextFunction)
     // Get fund details
     const fund = await getFundDetails(userId, fund_id);
     if (!fund) {
-      sendError(
-        res,
-        HTTP_STATUS.FORBIDDEN,
-        ERROR_CODES.FORBIDDEN,
-        'Access denied: fund not found or insufficient permissions'
+      // Check if fund exists but belongs to another user
+      const fundExists = await query(
+        'SELECT user_id FROM funds WHERE id = $1',
+        [fund_id]
       );
-      return;
+      
+      if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
+        // Fund doesn't exist or belongs to another user
+        sendError(
+          res,
+          HTTP_STATUS.NOT_FOUND,
+          ERROR_CODES.RESOURCE_NOT_FOUND,
+          'Fund not found'
+        );
+        return;
+      }
     }
     
     // Validate that winning_bid doesn't exceed chit_value
@@ -331,13 +339,18 @@ async function getFundBidsHandler(req: Request, res: Response, next: NextFunctio
     }
     
     // Check fund ownership
-    const ownsFund = await checkFundOwnership(userId, fundId);
-    if (!ownsFund) {
+    const fundExists = await query(
+      'SELECT user_id FROM funds WHERE id = $1',
+      [fundId]
+    );
+    
+    if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
+      // Fund doesn't exist or belongs to another user
       sendError(
         res,
-        HTTP_STATUS.FORBIDDEN,
-        ERROR_CODES.FORBIDDEN,
-        'Access denied: fund not found or insufficient permissions'
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
       );
       return;
     }
@@ -658,10 +671,15 @@ async function confirmBidsImportHandler(req: Request, res: Response, next: NextF
       for (const bid of bids) {
         try {
           // Check fund ownership
-          const ownsFund = await checkFundOwnership(userId, bid.fund_id);
-          if (!ownsFund) {
+          const fundExists = await query(
+            'SELECT user_id FROM funds WHERE id = $1',
+            [bid.fund_id]
+          );
+          
+          if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
+            // Fund doesn't exist or belongs to another user
             errors.push({
-              message: 'Access denied: fund not found or insufficient permissions',
+              message: 'Fund not found',
               fund_id: bid.fund_id,
               month_key: bid.month_key
             });

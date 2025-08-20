@@ -36,16 +36,26 @@ export function formatINR(amount: number, decimals: number = 2): string {
   const safeIntegerPart = integerPart || '0';
   
   // Format integer part with Indian numbering system
+  const digits = safeIntegerPart.split('');
+  const len = digits.length;
   let formattedInteger = '';
-  const reversed = safeIntegerPart.split('').reverse();
   
-  for (let i = 0; i < reversed.length; i++) {
-    if (i === 3 && reversed.length > 3) {
-      formattedInteger = ',' + formattedInteger;
-    } else if (i > 3 && i % 2 === 1 && i !== reversed.length - 1) {
-      formattedInteger = ',' + formattedInteger;
+  // Process digits from right to left
+  for (let i = len - 1; i >= 0; i--) {
+    // Add the digit
+    formattedInteger = digits[i] + formattedInteger;
+    
+    // Add comma if needed
+    const positionFromRight = len - i;
+    
+    // For Indian numbering system:
+    // - Add comma after 3 digits from right (position 3)
+    // - Then add comma after every 2 digits (positions 5, 7, 9, ...)
+    if (positionFromRight === 3 || (positionFromRight > 3 && positionFromRight % 2 === 1)) {
+      if (i > 0) { // Don't add comma at the beginning
+        formattedInteger = ',' + formattedInteger;
+      }
     }
-    formattedInteger = reversed[i] + formattedInteger;
   }
   
   // Add decimal part

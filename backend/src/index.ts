@@ -117,10 +117,13 @@ app.use(errorHandler);
 // 404 handler (must be last)
 app.use('*', notFoundHandler);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-});
+// Only start the server if not in test mode
+if (config.nodeEnv !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  });
+}
 
 // Export app for testing
 export { app };
