@@ -218,8 +218,19 @@ async function createBidHandler(req: Request, res: Response, next: NextFunction)
         [fund_id]
       );
       
-      if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
-        // Fund doesn't exist or belongs to another user
+      if (fundExists.rowCount === 0) {
+        // Fund doesn't exist
+        sendError(
+          res,
+          HTTP_STATUS.NOT_FOUND,
+          ERROR_CODES.RESOURCE_NOT_FOUND,
+          'Fund not found'
+        );
+        return;
+      }
+      
+      if (fundExists.rows[0].user_id !== userId) {
+        // Fund belongs to another user
         sendError(
           res,
           HTTP_STATUS.NOT_FOUND,
@@ -344,8 +355,19 @@ async function getFundBidsHandler(req: Request, res: Response, next: NextFunctio
       [fundId]
     );
     
-    if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
-      // Fund doesn't exist or belongs to another user
+    if (fundExists.rowCount === 0) {
+      // Fund doesn't exist
+      sendError(
+        res,
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
+      );
+      return;
+    }
+    
+    if (fundExists.rows[0].user_id !== userId) {
+      // Fund belongs to another user
       sendError(
         res,
         HTTP_STATUS.NOT_FOUND,
@@ -676,8 +698,18 @@ async function confirmBidsImportHandler(req: Request, res: Response, next: NextF
             [bid.fund_id]
           );
           
-          if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
-            // Fund doesn't exist or belongs to another user
+          if (fundExists.rowCount === 0) {
+            // Fund doesn't exist
+            errors.push({
+              message: 'Fund not found',
+              fund_id: bid.fund_id,
+              month_key: bid.month_key
+            });
+            continue;
+          }
+          
+          if (fundExists.rows[0].user_id !== userId) {
+            // Fund belongs to another user
             errors.push({
               message: 'Fund not found',
               fund_id: bid.fund_id,

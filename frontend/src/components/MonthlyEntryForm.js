@@ -25,7 +25,6 @@ class MonthlyEntryForm {
     this.entry = {
       month_key: '',
       dividend_amount: '',
-      prize_money: '',
       is_paid: true,
       notes: '',
     };
@@ -50,7 +49,6 @@ class MonthlyEntryForm {
     this.entry = {
       month_key: monthKey,
       dividend_amount: '',
-      prize_money: '',
       is_paid: true,
       notes: '',
     };
@@ -109,7 +107,6 @@ class MonthlyEntryForm {
       this.entry = {
         ...response.data,
         dividend_amount: formatINR(response.data.dividend_amount),
-        prize_money: formatINR(response.data.prize_money),
       };
       this.fundId = response.data.fund_id;
 
@@ -133,14 +130,12 @@ class MonthlyEntryForm {
 
     // Parse numeric values
     const dividendAmount = parseINR(this.entry.dividend_amount);
-    const prizeMoney = parseINR(this.entry.prize_money);
 
     // Prepare data for submission
     const submitData = {
       fund_id: this.fundId,
       month_key: this.entry.month_key,
       dividend_amount: dividendAmount,
-      prize_money: prizeMoney,
       is_paid: this.entry.is_paid,
       notes: this.entry.notes,
     };
@@ -216,7 +211,7 @@ class MonthlyEntryForm {
   validateField(fieldName, value) {
     // Parse numeric values
     let parsedValue = value;
-    if (fieldName === 'dividend_amount' || fieldName === 'prize_money') {
+    if (fieldName === 'dividend_amount') {
       const numericValue = parseINR(value);
       if (!isNaN(numericValue)) {
         parsedValue = numericValue;
@@ -328,20 +323,6 @@ class MonthlyEntryForm {
             <small class="form-text">Enter dividend received for this month</small>
           </div>
           
-          <div class="form-group">
-            <label for="prize-money">Prize Money (₹)</label>
-            <input 
-              type="text" 
-              id="prize-money" 
-              class="form-input ${this.errors && this.errors.prize_money ? 'form-input--error' : ''}"
-              value="${this.entry.prize_money}"
-              placeholder="0.00"
-              inputmode="decimal"
-            >
-            ${this.errors && this.errors.prize_money ? `<div class="form-error">${this.errors.prize_money}</div>` : ''}
-            <small class="form-text">Enter prize money received for this month</small>
-          </div>
-          
           <div class="form-group form-group--checkbox">
             <label class="checkbox-label">
               <input 
@@ -409,16 +390,6 @@ class MonthlyEntryForm {
       });
       dividendInput.addEventListener('blur', e => {
         this.validateField('dividend_amount', e.target.value);
-      });
-    }
-
-    const prizeInput = document.getElementById('prize-money');
-    if (prizeInput) {
-      prizeInput.addEventListener('input', e => {
-        this.handleInputChange('prize_money', e.target.value);
-      });
-      prizeInput.addEventListener('blur', e => {
-        this.validateField('prize_money', e.target.value);
       });
     }
 

@@ -88,7 +88,7 @@ async function getUserEntriesForExport(userId: string): Promise<any[]> {
   const result = await query(`
     SELECT 
       me.id, me.fund_id, me.month_key, me.dividend_amount, 
-      me.prize_money, me.is_paid, me.notes, me.created_at, me.updated_at,
+      me.is_paid, me.notes, me.created_at, me.updated_at,
       f.name as fund_name
     FROM monthly_entries me
     JOIN funds f ON me.fund_id = f.id
@@ -240,7 +240,6 @@ async function exportEntriesCsvHandler(req: Request, res: Response, next: NextFu
       { id: 'fund_name', title: 'Fund Name' },
       { id: 'month_key', title: 'Month Key' },
       { id: 'dividend_amount', title: 'Dividend Amount' },
-      { id: 'prize_money', title: 'Prize Money' },
       { id: 'is_paid', title: 'Is Paid' },
       { id: 'notes', title: 'Notes' },
       { id: 'created_at', title: 'Created At' },

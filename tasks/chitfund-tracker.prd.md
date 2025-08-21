@@ -13,7 +13,7 @@ Scope: Frontend-focused web app (mobile-first), with mixed computation (client +
 ## 2. Goals
 - G1: Allow a user to create and manage multiple chit funds with required setup fields.
 - G2: Enable monthly entries for dividends and optional prize money; auto-mark months as paid.
-- G3: Provide analytics per fund: current profit, ROI, average monthly dividend, months to completion.
+- G3: Provide analytics per fund: net amount, ROI, average monthly dividend, months to completion.
 - G4: Provide advanced analytics: XIRR, future value projection, cash flow analysis with simple forecasting, and FD comparison via user-entered rate.
 - G5: Offer strategic bidding insights from manual and CSV-imported historical winning bids.
 - G6: Achieve XIRR accuracy comparable to Excel within a reasonable tolerance.
@@ -29,7 +29,7 @@ Success constraints:
 - As a user, I can log monthly dividend and optional prize money, and the month becomes marked as paid automatically, so my records stay consistent.
 - As a user, I can view a dashboard with total profit and a fund vs. profit graph, so I understand overall performance.
 - As a user, I can view a list of my funds with key details and tap into an individual fund view for deep analytics.
-- As a user, I can see current profit, ROI, average monthly dividend, and months to completion for a specific fund, so I can track progress.
+- As a user, I can see net amount, ROI, average monthly dividend, and months to completion for a specific fund, so I can track progress.
 - As a user, I can compare my fund’s XIRR against a user-entered FD rate on the fund page, so I can benchmark performance.
 - As a user, I can import historical winning bids via CSV or input them manually, so I can get better strategic bidding insights.
 - As a user, I can see projected payouts at different months and simple goal-based advice (borrower vs investor), so I can decide when to bid.
@@ -59,7 +59,7 @@ Success constraints:
 
 4.5 Individual Fund View
 13) The system must show a summary of fund setup details.
-14) The system must compute and display: Current Profit, ROI, Average Monthly Dividend, Months to Completion.
+14) The system must compute and display: Net Amount, ROI, Average Monthly Dividend, Months to Completion.
 15) The system must show a chronological list of monthly entries with clear indicators for paid/missing months.
 
 4.6 Strategic Bidding Insights
@@ -139,19 +139,16 @@ Success constraints:
 - SM4: At least 70% of users engage with the FD comparison on first fund setup session (proxy for understanding returns).
 
 ## 9. Open Questions
-- Should “Current Profit” include unrealized estimates for remaining months or only realized cash flows to date?
+- Should "Net Amount" include unrealized estimates for remaining months or only realized cash flows to date?
 - For ROI calculation, confirm exact formula: simple (profit/total paid to date) vs annualized vs per-term?
 - Define a default assumption for projected payouts (e.g., use average historical discount vs user-entered scenarios).
 - Early exit handling: what is the data flow when a fund is closed prematurely? Any settlement entries?
-- Minimum validation thresholds: acceptable ranges for installments vs chit value; realistic member counts.
-- Do we need a sample dataset or demo mode for first-time users?
-- Any export limits for large histories (e.g., >300 rows)?
 
 ## 10. Acceptance Criteria (derived from selections and goals)
 - AC1: User can create a fund with required fields; invalid inputs show clear messages.
 - AC2: Adding a monthly entry marks the month as paid and updates analytics immediately.
 - AC3: Dashboard shows Total Profit and a Fund vs. Profit chart on mobile and desktop.
-- AC4: Individual Fund View shows Current Profit, ROI, Avg Monthly Dividend, Months to Completion, XIRR, future value projection, cash flow chart, and FD comparison with user-entered rate.
+- AC4: Individual Fund View shows Net Amount, ROI, Avg Monthly Dividend, Months to Completion, XIRR, future value projection, cash flow chart, and FD comparison with user-entered rate.
 - AC5: Strategic Insights page allows manual and CSV import of historical winning bids; displays trends and simple goal-based guidance with assumptions explained.
 - AC6: CSV and JSON import/export work with previews and validation.
 - AC7: XIRR results match Excel within ±0.1% on test cases.

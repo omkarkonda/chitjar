@@ -232,11 +232,10 @@ export const fundSchema = z.object({
 /**
  * Monthly entry creation schema
  */
-export const monthlyEntryCreationSchema = z.object({
+export const monthlyEntryCreateSchema = z.object({
   fund_id: uuidSchema,
   month_key: monthKeySchema,
   dividend_amount: nonNegativeMonetarySchema.default(0),
-  prize_money: nonNegativeMonetarySchema.default(0),
   is_paid: z.boolean().default(false),
   notes: z.string().max(1000, 'Notes too long').optional(),
 });
@@ -246,7 +245,6 @@ export const monthlyEntryCreationSchema = z.object({
  */
 export const monthlyEntryUpdateSchema = z.object({
   dividend_amount: nonNegativeMonetarySchema.optional(),
-  prize_money: nonNegativeMonetarySchema.optional(),
   is_paid: z.boolean().optional(),
   notes: z.string().max(1000, 'Notes too long').optional(),
 });
@@ -259,7 +257,6 @@ export const monthlyEntrySchema = z.object({
   fund_id: uuidSchema,
   month_key: monthKeySchema,
   dividend_amount: z.number().nonnegative(),
-  prize_money: z.number().nonnegative(),
   is_paid: z.boolean(),
   notes: z.string().nullable(),
   created_at: z.date(),
@@ -394,7 +391,6 @@ export const csvMonthlyEntryImportSchema = z.object({
   fund_name: z.string().min(1).max(255),
   month_key: monthKeySchema,
   dividend_amount: z.coerce.number().nonnegative().default(0),
-  prize_money: z.coerce.number().nonnegative().default(0),
   is_paid: z.coerce.boolean().default(false),
   notes: z.string().max(1000).optional(),
 });
@@ -458,7 +454,7 @@ export type FundUpdate = z.infer<typeof fundUpdateSchema>;
 export type Fund = z.infer<typeof fundSchema>;
 
 // Monthly entry types
-export type MonthlyEntryCreation = z.infer<typeof monthlyEntryCreationSchema>;
+export type MonthlyEntryCreation = z.infer<typeof monthlyEntryCreateSchema>;
 export type MonthlyEntryUpdate = z.infer<typeof monthlyEntryUpdateSchema>;
 export type MonthlyEntry = z.infer<typeof monthlyEntrySchema>;
 

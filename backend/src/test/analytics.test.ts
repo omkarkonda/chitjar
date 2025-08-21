@@ -63,15 +63,15 @@ describe('Analytics API', () => {
     
     // Create some test entries for the fund
     await query(
-      `INSERT INTO monthly_entries (id, fund_id, month_key, dividend_amount, prize_money, is_paid, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
-      [uuidv4(), testFundId, '2024-01', 1000, 0, true]
+      `INSERT INTO monthly_entries (id, fund_id, month_key, dividend_amount, is_paid, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+      [uuidv4(), testFundId, '2024-01', 1000, true]
     );
     
     await query(
-      `INSERT INTO monthly_entries (id, fund_id, month_key, dividend_amount, prize_money, is_paid, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
-      [uuidv4(), testFundId, '2024-02', 1200, 25000, true]
+      `INSERT INTO monthly_entries (id, fund_id, month_key, dividend_amount, is_paid, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+      [uuidv4(), testFundId, '2024-02', 1200, true]
     );
     
     // Create some test bids for the fund

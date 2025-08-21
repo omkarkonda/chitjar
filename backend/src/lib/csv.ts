@@ -183,9 +183,6 @@ function transformRowKeys(row: any, type: 'bids' | 'funds' | 'entries'): any {
         case 'dividendamount':
           transformed.dividend_amount = value;
           break;
-        case 'prizemoney':
-          transformed.prize_money = value;
-          break;
         case 'ispaid':
           transformed.is_paid = value === 'true' || value === '1';
           break;
@@ -313,7 +310,7 @@ export function generateCsvTemplate(type: 'bids' | 'funds' | 'entries'): string 
   } else if (type === 'funds') {
     return 'name,chit_value,installment_amount,total_months,start_month,end_month,notes\n';
   } else {
-    return 'fund_name,month_key,dividend_amount,prize_money,is_paid,notes\n';
+    return 'fund_name,month_key,dividend_amount,is_paid,notes\n';
   }
 }
 

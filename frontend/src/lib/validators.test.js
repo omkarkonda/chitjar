@@ -22,11 +22,9 @@ describe('Frontend Validators', () => {
       expect(validateMonetaryValue(0, 'Amount')).toBe('Amount must be positive');
     });
 
-    test('should validate dividend and prize money can be zero', () => {
+    test('should validate dividend can be zero', () => {
       expect(validateMonetaryValue(0, 'Dividend amount')).toBeNull();
-      expect(validateMonetaryValue(0, 'Prize money')).toBeNull();
       expect(validateMonetaryValue(-1, 'Dividend amount')).toBe('Dividend amount cannot be negative');
-      expect(validateMonetaryValue(-1, 'Prize money')).toBe('Prize money cannot be negative');
     });
 
     test('should validate against chit value', () => {
@@ -88,7 +86,6 @@ describe('Frontend Validators', () => {
     test('should validate valid monthly entry data', () => {
       const data = {
         dividend_amount: '1000',
-        prize_money: '0',
         month_key: '2024-01',
         notes: 'Test notes'
       };
@@ -101,7 +98,6 @@ describe('Frontend Validators', () => {
     test('should reject invalid monthly entry data', () => {
       const data = {
         dividend_amount: '-100',
-        prize_money: '200000',
         month_key: 'invalid',
         notes: 'a'.repeat(1001)
       };
@@ -109,7 +105,6 @@ describe('Frontend Validators', () => {
       const result = validateMonthlyEntry(data, fund);
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveProperty('dividend_amount');
-      expect(result.errors).toHaveProperty('prize_money');
       expect(result.errors).toHaveProperty('month_key');
       expect(result.errors).toHaveProperty('notes');
     });

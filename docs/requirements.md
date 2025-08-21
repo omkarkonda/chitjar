@@ -39,7 +39,7 @@ This screen lists all active funds with key details like name, chit value, and m
 This detailed page provides a comprehensive analysis for a single fund, including:
 
 * A summary of fund setup details.  
-* **Current Profit** and **Return on Investment (ROI)**.  
+* **Net Amount** and **Return on Investment (ROI)**.  
 * **Average Monthly Dividend** and **Months to Completion**.  
 * A chronological list of all monthly entries.
 

@@ -148,7 +148,7 @@
   - [x] 4.3 Dashboard: Total Profit card and Fund vs Profit chart with loading/empty states.
   - [x] 4.4 Funds List: cards with chit value, installment, progress (months paid/total), and navigation.
   - [x] 4.5 Fund Form: create/edit with validation, helper tooltips, and success/error toasts.
-  - [x] 4.6 Fund Detail: KPIs (Current Profit, ROI, Avg Monthly Dividend, Months to Completion, XIRR), monthly entries list.
+  - [x] 4.6 Fund Detail: KPIs (Net Amount, ROI, Avg Monthly Dividend, Months to Completion, XIRR), monthly entries list.
   - [x] 4.7 Monthly Entry Form: add/edit dividend and prize money; mark month as paid; handle zero values.
   - [x] 4.8 Insights Page: historical bidding trends (table + chart), borrower vs investor guidance, projected payouts.
   - [x] 4.9 Import/Export UI: CSV import dialog with preview/errors; JSON/CSV export controls.
@@ -192,8 +192,8 @@
 
 - [x] 10.0 Testing, Performance, and Acceptance Criteria Verification
   - [x] 10.1 Unit tests for formatters, validators, and API clients using Jest.
-  - [ ] 10.2 Backend tests: Express.js auth, funds, entries, bids, CSV import, analytics endpoints with PostgreSQL.
-  - [ ] 10.3 Frontend tests: flows for create fund, add entry, view analytics, CSV import.
+  - [x] 10.2 Backend tests: Express.js auth, funds, entries, bids, analytics endpoints with PostgreSQL.
+  - [ ] 10.3 Frontend tests: flows for create fund, add entry, view analytics.
   - [ ] 10.4 Accessibility tests for Chart.js charts and forms; contrast and keyboard navigation.
   - [ ] 10.5 Performance: load testing of Express.js analytics endpoints; profiling rendering on mobile.
   - [ ] 10.6 Verify acceptance criteria (AC1–AC8) with test cases and manual QA checklist.

@@ -35,6 +35,9 @@ import { calculateXirrPercentage } from '../lib/xirr';
 import { forecastFutureCashFlows } from '../lib/forecast';
 import { getFundCashFlowHandler, getFundNetCashFlowHandler } from './cash-flow';
 
+// Import the getFundNetCashFlowSeries function from cash-flow
+import { getFundNetCashFlowSeries } from './cash-flow';
+
 const router = Router();
 
 // Apply authentication middleware to all routes
@@ -99,7 +102,7 @@ async function getFundCashFlowSeries(userId: string, fundId: string): Promise<Ar
   // Get all entries for this fund
   const entriesResult = await query(`
     SELECT 
-      me.month_key, me.dividend_amount, me.prize_money
+      me.month_key, me.dividend_amount
     FROM monthly_entries me
     WHERE me.fund_id = $1
     ORDER BY me.month_key
@@ -118,12 +121,11 @@ async function getFundCashFlowSeries(userId: string, fundId: string): Promise<Ar
   for (const entry of entries) {
     // For each entry, we have:
     // 1. Outflow: installment_amount (negative)
-    // 2. Inflow: dividend_amount + prize_money (positive)
+    // 2. Inflow: dividend_amount (positive)
     
     const installment = -parseFloat(fund.installment_amount.toString()); // Negative because it's an outflow
     const dividend = parseFloat((entry.dividend_amount || 0).toString());
-    const prize = parseFloat((entry.prize_money || 0).toString());
-    const netCashFlow = installment + dividend + prize;
+    const netCashFlow = installment + dividend;
     
     // Convert month key to date (first day of the month)
     const parts = entry.month_key.split('-');
@@ -380,8 +382,19 @@ async function getFundAnalyticsHandler(req: Request, res: Response, next: NextFu
       [id]
     );
     
-    if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
-      // Fund doesn't exist or belongs to another user
+    if (fundExists.rowCount === 0) {
+      // Fund doesn't exist
+      sendError(
+        res,
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
+      );
+      return;
+    }
+    
+    if (fundExists.rows[0].user_id !== userId) {
+      // Fund belongs to another user
       sendError(
         res,
         HTTP_STATUS.NOT_FOUND,
@@ -465,8 +478,19 @@ async function compareFundWithFdHandler(req: Request, res: Response, next: NextF
       [id]
     );
     
-    if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
-      // Fund doesn't exist or belongs to another user
+    if (fundExists.rowCount === 0) {
+      // Fund doesn't exist
+      sendError(
+        res,
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
+      );
+      return;
+    }
+    
+    if (fundExists.rows[0].user_id !== userId) {
+      // Fund belongs to another user
       sendError(
         res,
         HTTP_STATUS.NOT_FOUND,
@@ -517,8 +541,19 @@ async function getFundForecastHandler(req: Request, res: Response, next: NextFun
       [id]
     );
     
-    if (fundExists.rowCount === 0 || fundExists.rows[0].user_id !== userId) {
-      // Fund doesn't exist or belongs to another user
+    if (fundExists.rowCount === 0) {
+      // Fund doesn't exist
+      sendError(
+        res,
+        HTTP_STATUS.NOT_FOUND,
+        ERROR_CODES.RESOURCE_NOT_FOUND,
+        'Fund not found'
+      );
+      return;
+    }
+    
+    if (fundExists.rows[0].user_id !== userId) {
+      // Fund belongs to another user
       sendError(
         res,
         HTTP_STATUS.NOT_FOUND,
@@ -637,85 +672,6 @@ async function getInsightsHandler(req: Request, res: Response, next: NextFunctio
   } catch (error) {
     next(error);
   }
-}
-
-/**
- * Get net cash flow series for a fund
- * Computes net monthly cash flow as installment - dividend for each month
- * 
- * @param userId - The ID of the user who owns the fund
- * @param fundId - The ID of the fund to get cash flow series for
- * @returns Promise that resolves to an array of net cash flow objects with date and amount
- */
-async function getFundNetCashFlowSeries(userId: string, fundId: string): Promise<Array<{ date: Date, amount: number }>> {
-  // First get the fund details
-  const fundResult = await query(`
-    SELECT 
-      f.start_month, f.end_month, f.early_exit_month,
-      f.installment_amount, f.chit_value
-    FROM funds f
-    WHERE f.id = $1 AND f.user_id = $2
-  `, [fundId, userId]);
-  
-  if (fundResult.rowCount === 0) {
-    return [];
-  }
-  
-  // Check if fund exists
-  if (!fundResult || fundResult.rows.length === 0) {
-    return [];
-  }
-  
-  const fund = fundResult.rows[0];
-  
-  // Get all entries for this fund
-  const entriesResult = await query(`
-    SELECT 
-      me.month_key, me.dividend_amount, me.prize_money
-    FROM monthly_entries me
-    WHERE me.fund_id = $1
-    ORDER BY me.month_key
-  `, [fundId]);
-  
-  const entries = entriesResult.rows;
-  
-  // If no entries, return empty array
-  if (entries.length === 0) {
-    return [];
-  }
-  
-  // Build net cash flow series only for months that have entries
-  const netCashFlow: Array<{ date: Date, amount: number }> = [];
-  
-  for (const entry of entries) {
-    // For each entry, we have:
-    // Net cash flow: installment - dividend (as per task 5.3 requirement)
-    
-    const installment = parseFloat(fund.installment_amount.toString());
-    const dividend = parseFloat((entry.dividend_amount || 0).toString());
-    const netCashFlowAmount = installment - dividend; // As per task 5.3 requirement
-    
-    // Convert month key to date (first day of the month)
-    const parts = entry.month_key.split('-');
-    const yearStr = parts[0];
-    const monthStr = parts[1];
-    
-    // Check if we have valid parts
-    if (!yearStr || !monthStr) {
-      continue; // Skip invalid month keys
-    }
-    
-    const year = parseInt(yearStr, 10);
-    const month = parseInt(monthStr, 10);
-    const date = new Date(year, month - 1, 1); // month is 0-indexed in JS Date
-    
-    netCashFlow.push({
-      date,
-      amount: netCashFlowAmount
-    });
-  }
-  
-  return netCashFlow;
 }
 
 // ============================================================================ 

@@ -48,7 +48,6 @@ CREATE TABLE IF NOT EXISTS monthly_entries (
     fund_id UUID NOT NULL REFERENCES funds(id) ON DELETE CASCADE,
     month_key VARCHAR(7) NOT NULL, -- Format: YYYY-MM
     dividend_amount DECIMAL(12,2) DEFAULT 0 CHECK (dividend_amount >= 0),
-    prize_money DECIMAL(12,2) DEFAULT 0 CHECK (prize_money >= 0),
     is_paid BOOLEAN DEFAULT false,
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

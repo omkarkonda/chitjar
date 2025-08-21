@@ -20,7 +20,7 @@ import {
 } from '../lib/validation-utils';
 import { sanitizeString, sanitizeQueryString, sanitizeParamString } from '../lib/sanitization';
 import {
-  monthlyEntryCreationSchema,
+  monthlyEntryCreateSchema,
   monthlyEntryUpdateSchema,
   monthlyEntryListQuerySchema,
   uuidSchema
@@ -119,7 +119,7 @@ async function getUserMonthlyEntries(userId: string, filters: any = {}): Promise
   const result = await query(`
     SELECT 
       me.id, me.fund_id, me.month_key, me.dividend_amount, 
-      me.prize_money, me.is_paid, me.notes, me.created_at, me.updated_at,
+      me.is_paid, me.notes, me.created_at, me.updated_at,
       f.name as fund_name, f.chit_value, f.installment_amount
     FROM monthly_entries me
     JOIN funds f ON me.fund_id = f.id
@@ -141,7 +141,7 @@ async function getUserMonthlyEntryById(userId: string, entryId: string): Promise
   const result = await query(`
     SELECT 
       me.id, me.fund_id, me.month_key, me.dividend_amount, 
-      me.prize_money, me.is_paid, me.notes, me.created_at, me.updated_at,
+      me.is_paid, me.notes, me.created_at, me.updated_at,
       f.name as fund_name, f.chit_value, f.installment_amount
     FROM monthly_entries me
     JOIN funds f ON me.fund_id = f.id
@@ -224,7 +224,7 @@ async function getFundMonthSeriesWithEntries(userId: string, fundId: string): Pr
   // Get existing entries for this fund
   const entriesResult = await query(`
     SELECT 
-      me.month_key, me.dividend_amount, me.prize_money, 
+      me.month_key, me.dividend_amount, 
       me.is_paid, me.notes, me.created_at, me.updated_at
     FROM monthly_entries me
     WHERE me.fund_id = $1
@@ -241,7 +241,6 @@ async function getFundMonthSeriesWithEntries(userId: string, fundId: string): Pr
     return {
       month_key: monthKey,
       dividend_amount: entry ? entry.dividend_amount : 0,
-      prize_money: entry ? entry.prize_money : 0,
       is_paid: entry ? entry.is_paid : false,
       notes: entry ? entry.notes : null,
       created_at: entry ? entry.created_at : null,
@@ -272,7 +271,7 @@ async function getFundMonthSeriesWithEntries(userId: string, fundId: string): Pr
  */
 async function createMonthlyEntryHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { fund_id, month_key, dividend_amount, prize_money, notes } = req.body;
+    const { fund_id, month_key, dividend_amount, notes } = req.body;
     const authenticatedReq = req as any;
     const userId = authenticatedReq.user.id;
     
@@ -288,27 +287,16 @@ async function createMonthlyEntryHandler(req: Request, res: Response, next: Next
       return;
     }
     
-    // Validate that prize_money doesn't exceed chit_value
-    if (prize_money > fund.chit_value) {
-      sendError(
-        res,
-        HTTP_STATUS.BAD_REQUEST,
-        ERROR_CODES.INVALID_INPUT,
-        `Prize money (${prize_money}) cannot exceed chit value (${fund.chit_value})`
-      );
-      return;
-    }
-    
     // Create entry in transaction
     // Note: is_paid is always set to true when creating an entry (AC2)
     const result = await transaction(async (client) => {
       const entryResult = await client.query(`
         INSERT INTO monthly_entries (
-          fund_id, month_key, dividend_amount, prize_money, is_paid, notes
-        ) VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, fund_id, month_key, dividend_amount, prize_money, 
+          fund_id, month_key, dividend_amount, is_paid, notes
+        ) VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, fund_id, month_key, dividend_amount, 
                   is_paid, notes, created_at, updated_at
-      `, [fund_id, month_key, dividend_amount || 0, prize_money || 0, true, notes || null]);
+      `, [fund_id, month_key, dividend_amount || 0, true, notes || null]);
       
       return entryResult.rows[0];
     });
@@ -511,17 +499,6 @@ async function updateMonthlyEntryHandler(req: Request, res: Response, next: Next
       return;
     }
     
-    // If prize_money is being updated, validate it against the fund's chit_value
-    if (updateData.prize_money !== undefined && updateData.prize_money > entry.chit_value) {
-      sendError(
-        res,
-        HTTP_STATUS.BAD_REQUEST,
-        ERROR_CODES.INVALID_INPUT,
-        `Prize money (${updateData.prize_money}) cannot exceed chit value (${entry.chit_value})`
-      );
-      return;
-    }
-    
     // Build dynamic update query
     const fields = [];
     const values = [];
@@ -532,7 +509,7 @@ async function updateMonthlyEntryHandler(req: Request, res: Response, next: Next
     
     for (const [key, value] of Object.entries(processedUpdateData)) {
       if (value !== undefined && key !== 'id' && key !== 'fund_id') {
-        fields.push(`${key} = ${index}`);
+        fields.push(`${key} = $${index}`);
         values.push(value);
         index++;
       }
@@ -548,9 +525,9 @@ async function updateMonthlyEntryHandler(req: Request, res: Response, next: Next
     const result = await query(`
       UPDATE monthly_entries 
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${index}
-      AND fund_id IN (SELECT id FROM funds WHERE user_id = ${index + 1})
-      RETURNING id, fund_id, month_key, dividend_amount, prize_money, 
+      WHERE id = $${index}
+      AND fund_id IN (SELECT id FROM funds WHERE user_id = $${index + 1})
+      RETURNING id, fund_id, month_key, dividend_amount, 
                 is_paid, notes, created_at, updated_at
     `, [...values, userId]);
     
@@ -638,7 +615,7 @@ async function deleteMonthlyEntryHandler(req: Request, res: Response, next: Next
 router.post('/',
   methodRateLimiter({ post: dataModificationRateLimiter }),
   sanitizeString('notes'),
-  validateBody(monthlyEntryCreationSchema),
+  validateBody(monthlyEntryCreateSchema),
   createMonthlyEntryHandler
 );
 
