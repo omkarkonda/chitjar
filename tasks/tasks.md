@@ -193,7 +193,7 @@
 - [x] 10.0 Testing, Performance, and Acceptance Criteria Verification
   - [x] 10.1 Unit tests for formatters, validators, and API clients using Jest.
   - [x] 10.2 Backend tests: Express.js auth, funds, entries, bids, analytics endpoints with PostgreSQL.
-  - [ ] 10.3 Frontend tests: flows for create fund, add entry, view analytics.
+  - [x] 10.3 Frontend tests: flows for create fund, add entry, view analytics.
   - [ ] 10.4 Accessibility tests for Chart.js charts and forms; contrast and keyboard navigation.
   - [ ] 10.5 Performance: load testing of Express.js analytics endpoints; profiling rendering on mobile.
   - [ ] 10.6 Verify acceptance criteria (AC1–AC8) with test cases and manual QA checklist.
