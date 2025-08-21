@@ -20,6 +20,8 @@
     "db:seed:realistic": "node dist/lib/seed-realistic.js",
     "db:check": "node scripts/check-data.js",
     "setup": "node scripts/setup-db.js",
+    "setup:perf": "node scripts/setup-performance-test.js",
+    "perf:test": "node scripts/performance-test.js",
     "check-env": "node scripts/check-env.js",
     "generate-secrets": "node scripts/generate-secrets.js",
     "postinstall": "node scripts/check-env.js"
@@ -61,6 +63,7 @@
     "@types/supertest": "^2.0.16",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
+    "autocannon": "^8.0.0",
     "eslint": "^8.56.0",
     "eslint-plugin-jest": "^29.0.1",
     "jest": "^29.7.0",
