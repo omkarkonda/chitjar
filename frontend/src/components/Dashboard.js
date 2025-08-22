@@ -1,7 +1,7 @@
 /**
  * Dashboard Component for ChitJar Frontend
  *
- * This component displays the user's dashboard with total profit and fund performance chart.
+ * This component displays the user's dashboard with fund performance chart.
  * The chart is responsive on small screens and print-friendly.
  */
 
@@ -12,7 +12,6 @@ import { handleApiError } from '../lib/errorHandler.js';
 
 class Dashboard {
   constructor() {
-    this.totalProfit = 0;
     this.funds = [];
     this.chart = null;
     this.isLoading = false;
@@ -36,7 +35,6 @@ class Dashboard {
 
     try {
       const response = await apiClient.get('/analytics/dashboard');
-      this.totalProfit = response.data.total_profit || 0;
       this.funds = response.data.funds || [];
     } catch (error) {
       // Handle authentication errors specifically
@@ -95,13 +93,6 @@ class Dashboard {
    */
   renderErrorState() {
     return `
-      <div class="dashboard__stats">
-        <div class="stat-card">
-          <h3>Total Profit</h3>
-          <p class="stat-value">₹0</p>
-        </div>
-      </div>
-      
       <div class="dashboard__error">
         <div class="error">
           <p>Error loading dashboard data: ${this.error}</p>
@@ -116,15 +107,6 @@ class Dashboard {
    */
   renderDashboard() {
     return `
-      <div class="dashboard__stats">
-        <div class="stat-card">
-          <h3>Total Profit</h3>
-          <p class="stat-value ${this.totalProfit >= 0 ? 'stat-value--positive' : 'stat-value--negative'}">
-            ${formatINR(this.totalProfit)}
-          </p>
-        </div>
-      </div>
-      
       <div class="dashboard__chart-container">
         <div class="chart-header">
           <h3>Fund vs Profit</h3>

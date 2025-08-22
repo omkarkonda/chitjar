@@ -206,7 +206,6 @@ describe('Frontend Flows', () => {
       apiClient.get = jest.fn()
         .mockResolvedValueOnce({
           data: {
-            total_profit: 15000,
             funds: [
               {
                 fund_id: 'fund-1',
@@ -231,7 +230,6 @@ describe('Frontend Flows', () => {
       document.body.innerHTML = `
         <div class="main">
           <div class="dashboard">
-            <div class="dashboard__stats"></div>
             <div class="dashboard__chart-container">
               <canvas id="fund-profit-chart"></canvas>
             </div>
@@ -252,7 +250,6 @@ describe('Frontend Flows', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/analytics/dashboard');
       
       // Verify data was loaded
-      expect(dashboard.totalProfit).toBe(15000);
       expect(dashboard.funds).toHaveLength(2);
     });
 

@@ -13,7 +13,7 @@ This document provides comprehensive context about the ChitJar project for Qwen 
 - Enable data import/export functionality
 
 ### Key Features
-- 📊 Dashboard with total profit and fund performance visualization
+- 📊 Dashboard with fund performance visualization
 - 💰 Fund management for multiple chit funds
 - 📈 Advanced analytics including XIRR calculations and ROI analysis
 - 🎯 Strategic bidding insights with historical trend analysis
@@ -107,7 +107,7 @@ The backend API follows RESTful conventions with the following key endpoints:
 - `GET /api/v1/funds/:fundId/bids` - Get bids for specific fund
 
 ### Analytics
-- `GET /api/v1/analytics/dashboard` - Dashboard analytics with total profit and fund performance
+- `GET /api/v1/analytics/dashboard` - Dashboard analytics with fund performance
 - `GET /api/v1/analytics/funds/:id` - Fund-specific analytics including XIRR and cash flow series
 - `POST /api/v1/analytics/funds/:id/fd-comparison` - Compare fund XIRR with FD rate
 - `GET /api/v1/analytics/insights` - Strategic bidding insights based on historical data

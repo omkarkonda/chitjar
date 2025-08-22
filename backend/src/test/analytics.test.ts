@@ -107,7 +107,6 @@ describe('Analytics API', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('total_profit');
       expect(response.body.data).toHaveProperty('funds');
       expect(response.body.data).toHaveProperty('fund_count');
       

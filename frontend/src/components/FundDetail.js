@@ -12,6 +12,7 @@ import { createFocusTrap } from '../lib/focusTrap.js';
 import { debounce } from '../lib/performance.js';
 import { handleApiError } from '../lib/errorHandler.js';
 import { isZeroDividendMonth, isPastMonth } from '../lib/edgeCaseHandler.js';
+import { isFundEnded, canAddEntriesToFund, getFundStatusDescription } from '../lib/fundUtils.js';
 
 class FundDetail {
   constructor() {
@@ -361,11 +362,31 @@ class FundDetail {
     const endIndex = startIndex + this.entriesPerPage;
     this.visibleEntries = this.entries.slice(startIndex, endIndex);
 
+    // Check if entries can be added to this fund
+    const entryPermission = canAddEntriesToFund(this.fund);
+
     return `
       <div class="fund-detail__entries">
         <div class="entries-header">
           <h3>Monthly Entries</h3>
-          <button class="btn btn--secondary" id="add-entry" aria-label="Add new monthly entry">Add Entry</button>
+          <div class="entries-header__actions">
+            <button 
+              class="btn btn--secondary ${!entryPermission.canAdd ? 'btn--disabled' : ''}" 
+              id="add-entry" 
+              aria-label="Add new monthly entry"
+              ${!entryPermission.canAdd ? 'disabled' : ''}
+            >
+              Add Entry
+            </button>
+            ${!entryPermission.canAdd ? `
+              <div class="entries-header__status">
+                <small class="text-muted">
+                  <i class="icon-info"></i>
+                  ${entryPermission.reason}
+                </small>
+              </div>
+            ` : ''}
+          </div>
         </div>
         <div class="entries-list">
           ${
@@ -445,11 +466,22 @@ class FundDetail {
    * Render the empty entries state
    */
   renderEmptyEntries() {
+    // Check if entries can be added to this fund
+    const entryPermission = canAddEntriesToFund(this.fund);
+
     return `
       <div class="entries-empty">
         <div class="empty-state">
-          <p>No entries yet. Add your first entry to get started!</p>
-          <button class="btn btn--primary" id="add-first-entry" aria-label="Add first monthly entry">Add Entry</button>
+          <p>No entries yet. ${entryPermission.canAdd ? 'Add your first entry to get started!' : 'This fund has ended.'}</p>
+          ${entryPermission.canAdd ? `
+            <button class="btn btn--primary" id="add-first-entry" aria-label="Add first monthly entry">Add Entry</button>
+          ` : `
+            <button class="btn btn--primary btn--disabled" disabled aria-label="Cannot add entries to ended fund">Add Entry</button>
+            <small class="text-muted">
+              <i class="icon-info"></i>
+              ${entryPermission.reason}
+            </small>
+          `}
         </div>
       </div>
     `;
@@ -529,7 +561,11 @@ class FundDetail {
     const addEntryButton = document.getElementById('add-entry');
     if (addEntryButton) {
       addEntryButton.addEventListener('click', () => {
-        this.showAddEntryForm();
+        // Check if entries can be added before showing form
+        const entryPermission = canAddEntriesToFund(this.fund);
+        if (entryPermission.canAdd) {
+          this.showAddEntryForm();
+        }
       });
     }
 
@@ -537,7 +573,11 @@ class FundDetail {
     const addFirstEntryButton = document.getElementById('add-first-entry');
     if (addFirstEntryButton) {
       addFirstEntryButton.addEventListener('click', () => {
-        this.showAddEntryForm();
+        // Check if entries can be added before showing form
+        const entryPermission = canAddEntriesToFund(this.fund);
+        if (entryPermission.canAdd) {
+          this.showAddEntryForm();
+        }
       });
     }
 
@@ -766,6 +806,10 @@ class FundDetail {
   showAddEntryForm() {
     if (!this.fund) return;
 
+    // Generate a month key for the current month or next available month
+    const currentDate = new Date();
+    const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
     // Show the modal with the monthly entry form
     this.showModal(() => {
       const modalContainer = document.getElementById('modal-container');
@@ -781,7 +825,26 @@ class FundDetail {
         `;
 
         // Initialize the monthly entry form for creation
-        monthlyEntryForm.initNew(this.fund.id, null, null, null);
+        monthlyEntryForm.initNew(
+          this.fund.id,
+          currentMonth,
+          (data) => {
+            // Success callback - refresh fund data and close modal
+            this.hideModal();
+            this.loadData(this.fund.id);
+            // Show success message
+            window.dispatchEvent(new CustomEvent('showToast', {
+              detail: {
+                message: 'Monthly entry added successfully',
+                type: 'success'
+              }
+            }));
+          },
+          () => {
+            // Cancel callback - just close modal
+            this.hideModal();
+          }
+        );
 
         // Add event listener for close button
         const closeButton = modalContainer.querySelector('.modal-close');
@@ -826,7 +889,25 @@ class FundDetail {
         `;
 
         // Initialize the monthly entry form for editing
-        monthlyEntryForm.initEdit(entryId);
+        monthlyEntryForm.initEdit(
+          entryId,
+          (data) => {
+            // Success callback - refresh fund data and close modal
+            this.hideModal();
+            this.loadData(this.fund.id);
+            // Show success message
+            window.dispatchEvent(new CustomEvent('showToast', {
+              detail: {
+                message: 'Monthly entry updated successfully',
+                type: 'success'
+              }
+            }));
+          },
+          () => {
+            // Cancel callback - just close modal
+            this.hideModal();
+          }
+        );
 
         // Add event listener for close button
         const closeButton = modalContainer.querySelector('.modal-close');

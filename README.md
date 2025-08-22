@@ -4,7 +4,7 @@ A comprehensive web application to track and analyze personal chit fund investme
 
 ## Features
 
-- 📊 **Dashboard**: Overview of total profit and fund performance
+- 📊 **Dashboard**: Overview of fund performance
 - 💰 **Fund Management**: Create and track multiple chit funds
 - 📈 **Analytics**: XIRR calculations, ROI analysis, and projections
 - 🎯 **Strategic Insights**: Bidding guidance for borrowers vs investors

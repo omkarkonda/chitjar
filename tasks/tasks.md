@@ -53,7 +53,7 @@
 - frontend/styles/main.css - Global styles; accessible color palette; responsive layout; print-friendly tables.
 - frontend/app.js - App bootstrap, simple router, and centralized state management.
 - frontend/components/NavBar.js - Bottom navigation (mobile) and sidebar (desktop).
-- frontend/components/Dashboard.js - Total Profit card and Fund vs Profit chart.
+- frontend/components/Dashboard.js - Fund vs Profit chart.
 - frontend/components/FundsList.js - List of funds with key metrics and navigation.
 - frontend/components/FundForm.js - Create/Edit fund form with client-side validation and helpful tooltips.
 - frontend/components/FundDetail.js - Summary KPIs, entries list, cash flow chart, XIRR, FD comparison.
@@ -145,7 +145,7 @@
 - [ ] 4.0 Frontend UI: Mobile-first Screens and Navigation
   - [x] 4.1 Global layout: index.html, responsive grid, accessible color tokens, typography.
   - [x] 4.2 Navigation: bottom nav (Dashboard, Funds, Add, Insights); desktop sidebar.
-  - [x] 4.3 Dashboard: Total Profit card and Fund vs Profit chart with loading/empty states.
+  - [x] 4.3 Dashboard: Fund vs Profit chart with loading/empty states.
   - [x] 4.4 Funds List: cards with chit value, installment, progress (months paid/total), and navigation.
   - [x] 4.5 Fund Form: create/edit with validation, helper tooltips, and success/error toasts.
   - [x] 4.6 Fund Detail: KPIs (Net Amount, ROI, Avg Monthly Dividend, Months to Completion, XIRR), monthly entries list.

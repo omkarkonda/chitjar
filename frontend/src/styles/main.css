@@ -253,6 +253,12 @@ li > ol {
   cursor: not-allowed;
 }
 
+.btn--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .btn--primary {
   color: var(--text-inverse);
   background-color: var(--primary-600);

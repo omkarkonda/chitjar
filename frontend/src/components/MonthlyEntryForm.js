@@ -31,6 +31,7 @@ class MonthlyEntryForm {
     this.fund = null;
     this.isLoading = false;
     this.error = null;
+    this.errors = {};
     this.onSuccess = null;
     this.onCancel = null;
   }
@@ -47,11 +48,14 @@ class MonthlyEntryForm {
     this.entryId = null;
     this.isEditing = false;
     this.entry = {
-      month_key: monthKey,
+      month_key: monthKey || '',
       dividend_amount: '',
       is_paid: true,
       notes: '',
     };
+    this.error = null;
+    this.errors = {};
+    this.isLoading = false;
     this.onSuccess = onSuccess;
     this.onCancel = onCancel;
 
@@ -68,6 +72,8 @@ class MonthlyEntryForm {
   async initEdit(entryId, onSuccess, onCancel) {
     this.entryId = entryId;
     this.isEditing = true;
+    this.error = null;
+    this.errors = {};
     this.onSuccess = onSuccess;
     this.onCancel = onCancel;
 
@@ -307,7 +313,18 @@ class MonthlyEntryForm {
         ` : ''}
         
         <form id="monthly-entry-form">
-          <input type="hidden" id="month-key" value="${this.entry.month_key}">
+          <div class="form-group">
+            <label for="month-key">Month</label>
+            <select 
+              id="month-key" 
+              class="form-input ${this.errors && this.errors.month_key ? 'form-input--error' : ''}"
+              ${this.isEditing ? 'disabled' : ''}
+            >
+              ${this.renderMonthOptions()}
+            </select>
+            ${this.errors && this.errors.month_key ? `<div class="form-error">${this.errors.month_key}</div>` : ''}
+            <small class="form-text">Select the month for this entry</small>
+          </div>
           
           <div class="form-group">
             <label for="dividend-amount">Dividend Amount (₹)</label>
@@ -370,6 +387,43 @@ class MonthlyEntryForm {
   }
 
   /**
+   * Render month options for the dropdown
+   */
+  renderMonthOptions() {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    
+    // Generate months for current year and next year
+    const months = [];
+    
+    // Add months from current month to end of current year
+    for (let month = currentMonth; month < 12; month++) {
+      const monthKey = `${currentYear}-${String(month + 1).padStart(2, '0')}`;
+      const monthLabel = new Date(currentYear, month).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long'
+      });
+      months.push({ key: monthKey, label: monthLabel });
+    }
+    
+    // Add months for next year
+    for (let month = 0; month < 12; month++) {
+      const monthKey = `${currentYear + 1}-${String(month + 1).padStart(2, '0')}`;
+      const monthLabel = new Date(currentYear + 1, month).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long'
+      });
+      months.push({ key: monthKey, label: monthLabel });
+    }
+    
+    return months.map(month => 
+      `<option value="${month.key}" ${month.key === this.entry.month_key ? 'selected' : ''}>
+        ${month.label}
+      </option>`
+    ).join('');
+  }
+  /**
    * Add event listeners to form elements
    */
   addEventListeners() {
@@ -381,6 +435,13 @@ class MonthlyEntryForm {
     const cancelBtn = document.getElementById('cancel-btn');
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => this.handleCancel());
+    }
+
+    const monthSelect = document.getElementById('month-key');
+    if (monthSelect && !this.isEditing) {
+      monthSelect.addEventListener('change', e => {
+        this.handleInputChange('month_key', e.target.value);
+      });
     }
 
     const dividendInput = document.getElementById('dividend-amount');

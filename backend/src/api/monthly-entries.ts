@@ -78,7 +78,7 @@ async function checkFundOwnership(userId: string, fundId: string): Promise<boole
  */
 async function getFundDetails(userId: string, fundId: string): Promise<any> {
   const result = await query(
-    'SELECT chit_value, start_month, end_month, early_exit_month FROM funds WHERE id = $1 AND user_id = $2',
+    'SELECT chit_value, start_month, end_month, early_exit_month, user_id FROM funds WHERE id = $1 AND user_id = $2',
     [fundId, userId]
   );
   return result.rows[0] || null;

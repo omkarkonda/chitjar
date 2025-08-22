@@ -27,7 +27,7 @@ Success constraints:
 ## 3. User Stories
 - As a user, I can create a fund by entering fund name, chit value, monthly installment, number of members, start date, and an optional goal, so I can start tracking.
 - As a user, I can log monthly dividend and optional prize money, and the month becomes marked as paid automatically, so my records stay consistent.
-- As a user, I can view a dashboard with total profit and a fund vs. profit graph, so I understand overall performance.
+- As a user, I can view a dashboard with a fund vs. profit graph, so I understand overall performance.
 - As a user, I can view a list of my funds with key details and tap into an individual fund view for deep analytics.
 - As a user, I can see net amount, ROI, average monthly dividend, and months to completion for a specific fund, so I can track progress.
 - As a user, I can compare my fund’s XIRR against a user-entered FD rate on the fund page, so I can benchmark performance.
@@ -54,8 +54,7 @@ Success constraints:
 10) The system must handle irregular dividends (zero or missing months), mid-year fund start, and early exit (fund closed before full term).
 
 4.4 Dashboard
-11) The system must display Total Profit across all active funds.
-12) The system must show a Fund vs. Profit graph (bar or comparable) per fund.
+11) The system must show a Fund vs. Profit graph (bar or comparable) per fund.
 
 4.5 Individual Fund View
 13) The system must show a summary of fund setup details.
@@ -147,7 +146,7 @@ Success constraints:
 ## 10. Acceptance Criteria (derived from selections and goals)
 - AC1: User can create a fund with required fields; invalid inputs show clear messages.
 - AC2: Adding a monthly entry marks the month as paid and updates analytics immediately.
-- AC3: Dashboard shows Total Profit and a Fund vs. Profit chart on mobile and desktop.
+- AC3: Dashboard shows a Fund vs. Profit chart on mobile and desktop.
 - AC4: Individual Fund View shows Net Amount, ROI, Avg Monthly Dividend, Months to Completion, XIRR, future value projection, cash flow chart, and FD comparison with user-entered rate.
 - AC5: Strategic Insights page allows manual and CSV import of historical winning bids; displays trends and simple goal-based guidance with assumptions explained.
 - AC6: CSV and JSON import/export work with previews and validation.

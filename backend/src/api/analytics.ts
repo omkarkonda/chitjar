@@ -258,7 +258,7 @@ async function compareWithFd(userId: string, fundId: string, fdRate: number): Pr
 
 /**
  * Get dashboard analytics for a user
- * Calculates total profit and fund performance metrics for all active funds
+ * Calculates fund performance metrics for all active funds
  * owned by the user.
  * @param userId - The ID of the user to get dashboard analytics for
  * @returns Promise that resolves to an object containing dashboard analytics data
@@ -278,7 +278,6 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
   
   // Calculate analytics for each fund
   const fundAnalytics = [];
-  let totalProfit = 0;
   
   // Track which funds need recalculation
   // const fundsNeedingRecalculation = [];
@@ -289,7 +288,6 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
     if (cashFlow.length > 0) {
       // Calculate total profit for this fund
       const fundProfit = cashFlow.reduce((sum, cf) => sum + cf.amount, 0);
-      totalProfit += fundProfit;
       
       // Calculate XIRR
       const fundXirr = await calculateFundXirr(userId, fund.id);
@@ -318,7 +316,6 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
   // }
   
   return {
-    total_profit: totalProfit,
     funds: fundAnalytics,
     fund_count: funds.length
   };
@@ -331,7 +328,7 @@ async function getDashboardAnalytics(userId: string): Promise<any> {
 /**
  * Get dashboard analytics
  * GET /api/v1/analytics/dashboard
- * Returns total profit and fund performance metrics for all active funds.
+ * Returns fund performance metrics for all active funds.
  * @param req - Express request object
  * @param res - Express response object
  * @param next - Express next function for error handling

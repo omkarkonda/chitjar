@@ -343,13 +343,6 @@ class ChitJarApp {
           <h2>Dashboard</h2>
         </div>
         
-        <div class="dashboard__stats">
-          <div class="stat-card">
-            <h3>Total Profit</h3>
-            <div class="loading__skeleton stat-value-skeleton"></div>
-          </div>
-        </div>
-        
         <div class="dashboard__chart-container">
           <div class="chart-header">
             <h3>Fund vs Profit</h3>

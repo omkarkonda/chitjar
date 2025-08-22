@@ -306,6 +306,33 @@
   margin: 0;
 }
 
+/* Entries header actions container */
+.entries-header__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-1);
+}
+
+/* Status information for disabled buttons */
+.entries-header__status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.entries-header__status small {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.entries-header__status .icon-info {
+  width: 12px;
+  height: 12px;
+  opacity: 0.7;
+}
+
 .entries-list {
   display: flex;
   flex-direction: column;

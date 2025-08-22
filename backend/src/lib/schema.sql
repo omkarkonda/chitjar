@@ -133,10 +133,10 @@ BEGIN
     FROM funds
     WHERE id = NEW.fund_id;
     
-    -- Check if prize_money doesn't exceed chit_value
-    IF NEW.prize_money > fund_record.chit_value THEN
-        RAISE EXCEPTION 'Prize money (%) cannot exceed chit value (%)',
-            NEW.prize_money, fund_record.chit_value;
+    -- Check if dividend_amount doesn't exceed chit_value
+    IF NEW.dividend_amount > fund_record.chit_value THEN
+        RAISE EXCEPTION 'Dividend amount (%) cannot exceed chit value (%)',
+            NEW.dividend_amount, fund_record.chit_value;
     END IF;
     
     -- Check if month_key is within fund's date range
